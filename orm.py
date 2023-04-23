@@ -26,6 +26,7 @@ class Candle(Base):
     __tablename__ = 'candles'
     id = Column(Integer(), primary_key=True)
     interval = Column(Integer(), nullable=False)
+    ts = Column(Integer(), nullable=False)
     dt = Column(DateTime(), default=datetime.now)
     open = Column(Float(), nullable=False)
     high = Column(Float(), nullable=False)
