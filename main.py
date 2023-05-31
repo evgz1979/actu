@@ -39,8 +39,8 @@ Base.metadata.create_all(engine)
 session = Session(engine)
 
 df = candles_to_df3(get_candles(symbol_name_ku, '1w'))  # -- так работает с базой
-print(df)
-print('max=', df['high'].max(), '; min=', df['low'].min())
+# print(df)
+# print('max=', df['high'].max(), '; min=', df['low'].min())
 plot1(df)
 
 df.to_sql('candles', con=engine, if_exists='append')
