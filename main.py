@@ -13,7 +13,4 @@ if __name__ == '__main__':
     # fp.candlestick_ochl(df[['open', 'close', 'high', 'low']])
     # fp.show()
 
-    print(len(quoted_symbols))
-    print('quoted symbols:')
-    for s in quoted_symbols:
-        print('...', s)
+

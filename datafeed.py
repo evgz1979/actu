@@ -9,6 +9,7 @@ from datetime import datetime
 
 quoted_symbols = []
 
+
 def get_candles(symbol_name: str, interval: str, dt_from: datetime, dt_to: datetime):
     print('>> get_candles(', symbol_name, ', ', interval, 'dt:', dt_from, ' -> ', dt_to, ')')
 
@@ -35,16 +36,21 @@ def get_quoted_symbols():
             quoted_symbols.append(symbol)
 
 
-# symbol1 = Symbol(name='BTC/USDT', exchange_name='kucoin', exchange_section='futures',
-#                  dt_analyzer_start_from=datetime.now(), dt_historical_start=datetime.now(),
-#                  quoted=True)
-# session.add(symbol1)
-# session.commit()
+quoted_symbol_0 = Symbol(name='BTC/USDT', exchange_name='kucoin', exchange_section='futures',
+                         dt_analyzer_start_from=datetime.now(), dt_historical_start=datetime.now(), quoted=True)
 
 print('>> datafeed init')
 get_quoted_symbols()
 
+if len(quoted_symbols) == 0:
+    with Session(engine) as session:
+        session.add(quoted_symbol_0)
+        session.commit()
+    get_quoted_symbols()
 
+print('quoted symbols:')
+for s in quoted_symbols:
+    print('...', s)
 
 # ----
 # --- это реализация с другой проги df = pd.DataFrame(r.json()['data']).astype({'timestamp':int, 'open':float, 'close':float, 'high':float, 'low':float}).set_index('timestamp')
