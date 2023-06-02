@@ -3,7 +3,7 @@
 from _old_download import *
 import finplot as fplt
 from binance.spot import Spot
-from settings import *
+from connector import *
 
 spot = Spot(key, secret)
 symbol = spot.exchange_info(symbol_name)
@@ -17,7 +17,7 @@ print('min=', df['low'].min())
 from _old_download import *
 import finplot as fplt
 from binance.spot import Spot
-from settings import *
+from connector import *
 
 spot = Spot(key, secret)
 symbol = spot.exchange_info(symbol_name)

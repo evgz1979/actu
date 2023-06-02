@@ -2,7 +2,7 @@ from datetime import datetime, date
 
 import requests
 
-from settings import *
+from connector import *
 from orm import *
 import pandas as pd
 import finplot as fplt

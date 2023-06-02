@@ -7,7 +7,6 @@ secret = "CjDOaNifYTCb7a2KmvGkAFtFOMKDy9dd3psflBzSlyek9rht0Xt1WRup37kxujtO"
 symbol_name_bi = 'BTCUSDT'
 symbol_name_ku = 'BTC/USDT' #{'spot': 'BTC/USDT', 'futures': 'BTC/USDT:USDT'}
 
-symbol_name = symbol_name_ku
 
 
 kus = ccxt.kucoin({

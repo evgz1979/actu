@@ -3,7 +3,7 @@
 from _old_download import *
 import finplot as fplt
 from binance.spot import Spot
-from settings import *
+from connector import *
 
 spot = Spot(key, secret)
 df = get_data(spot, symbol=symbol, start_time='2021-01-10', end_time='2022-05-25', interval='1d')
@@ -34,7 +34,7 @@ fplt.show()
 from _old_download import *
 import finplot as fplt
 from binance.spot import Spot
-from settings import *
+from connector import *
 
 spot = Spot(key, secret)
 df = get_data(spot, symbol=symbol, start_time='2022-04-10', end_time='2022-05-21', interval='1d')
