@@ -7,6 +7,7 @@ from connector import *
 from orm import *
 from datetime import datetime
 
+quoted_symbols = []
 
 def get_candles(symbol_name: str, interval: str, dt_from: datetime, dt_to: datetime):
     print('>> get_candles(', symbol_name, ', ', interval, 'dt:', dt_from, ' -> ', dt_to, ')')
@@ -27,19 +28,23 @@ def get_candles_old(s: str, interval):
 
 
 def get_quoted_symbols():
-    statement = select(Symbol).where(Symbol.quoted)
-    results = session.exec(statement)
-    return results
+    with Session(engine) as session:
+        statement = select(Symbol).where(Symbol.quoted)
+        results = session.exec(statement)
+        for symbol in results:
+            quoted_symbols.append(symbol)
 
+
+# symbol1 = Symbol(name='BTC/USDT', exchange_name='kucoin', exchange_section='futures',
+#                  dt_analyzer_start_from=datetime.now(), dt_historical_start=datetime.now(),
+#                  quoted=True)
+# session.add(symbol1)
+# session.commit()
 
 print('>> datafeed init')
-quoted_symbols = get_quoted_symbols()
-
-print('quoted symbols:')
-for s in quoted_symbols:
-    print('...', s)
+get_quoted_symbols()
 
 
 
-#----
+# ----
 # --- это реализация с другой проги df = pd.DataFrame(r.json()['data']).astype({'timestamp':int, 'open':float, 'close':float, 'high':float, 'low':float}).set_index('timestamp')

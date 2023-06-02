@@ -5,14 +5,15 @@ from sqlmodel import Field, Session, SQLModel, create_engine, select
 
 sqlite_url = f"sqlite:///db/01.db"
 engine = create_engine(sqlite_url, echo=False)
-session = Session(engine)
 
 
 class Symbol(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     exchange_name: str
-    dt_from: datetime
+    exchange_section: str
+    dt_analyzer_start_from: datetime
+    dt_historical_start: datetime
     quoted: bool
 
 
@@ -31,8 +32,5 @@ class Candle(SQLModel, table=True):
 print(">> orm init")
 SQLModel.metadata.create_all(engine)
 
-    # symbol1 = Symbol(name='eth', exchange_name='binance', dt_from=datetime.now(), quoted=False)
-    # session.add(symbol1)
-    # session.commit()
 
 
