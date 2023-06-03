@@ -25,7 +25,8 @@ def candles_to_df3(candles):  # temp function
         {'ts': int, 'open': float, 'high': float, 'low': float, 'close': float, 'volume': float})
     df.insert(1, 'dt', '')
     df['dt'] = df.apply(lambda x: timestamp2iso(x['ts'], format='%Y-%m-%d %H:%M:%S'), axis=1)
-    df.insert(1, 'interval', '1w')
+    df.insert(1, 'interval', '1d')
+    df.insert(1, 'symbol_id', 1)
     return df.set_index('ts')
 
 
