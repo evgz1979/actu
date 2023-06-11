@@ -10,15 +10,12 @@ quoted_symbol_0 = Symbol(name='BTC/USDT', exchange_name='kucoin', exchange_secti
                          dt_analyzer_start_from=datetime.now(), dt_historical_start=datetime.now(), quoted=True)
 
 
-def refresh(self):
-    print('refresh method ___')
-    print(self.name)
+def refresh_quoted_symbol(qs1: Symbol):
     with Session(engine) as session:
-        statement = select(Symbol)
-
+        statement = select(Symbol).where(Symbol.name == qs1.name)
         results = session.exec(statement)
-        for r in results:
-            print(r)
+        q = results.one()
+        print(q.candles)
 
 
 def get_quoted_symbols():
@@ -53,6 +50,8 @@ get_quoted_symbols()
 print('quoted symbols:')
 for qs in quoted_symbols:
     print('*', qs.name, '... please wait while quoted symbol refreshing candles data ...')
+    refresh_quoted_symbol(qs)
+
 
 
 # ----
