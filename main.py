@@ -4,6 +4,7 @@ import pandas as pd
 import mplfinance as mpf
 import finplot as fp
 
+
 print('>> actualiZator started')
 
 # get_candles(quoted_symbols[0].name, 'D')
