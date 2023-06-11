@@ -51,3 +51,13 @@ kuf.load_markets({'future': True})
 
 
 
+
+# get_candles(quoted_symbols[0].name, 'D')
+# df = candles_to_df3(get_candles_old(symbol_name_ku, '1d'))
+# df.to_sql('candle', con=engine, if_exists='append')
+# print(df)
+
+# print('max=', df['high'].max(), '; min=', df['low'].min())
+# fp.candlestick_ochl(df[['open', 'close', 'high', 'low']])
+# fp.show()
+
