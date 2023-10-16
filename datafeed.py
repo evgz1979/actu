@@ -25,6 +25,8 @@ def load_file(file_name: str):  # temp function
     df['ts'] = df['ts'].astype(int)
     # df.set_index('ts')
     df = df.set_index('ts')
+    df.insert(0, 'dn', 0)
+    df.insert(0, 'up', 0)
     return df
 
 
@@ -33,7 +35,7 @@ def refresh_quoted_symbol(qs1: Symbol):
         statement = select(Symbol).where(Symbol.name == qs1.name)
         results = session.exec(statement)
         q = results.one()
-        print(q.candles)
+        # print(q.candles)
 
 
 def get_quoted_symbols():
@@ -67,7 +69,7 @@ print('>> datafeed init')
 get_quoted_symbols()
 print('quoted symbols:')
 for qs in quoted_symbols:
-    print('*', qs.name, '... please wait while quoted symbol refreshing candles data ...')
+    print('*', qs.name)  # ,'... please wait while quoted symbol refreshing candles data ...')
     refresh_quoted_symbol(qs)
 
 

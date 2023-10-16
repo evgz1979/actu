@@ -6,9 +6,6 @@ import mplfinance as mpf
 import finplot as fp
 
 print('>> actualiZator started')
-
 df = load_file('db/rts01.csv')
-
-draw1(df)
-
+draw2(df)
 
