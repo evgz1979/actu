@@ -81,14 +81,14 @@ def draw1(df: DataFrame):
     _candle = df.iloc[0]
     candle = df.iloc[1]
     while i < df.shape[0] - 1:
-        # _candle = df.iloc[i-1]
-        # candle = df.iloc[i]
+        _candle = df.iloc[i-1]
+        candle = df.iloc[i]
         _i = i
         if inside_candle(_candle, candle):
             while inside_candle(_candle, candle):
                 i = i + 1
                 candle = df.iloc[i]
-                print('inside', i-1)
+                # print('inside', i-1)
         elif candle.high <= _candle.high:
             while candle.high <= _candle.high:
                 _candle = candle
@@ -115,7 +115,7 @@ def draw1(df: DataFrame):
             i = i + 1
 
 
-    print(df.head(10))
+    # print(df.head(10))
 
     _dt1 = dt1[0]
     _s1 = stream1[0]
