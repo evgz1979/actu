@@ -5,37 +5,26 @@ from typing import Optional, List
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
 
 
-class TCandle:
-    _orm: Candle
-
-
-class TInterval:
-    name: str
-    candles: List[TCandle]
-
-    def __init__(self, name):
-        self.name = name
-
-
 class TSymbol:
     name = ''
     figi = ''
 
-    _connector_name: ''
-    _orm: Symbol
+    connector: TConnector
+    _orm_symbol: Symbol
+    _orm_candle: Candle
     _related: ['TSymbol']
 
-    intervals = {}
+    candles = {}
 
-    def __init__(self, name, connector_name):
+    def __init__(self, name, connector):
         self.name = name
         self.figi = name
-        self._connector_name = connector_name
+        self.connector = connector
 
 
 class TDataFeeder:
     connectors = {}
-    symbols = [TSymbol]
+    symbols = []
     #  db = TDataBase
     quoted_by_orm = []
     _quoted_symbol_0 = Symbol
@@ -78,16 +67,12 @@ class TDataFeeder:
             connector.main()
 
         for symbol in self.symbols:
-            symbol.intervals['d1'] = TInterval('d1')
-            symbol.intervals['h1'] = TInterval('h1')
-            symbol.intervals['m5'] = TInterval('m5')
+            symbol.candles[TInterval.day1] = symbol.connector.get_candles(symbol.name, TInterval.day1)
+            symbol.candles[TInterval.hour1] = symbol.connector.get_candles(symbol.name, TInterval.hour1)
 
     def amain(self):  # data.amain() is not async !!! - async only connector.amain()
         for key, connector in self.connectors.items():
             asyncio.run(connector.amain())
-
-    def get_candles(self, symbol: TSymbol, intervals):  # -> TIntervals
-        pass
 
 
 def load_from_file(file_name: str):  # temp function --- >>> TCandles

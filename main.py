@@ -7,9 +7,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from connector_tinkoff import *
+from connector import *
 
 
-def draw01():
+def draw01(df):
     df['ema'] = ema_indicator(close=df['close'], window=9)
 
     print(df[['time', 'close', 'ema']].tail(5))
@@ -21,11 +22,11 @@ def draw01():
 if __name__ == "__main__":
     data = TDataFeeder()
     data.connectors['tink1'] = conn1 = TTinkoffConnector(token_tinkoff_all_readonly)
-    data.symbols.append(TSymbol('USD000UTSTOM', 'tink1'))
+    s1 = TSymbol('USD000UTSTOM', conn1)
+    data.symbols.append(s1)
     data.main()
 
-    df = conn1.get_candles()  # -> data.main()
-    draw01()  # -> drawer
+    draw01(s1.candles[TInterval.hour1])  # -> drawer
 
     data.amain()
 

@@ -53,23 +53,23 @@ class TTinkoffConnector(TMOEXConnector):
             ):
                 print(candle.time)
 
-    def get_candles_test01(self, client):
-        r = client.market_data.get_candles(
-            figi='USD000UTSTOM',
-            from_=datetime.utcnow() - timedelta(days=7),
-            to=datetime.utcnow(),
-            interval=CandleInterval.CANDLE_INTERVAL_HOUR  # см. utils.get_all_candles
-        )
-        return r.candles
+    def convert_interval(self, interval):
+        if interval == TInterval.day1: return CandleInterval.CANDLE_INTERVAL_DAY
+        elif interval == TInterval.hour1: return CandleInterval.CANDLE_INTERVAL_HOUR
+        elif interval == TInterval.min5: return CandleInterval.CANDLE_INTERVAL_5_MIN
 
-    def get_candles(self):  # пока без параметров, возвращает df
+    def get_candles(self, symbol_name, interval):
         try:
             with Client(self.TOKEN) as client:
-                candles = self.get_candles_test01(client)
+                r = client.market_data.get_candles(
+                    figi=symbol_name,
+                    from_=datetime.utcnow() - timedelta(days=7),
+                    to=datetime.utcnow(),
+                    interval=self.convert_interval(interval)
+                )
         except Exception as ex:
             logger.error(ex)
-
-        return create_df(candles)
+        return create_df(r.candles)
 
     async def task01(self, client):
         pass
