@@ -4,44 +4,90 @@ from datetime import datetime
 from typing import Optional, List
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
 
-quoted_symbol_00 = Symbol(name='BTC/USDT', exchange_name='kucoin', exchange_section='spot',
-                          dt_analyzer_start_from=datetime.now(), dt_historical_start=datetime.now(), quoted=True)
+
+class TCandle:
+    _orm: Candle
+
+
+class TInterval:
+    name: str
+    candles: List[TCandle]
+
+    def __init__(self, name):
+        self.name = name
+
+
+class TSymbol:
+    name = ''
+    figi = ''
+
+    _connector_name: ''
+    _orm: Symbol
+    _related: ['TSymbol']
+
+    intervals = {}
+
+    def __init__(self, name, connector_name):
+        self.name = name
+        self.figi = name
+        self._connector_name = connector_name
 
 
 class TDataFeeder:
-    connectors = []
+    connectors = {}
+    symbols = [TSymbol]
     #  db = TDataBase
-    quoted = []
-    quoted_symbol_0 = Symbol
+    quoted_by_orm = []
+    _quoted_symbol_0 = Symbol
 
-    def __init__(self, qs0):
-        self.quoted_symbol_0 = qs0
-        pass
+    def _print_0(self):  # temp
+        for qs11 in self.quoted_by_orm:
+            print('   * quoted symbol: ',
+                  qs11.name)  # ,'... please wait while quoted symbol refreshing candles data ...')
+            # refresh_quoted_symbol(qs)
 
-    def load_from_db(self):
+    def _load_from_db(self):
         with Session(engine) as session:
             statement = select(Symbol).where(Symbol.quoted)
 
             results = session.exec(statement)
 
             for symbol in results:  ### упростить и объеденить нижний блок такойжке
-                self.quoted.append(symbol)
+                self.quoted_by_orm.append(symbol)
 
-            if len(self.quoted) == 0:
+            if len(self.quoted_by_orm) == 0:
                 print('adding quoted_symbol_0')
-                session.add(self.quoted_symbol_0)
+                session.add(self._quoted_symbol_0)
                 session.commit()
 
                 results = session.exec(statement)
 
                 for symbol in results:
-                    self.quoted.append(symbol)
+                    self.quoted_by_orm.append(symbol)
 
-    def print_0(self):  # temp
-        for qs11 in self.quoted:
-            print('   * quoted symbol: ',
-                  qs11.name)  # ,'... please wait while quoted symbol refreshing candles data ...')
-            # refresh_quoted_symbol(qs)
+    def __init__(self):
+        # temp - quoted_symbol_0 - если нет котируемых символов нигде в базе, пока временно используем этот,
+        # позже сделать чтобы спрашивал из возможных вариантов
+        self._quoted_symbol_0 = Symbol(name='BTC/USDT', exchange_name='kucoin', exchange_section='spot',
+                                      dt_analyzer_start_from=datetime.now(), dt_historical_start=datetime.now(),
+                                      quoted=True)
+        self._load_from_db()
+
+    def main(self):
+        for key, connector in self.connectors.items():
+            connector.main()
+
+        for symbol in self.symbols:
+            symbol.intervals['d1'] = TInterval('d1')
+            symbol.intervals['h1'] = TInterval('h1')
+            symbol.intervals['m5'] = TInterval('m5')
+
+    def amain(self):  # data.amain() is not async !!! - async only connector.amain()
+        for key, connector in self.connectors.items():
+            asyncio.run(connector.amain())
+
+    def get_candles(self, symbol: TSymbol, intervals):  # -> TIntervals
+        pass
 
 
 def load_from_file(file_name: str):  # temp function --- >>> TCandles
@@ -62,3 +108,6 @@ def load_from_file(file_name: str):  # temp function --- >>> TCandles
     df.insert(0, 'dn', 0)
     df.insert(0, 'up', 0)
     return df
+
+
+

@@ -1,31 +1,31 @@
-# actualiZator, (c) jz
+# ACTUaliZator, (c) JZ
 
 from datafeed import *
-from drawer import *
-
-# ku = TKUCoinConnector()
-# tink = TTinkoffConnector()
-
-data = TDataFeeder(quoted_symbol_00)
-data.load_from_db()
-# data.print_0()
-
-qs1 = data.quoted[0]
-
-print(qs1.name)
+from ta.trend import ema_indicator
+from tinkoff.invest import Client, RequestError, CandleInterval
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+from connector_tinkoff import *
 
 
-candles1 = data.quoted[0].get_candles('1d')
+def draw01():
+    df['ema'] = ema_indicator(close=df['close'], window=9)
 
-# for candle in candles1:
-#     print(candle.open)
-
-
-# df = load_from_file('db/rts01.csv')
-# draw1(df)
-
+    print(df[['time', 'close', 'ema']].tail(5))
+    ax = df.plot(x='time', y='close')
+    df.plot(ax=ax, x='time', y='ema')
+    plt.show()
 
 
+if __name__ == "__main__":
+    data = TDataFeeder()
+    data.connectors['tink1'] = conn1 = TTinkoffConnector(token_tinkoff_all_readonly)
+    data.symbols.append(TSymbol('USD000UTSTOM', 'tink1'))
+    data.main()
 
+    df = conn1.get_candles()  # -> data.main()
+    draw01()  # -> drawer
 
+    data.amain()
 

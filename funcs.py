@@ -1,5 +1,19 @@
 import datetime
+import logging
+
 import pytz
+
+logging.basicConfig(format="%(asctime)s %(levelname)s:%(message)s", level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def cast_money(v):
+    """
+    https://tinkoff.github.io/investAPI/faq_custom_types/
+    :param v:
+    :return:
+    """
+    return v.units + v.nano / 1e9  # nano - 9 нулей
 
 
 def timestamp2iso(timestamp,format='%Y-%m-%dT%H:%M:%S.%fZ'):

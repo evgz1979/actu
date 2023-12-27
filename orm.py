@@ -47,29 +47,5 @@ class Candle(SQLModel, table=True):
     symbol: Optional[Symbol] = Relationship(back_populates="candles")
 
 
-class TCandle:
-    _orm: Candle
-
-
-class TInterval:
-    name: str
-    candles: List[TCandle]
-
-    def __init__(self, name):
-        self.name = name
-
-
-class TSymbol:
-    _orm: Symbol
-    d1: TInterval
-    h1: TInterval
-    h2: TInterval
-
-    def __init__(self):
-        self.d1 = TInterval('d1')
-        self.h1 = TInterval('h1')
-        self.h2 = TInterval('h2')
-
-
 # print(">> orm init")
 SQLModel.metadata.create_all(engine)
