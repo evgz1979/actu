@@ -1,3 +1,5 @@
+from tinkoff.invest.services import *
+
 from connector import *
 import asyncio
 from datetime import timedelta
@@ -11,6 +13,7 @@ from tinkoff.invest import CandleInterval, Client, HistoricCandle, AsyncClient
 from tinkoff.invest.utils import now
 from settings import *
 from orm import *
+from tinkoff.invest.utils import now
 
 
 def create_df(candles: [HistoricCandle]):  # -> tink_connector.py
@@ -26,46 +29,98 @@ def create_df(candles: [HistoricCandle]):  # -> tink_connector.py
     return df
 
 
-class TTinkoffConnector(TMOEXConnector):
+def get_instrument_by_asset(asset, instruments):
+    futures = list(
+        filter(lambda item: item.basic_asset == asset and now() < item.last_trade_date, instruments))
+    futures.sort(key=lambda item: item.last_trade_date)
+    return futures
+
+
+def convert_interval(interval):
+    if interval == Interval.day1: return CandleInterval.CANDLE_INTERVAL_DAY
+    elif interval == Interval.hour1: return CandleInterval.CANDLE_INTERVAL_HOUR
+    elif interval == Interval.min5: return CandleInterval.CANDLE_INTERVAL_5_MIN
+
+
+class TTinkoffAbstractConnector(TMOEXConnector):
     account_id = 0
     TOKEN = ''
+    APPNAME = 'ACTUaliZator 0.1 by JZ'
 
     def __init__(self, token):
-        logger.info(">> Tinkoff connector init")
-
         self.TOKEN = token
 
         with Client(self.TOKEN) as client:
             r = client.users.get_accounts()
             self.account_id = r.accounts[0].id
 
+    def main(self):
+        pass
+
+    async def amain(self):
+        pass
+
+
+class TTinkoffHistoryConnector(TTinkoffAbstractConnector):
+    def __init__(self, token):
+        super().__init__(token)
+        logger.info(">> Tinkoff history connector init")
+
+
+class TTinkoffConnector(TTinkoffAbstractConnector):
+    def __init__(self, token):
+        super().__init__(token)
+        logger.info(">> Tinkoff connector init")
+
+    def get_by_asset(self, name, alias, figi, future):
+        param = [  # вызывается для списка, но здесь 1 элемент
+            {"name": name, "alias": alias, "figi": figi, "future": future}
+        ]
+
+        with Client(self.TOKEN) as client:
+            r = client.instruments.futures()
+            logger.info("quoted symbols ...")
+
+            for instrument in param:  # -> gui
+                asset = instrument["alias"] if "alias" in instrument else instrument["name"]
+                futures = get_instrument_by_asset(asset, r.instruments)
+                print(f"{instrument['name']}:")
+
+            for future in futures:
+                print(f"name=[{future.name}], ticker=[{future.ticker}], figi=[{future.figi}]")
+
     def show_settings(self):
         logger.info("account id = " + self.account_id)
 
-    def get_test01(self):
-        with Client(token_tinkoff_all_readonly) as client:
-            settings = MarketDataCacheSettings(base_cache_dir=Path("market_data_cache"))
-            market_data_cache = MarketDataCache(settings=settings, services=client)
-            for candle in market_data_cache.get_all_candles(
-                    figi="BBG004730N88",
-                    from_=now() - timedelta(days=3),
-                    interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
-            ):
-                print(candle.time)
-
-    def convert_interval(self, interval):
-        if interval == TInterval.day1: return CandleInterval.CANDLE_INTERVAL_DAY
-        elif interval == TInterval.hour1: return CandleInterval.CANDLE_INTERVAL_HOUR
-        elif interval == TInterval.min5: return CandleInterval.CANDLE_INTERVAL_5_MIN
-
     def get_candles(self, symbol_name, interval):
+        try:
+            logger.info("start getting candles, symbol="+symbol_name+", Interval="+str(interval)+"...")
+
+            if interval == Interval.day1:  # for Interval.day1 need absolutely all candles
+                from_2 = now() - timedelta(days=10)
+            else: from_2 = now() - timedelta(days=5)  # по каждому интервалу индивидуально
+
+            with Client(self.TOKEN) as client:
+                settings = MarketDataCacheSettings(base_cache_dir=Path("market_data_cache"))
+                market_data_cache = MarketDataCache(settings=settings, services=client)
+                for candle in market_data_cache.get_all_candles(
+                        figi=symbol_name,
+                        from_=from_2,
+                        interval=convert_interval(interval),
+                ):
+                    print(candle.time)
+            logger.info("...success")
+        except Exception as ex:
+            logger.error(ex)
+
+    def _get_candles_old(self, symbol_name, interval):
         try:
             with Client(self.TOKEN) as client:
                 r = client.market_data.get_candles(
                     figi=symbol_name,
                     from_=datetime.utcnow() - timedelta(days=7),
                     to=datetime.utcnow(),
-                    interval=self.convert_interval(interval)
+                    interval=convert_interval(interval)
                 )
         except Exception as ex:
             logger.error(ex)
@@ -78,9 +133,11 @@ class TTinkoffConnector(TMOEXConnector):
         pass
 
     def main(self):
+        super().main()
         self.show_settings()  # -> gui
 
     async def amain(self):
+        await super().amain()
         try:
             async with AsyncClient(self.TOKEN) as client:
                 tasks = [asyncio.ensure_future(self.task01(client)),

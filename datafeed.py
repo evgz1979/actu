@@ -9,6 +9,8 @@ class TSymbol:
     name = ''
     figi = ''
 
+    quoted = False
+
     connector: TConnector
     _orm_symbol: Symbol
     _orm_candle: Candle
@@ -22,9 +24,30 @@ class TSymbol:
         self.connector = connector
 
 
+class TMetaSymbol:
+    name = ''
+    alias = ''
+    figi = ''
+    future = ''
+    description = ''
+    symbols = []
+    connector: TConnector
+
+    def __init__(self, name, alias, figi, future, connector):
+        self.name = name
+        self.alias = alias
+        self.figi = figi
+        self.future = future
+        self.connector = connector
+
+        self.connector.get_by_asset(name, alias, figi, future)
+
+
 class TDataFeeder:
     connectors = {}
     symbols = []
+    meta_symbols = []
+
     #  db = TDataBase
     quoted_by_orm = []
     _quoted_symbol_0 = Symbol
@@ -63,12 +86,16 @@ class TDataFeeder:
         self._load_from_db()
 
     def main(self):
+        logger.info("connectors starting ...")
         for key, connector in self.connectors.items():
             connector.main()
 
+        logger.info("getting candles ...")
         for symbol in self.symbols:
-            symbol.candles[TInterval.day1] = symbol.connector.get_candles(symbol.name, TInterval.day1)
-            symbol.candles[TInterval.hour1] = symbol.connector.get_candles(symbol.name, TInterval.hour1)
+            logger.info("... for symbol = " + symbol.name)
+            if symbol.quoted:
+                symbol.candles[Interval.day1] = symbol.connector.get_candles(symbol.name, Interval.day1)
+            # symbol.candles[Interval.hour1] = symbol.connector.get_candles(symbol.name, Interval.hour1)
 
     def amain(self):  # data.amain() is not async !!! - async only connector.amain()
         for key, connector in self.connectors.items():

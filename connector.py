@@ -22,8 +22,10 @@ symbol_name_bi = 'BTCUSDT'
 symbol_name_ku = 'BTC/USDT'  # {'spot': 'BTC/USDT', 'futures': 'BTC/USDT:USDT'}
 
 
-class TInterval:
+class Interval:
     day1 = 1
+    week1 = 2
+    month1 = 3
     hour1 = 10
     min5 = 100
 
@@ -34,6 +36,9 @@ class TCandle:
 
 class TConnector:
     def get_candles(self, symbol_name, interval):
+        pass
+
+    def get_by_asset(self, name, alias, figi, future):
         pass
 
 
