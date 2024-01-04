@@ -7,6 +7,7 @@ from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, sele
 
 class TSymbol:
     name = ''
+    ticker = ''
     figi = ''
 
     quoted = False
@@ -27,20 +28,16 @@ class TSymbol:
 class TMetaSymbol:
     name = ''
     alias = ''
-    figi = ''
-    future = ''
-    description = ''
+    # figi = ''
+    # future = ''
+    # description = ''
     symbols = []
+
     connector: TConnector
 
-    def __init__(self, name, alias, figi, future, connector):
-        self.name = name
+    def __init__(self, alias, connector):
         self.alias = alias
-        self.figi = figi
-        self.future = future
         self.connector = connector
-
-        self.connector.get_by_asset(name, alias, figi, future)
 
 
 class TDataFeeder:
@@ -81,14 +78,24 @@ class TDataFeeder:
         # temp - quoted_symbol_0 - если нет котируемых символов нигде в базе, пока временно используем этот,
         # позже сделать чтобы спрашивал из возможных вариантов
         self._quoted_symbol_0 = Symbol(name='BTC/USDT', exchange_name='kucoin', exchange_section='spot',
-                                      dt_analyzer_start_from=datetime.now(), dt_historical_start=datetime.now(),
-                                      quoted=True)
+                                       dt_analyzer_start_from=datetime.now(), dt_historical_start=datetime.now(),
+                                       quoted=True)
         self._load_from_db()
 
     def main(self):
         logger.info("connectors starting ...")
         for key, connector in self.connectors.items():
             connector.main()
+
+        logger.info("meta symbols init ...")
+        for ms in self.meta_symbols:
+            logger.info("... meta symbol: " + ms.alias + ' ...')
+
+            futures = ms.connector.get_by_asset(ms.alias)
+            for future in futures:
+                print(f"name=[{future.name}], ticker=[{future.ticker}], figi=[{future.figi}]")
+
+            # TO-DO: futures -> TSymbol[symbols]
 
         logger.info("getting candles ...")
         for symbol in self.symbols:
@@ -120,6 +127,3 @@ def load_from_file(file_name: str):  # temp function --- >>> TCandles
     df.insert(0, 'dn', 0)
     df.insert(0, 'up', 0)
     return df
-
-
-

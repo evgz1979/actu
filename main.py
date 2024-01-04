@@ -24,7 +24,8 @@ if __name__ == "__main__":
     data.connectors['tink'] = c_tink = TTinkoffConnector(token_tinkoff_all_readonly)
     # data.connectors['tink-h'] = c_tink_h = TTinkoffHistoryConnector(token_tinkoff_all_readonly)
 
-    ms1 = TMetaSymbol('USD000UTSTOM', 'USD/RUB', 'BBG0013HGFT4', 'BBG00VHGV1J0', c_tink)
+    # ms1 = TMetaSymbol('USD000UTSTOM', 'USD/RUB', 'BBG0013HGFT4', 'BBG00VHGV1J0', c_tink)
+    ms1 = TMetaSymbol('USD/RUB', c_tink)
     data.meta_symbols.append(ms1)
     data.main()
 

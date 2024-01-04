@@ -38,9 +38,8 @@ class TConnector:
     def get_candles(self, symbol_name, interval):
         pass
 
-    def get_by_asset(self, name, alias, figi, future):
+    def get_by_asset(self, alias):
         pass
-
 
 class TPoligonIOConnector(TConnector):
     pass

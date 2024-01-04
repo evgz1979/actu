@@ -72,22 +72,12 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
         super().__init__(token)
         logger.info(">> Tinkoff connector init")
 
-    def get_by_asset(self, name, alias, figi, future):
-        param = [  # вызывается для списка, но здесь 1 элемент
-            {"name": name, "alias": alias, "figi": figi, "future": future}
-        ]
+    def get_by_asset(self, alias):
 
         with Client(self.TOKEN) as client:
             r = client.instruments.futures()
-            logger.info("quoted symbols ...")
 
-            for instrument in param:  # -> gui
-                asset = instrument["alias"] if "alias" in instrument else instrument["name"]
-                futures = get_instrument_by_asset(asset, r.instruments)
-                print(f"{instrument['name']}:")
-
-            for future in futures:
-                print(f"name=[{future.name}], ticker=[{future.ticker}], figi=[{future.figi}]")
+        return get_instrument_by_asset(alias, r.instruments)
 
     def show_settings(self):
         logger.info("account id = " + self.account_id)
