@@ -11,18 +11,22 @@ class TSymbol:
     figi = ''
 
     quoted = False
+    future = False
+    spot = False
 
     connector: TConnector
     _orm_symbol: Symbol
     _orm_candle: Candle
-    _related: ['TSymbol']
 
     candles = {}
 
-    def __init__(self, name, connector):
+    def __init__(self, name, ticker, figi, connector, **kwargs):
         self.name = name
-        self.figi = name
+        self.ticker = ticker
+        self.figi = figi
         self.connector = connector
+        self.future = kwargs.get('future', False)
+        self.spot = kwargs.get('spot', False)
 
 
 class TMetaSymbol:
@@ -31,13 +35,27 @@ class TMetaSymbol:
     # figi = ''
     # future = ''
     # description = ''
+
     symbols = []
+    current_future: TSymbol
+    current_spot: TSymbol
 
     connector: TConnector
 
-    def __init__(self, alias, connector):
+    def __init__(self, name, alias, connector):
+        self.name = name
         self.alias = alias
         self.connector = connector
+
+    def main(self):
+        # logger.info("getting candles ...")
+        for symbol in self.symbols:
+            print(f"name=[{symbol.name}], ticker=[{symbol.ticker}], figi=[{symbol.figi}], future={symbol.future}")
+
+            # logger.info("... for symbol = " + symbol.name)
+            if symbol.quoted:
+                symbol.candles[Interval.day1] = symbol.connector.get_candles(symbol.name, Interval.day1)
+            # symbol.candles[Interval.hour1] = symbol.connector.get_candles(symbol.name, Interval.hour1)
 
 
 class TDataFeeder:
@@ -91,18 +109,23 @@ class TDataFeeder:
         for ms in self.meta_symbols:
             logger.info("... meta symbol: " + ms.alias + ' ...')
 
-            futures = ms.connector.get_by_asset(ms.alias)
+            futures = ms.connector.get_futures(ms.alias)
             for future in futures:
-                print(f"name=[{future.name}], ticker=[{future.ticker}], figi=[{future.figi}]")
+                ms.symbols.append(TSymbol(future.name, future.ticker, future.figi, ms.connector, future=True))
+            if len(futures) > 0:
+                ms.current_future = futures[0]
+                logger.info('current future = ' + ms.current_future.ticker)
 
-            # TO-DO: futures -> TSymbol[symbols]
+            spots = ms.connector.get_spot(ms.name)
+            for spot in spots:
+                ms.symbols.append(TSymbol(spot.name, spot.ticker, spot.figi, ms.connector, spot=True))
+            if len(spots) > 0:
+                ms.current_spot = spots[0]
+                logger.info('current spot = ' + ms.current_spot.ticker)
 
-        logger.info("getting candles ...")
-        for symbol in self.symbols:
-            logger.info("... for symbol = " + symbol.name)
-            if symbol.quoted:
-                symbol.candles[Interval.day1] = symbol.connector.get_candles(symbol.name, Interval.day1)
-            # symbol.candles[Interval.hour1] = symbol.connector.get_candles(symbol.name, Interval.hour1)
+            ms.main()
+
+        self.amain()
 
     def amain(self):  # data.amain() is not async !!! - async only connector.amain()
         for key, connector in self.connectors.items():

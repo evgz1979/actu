@@ -29,13 +29,6 @@ def create_df(candles: [HistoricCandle]):  # -> tink_connector.py
     return df
 
 
-def get_instrument_by_asset(asset, instruments):
-    futures = list(
-        filter(lambda item: item.basic_asset == asset and now() < item.last_trade_date, instruments))
-    futures.sort(key=lambda item: item.last_trade_date)
-    return futures
-
-
 def convert_interval(interval):
     if interval == Interval.day1: return CandleInterval.CANDLE_INTERVAL_DAY
     elif interval == Interval.hour1: return CandleInterval.CANDLE_INTERVAL_HOUR
@@ -72,12 +65,26 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
         super().__init__(token)
         logger.info(">> Tinkoff connector init")
 
-    def get_by_asset(self, alias):
+    def get_futures(self, alias):
 
         with Client(self.TOKEN) as client:
-            r = client.instruments.futures()
+            r1 = client.instruments.futures()
 
-        return get_instrument_by_asset(alias, r.instruments)
+        futures = list(
+            filter(lambda item: item.basic_asset == alias and now() < item.last_trade_date, r1.instruments))
+        futures.sort(key=lambda item: item.last_trade_date)
+
+        return futures
+
+    def get_spot(self, name):
+
+        with Client(self.TOKEN) as client:
+            r1 = client.instruments.find_instrument(query=name)
+
+        spot = list(r1.instruments)
+        spot.sort(key=lambda item: item.name)
+
+        return spot
 
     def show_settings(self):
         logger.info("account id = " + self.account_id)

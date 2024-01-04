@@ -41,6 +41,7 @@ class TConnector:
     def get_by_asset(self, alias):
         pass
 
+
 class TPoligonIOConnector(TConnector):
     pass
 

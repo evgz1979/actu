@@ -22,11 +22,7 @@ def draw01(df):
 if __name__ == "__main__":
     data = TDataFeeder()
     data.connectors['tink'] = c_tink = TTinkoffConnector(token_tinkoff_all_readonly)
-    # data.connectors['tink-h'] = c_tink_h = TTinkoffHistoryConnector(token_tinkoff_all_readonly)
-
-    # ms1 = TMetaSymbol('USD000UTSTOM', 'USD/RUB', 'BBG0013HGFT4', 'BBG00VHGV1J0', c_tink)
-    ms1 = TMetaSymbol('USD/RUB', c_tink)
-    data.meta_symbols.append(ms1)
+    data.meta_symbols.append(TMetaSymbol('USD000UTSTOM', 'USD/RUB', c_tink))
     data.main()
 
     # draw01(s1.candles[TInterval.hour1])  # -> drawer
@@ -34,5 +30,5 @@ if __name__ == "__main__":
     # print(s1.candles[Interval.day1].head(5))
     # print(s1.candles[TInterval.hour1])
 
-    data.amain()
+
 
