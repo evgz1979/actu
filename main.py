@@ -1,5 +1,6 @@
 # ACTUaliZator, (c) JZ
 
+from trader import *
 from datafeed import *
 from ta.trend import ema_indicator
 from tinkoff.invest import Client, RequestError, CandleInterval
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from connector_tinkoff import *
 from connector import *
+import configparser
 
 
 def draw01(df):
@@ -20,15 +22,22 @@ def draw01(df):
 
 
 if __name__ == "__main__":
+
     data = TDataFeeder()
-    data.connectors['tink'] = c_tink = TTinkoffConnector(token_tinkoff_all_readonly)
-    data.meta_symbols.append(TMetaSymbol('USD000UTSTOM', 'USD/RUB', c_tink))
-    data.main()
+    c_tink = TTinkoffConnector(data.config)
+    data.connectors.append(c_tink)
+    data.meta_symbols.append(TMetaSymbol('USD/RUB', c_tink, data.config))
+
+    data.main()  # -> robot.main ?
+
+    jz = JZTrader(data)
 
     # draw01(s1.candles[TInterval.hour1])  # -> drawer
 
     # print(s1.candles[Interval.day1].head(5))
     # print(s1.candles[TInterval.hour1])
 
-
-
+# [API]
+# token=
+# app_name=
+# account=

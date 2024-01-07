@@ -3,6 +3,7 @@ from orm import *
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
+import configparser
 
 
 class TSymbol:
@@ -27,6 +28,7 @@ class TSymbol:
         self.connector = connector
         self.future = kwargs.get('future', False)
         self.spot = kwargs.get('spot', False)
+        self.quoted = kwargs.get('quoted', False)
 
 
 class TMetaSymbol:
@@ -41,25 +43,31 @@ class TMetaSymbol:
     current_spot: TSymbol
 
     connector: TConnector
+    config: configparser.ConfigParser
 
-    def __init__(self, name, alias, connector):
-        self.name = name
-        self.alias = alias
+    def __init__(self, alias, connector, config):
         self.connector = connector
+        self.config = config
+
+        self.alias = alias
+        self.name = config.get(alias, 'name')
 
     def main(self):
         # logger.info("getting candles ...")
         for symbol in self.symbols:
-            print(f"name=[{symbol.name}], ticker=[{symbol.ticker}], figi=[{symbol.figi}], future={symbol.future}")
+            # if symbol.quoted:
+            print(f"name=[{symbol.name}], ticker=[{symbol.ticker}], figi=[{symbol.figi}], future={symbol.future}, "
+                  f"quoted={symbol.quoted}")
 
-            # logger.info("... for symbol = " + symbol.name)
             if symbol.quoted:
+                logger.info("... for symbol = " + symbol.name)
                 symbol.candles[Interval.day1] = symbol.connector.get_candles(symbol.name, Interval.day1)
-            # symbol.candles[Interval.hour1] = symbol.connector.get_candles(symbol.name, Interval.hour1)
+                # symbol.candles[Interval.hour1] = symbol.connector.get_candles(symbol.name, Interval.hour1)
 
 
 class TDataFeeder:
-    connectors = {}
+    config: configparser.ConfigParser
+    connectors = []
     symbols = []
     meta_symbols = []
 
@@ -100,9 +108,14 @@ class TDataFeeder:
                                        quoted=True)
         self._load_from_db()
 
+        self.config = configparser.ConfigParser()
+        self.config.read('cfg/settings.ini')
+
     def main(self):
         logger.info("connectors starting ...")
-        for key, connector in self.connectors.items():
+
+        # for key, connector in self.connectors.items():
+        for connector in self.connectors:
             connector.main()
 
         logger.info("meta symbols init ...")
@@ -113,22 +126,29 @@ class TDataFeeder:
             for future in futures:
                 ms.symbols.append(TSymbol(future.name, future.ticker, future.figi, ms.connector, future=True))
             if len(futures) > 0:
-                ms.current_future = futures[0]
+                ms.current_future = ms.symbols[0]  # futures[0]
+                ms.current_future.quoted = True
                 logger.info('current future = ' + ms.current_future.ticker)
 
+            s1 = None
             spots = ms.connector.get_spot(ms.name)
             for spot in spots:
-                ms.symbols.append(TSymbol(spot.name, spot.ticker, spot.figi, ms.connector, spot=True))
-            if len(spots) > 0:
-                ms.current_spot = spots[0]
-                logger.info('current spot = ' + ms.current_spot.ticker)
+                s = TSymbol(spot.name, spot.ticker, spot.figi, ms.connector, spot=True)
+                if s1 is None:
+                    s1 = s
+                    s.quoted = True
+                    ms.current_spot = s
+                    logger.info('current spot = ' + ms.current_spot.ticker)
+
+                ms.symbols.append(s)
 
             ms.main()
 
+        logger.info("starting async data.amain() ...")
         self.amain()
 
     def amain(self):  # data.amain() is not async !!! - async only connector.amain()
-        for key, connector in self.connectors.items():
+        for connector in self.connectors:
             asyncio.run(connector.amain())
 
 
@@ -150,3 +170,17 @@ def load_from_file(file_name: str):  # temp function --- >>> TCandles
     df.insert(0, 'dn', 0)
     df.insert(0, 'up', 0)
     return df
+
+    # config = configparser.ConfigParser()  # -> data
+    #
+    # config.add_section('CONNECTOR: TINKOFF')
+    # config.set('CONNECTOR: TINKOFF', 'token',
+    #            '')
+    # config.set('CONNECTOR: TINKOFF', 'app_name',
+    #            'ACTUaliZator 0.1 by JZ')
+    #
+    # with open('cfg/settings.ini', 'w') as config_file:
+    #     config.write(config_file)
+    #
+    # config.read('cfg/settings.ini')
+    # print(config.get('SYMBOLS', 'meta_symbols')

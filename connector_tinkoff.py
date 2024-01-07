@@ -14,6 +14,7 @@ from tinkoff.invest.utils import now
 from settings import *
 from orm import *
 from tinkoff.invest.utils import now
+import configparser
 
 
 def create_df(candles: [HistoricCandle]):  # -> tink_connector.py
@@ -36,14 +37,16 @@ def convert_interval(interval):
 
 
 class TTinkoffAbstractConnector(TMOEXConnector):
+    config: configparser.ConfigParser
     account_id = 0
-    TOKEN = ''
-    APPNAME = 'ACTUaliZator 0.1 by JZ'
+    token = ''
+    app_name = ''
 
-    def __init__(self, token):
-        self.TOKEN = token
+    def __init__(self, config):
+        self.token = config.get('CONNECTOR: TINKOFF', 'token')
+        self.app_name = config.get('CONNECTOR: TINKOFF', 'app_name')
 
-        with Client(self.TOKEN) as client:
+        with Client(self.token) as client:
             r = client.users.get_accounts()
             self.account_id = r.accounts[0].id
 
@@ -67,7 +70,7 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
 
     def get_futures(self, alias):
 
-        with Client(self.TOKEN) as client:
+        with Client(self.token) as client:
             r1 = client.instruments.futures()
 
         futures = list(
@@ -78,7 +81,7 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
 
     def get_spot(self, name):
 
-        with Client(self.TOKEN) as client:
+        with Client(self.token) as client:
             r1 = client.instruments.find_instrument(query=name)
 
         spot = list(r1.instruments)
@@ -97,7 +100,7 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
                 from_2 = now() - timedelta(days=10)
             else: from_2 = now() - timedelta(days=5)  # по каждому интервалу индивидуально
 
-            with Client(self.TOKEN) as client:
+            with Client(self.token) as client:
                 settings = MarketDataCacheSettings(base_cache_dir=Path("market_data_cache"))
                 market_data_cache = MarketDataCache(settings=settings, services=client)
                 for candle in market_data_cache.get_all_candles(
@@ -112,7 +115,7 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
 
     def _get_candles_old(self, symbol_name, interval):
         try:
-            with Client(self.TOKEN) as client:
+            with Client(self.token) as client:
                 r = client.market_data.get_candles(
                     figi=symbol_name,
                     from_=datetime.utcnow() - timedelta(days=7),
@@ -136,7 +139,7 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
     async def amain(self):
         await super().amain()
         try:
-            async with AsyncClient(self.TOKEN) as client:
+            async with AsyncClient(self.token) as client:
                 tasks = [asyncio.ensure_future(self.task01(client)),
                          asyncio.ensure_future(self.task02(client))]
                 await asyncio.wait(tasks)
