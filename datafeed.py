@@ -68,9 +68,16 @@ class TMetaSymbol:
         #     self.current_spot.connector.get_candles(self.current_spot.figi, Interval.day1)
         # print(self.current_spot.candles_day1)
 
-        # ---worked---
+        # print(self.config.get('META: '+self.alias, 'from_day'))
+
+        nn = now()
+        from22 = datetime.strptime(self.config.get('META: ' + self.alias, 'from_day'), '%Y-%m-%d').astimezone(nn.tzinfo)
+        print(from22)
+
         self.current_spot.candles.day1 = \
-            self.current_spot.connector.get_candles(self.current_spot.figi, Interval.day1)
+            self.current_spot.connector.get_candles(
+                self.current_spot.figi, Interval.day1, from22, now())
+
         print(self.current_spot.candles.day1)
 
         # symbol.candles[Interval.day1] = symbol.connector.get_candles(symbol.figi, Interval.day1)

@@ -53,7 +53,7 @@ class TCandle:
 
 
 class TConnector:
-    def get_candles(self, symbol_name, interval):
+    def get_candles(self, symbol_name, interval, from2, to2):
         pass
 
     def get_by_asset(self, alias):

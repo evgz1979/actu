@@ -26,3 +26,5 @@ if __name__ == "__main__":
 
     draw3(ms1.current_spot.candles.day1)
 
+
+
