@@ -31,9 +31,12 @@ def create_df(candles: [HistoricCandle]):  # -> tink_connector.py
 
 
 def convert_interval(interval):
-    if interval == Interval.day1: return CandleInterval.CANDLE_INTERVAL_DAY
-    elif interval == Interval.hour1: return CandleInterval.CANDLE_INTERVAL_HOUR
-    elif interval == Interval.min5: return CandleInterval.CANDLE_INTERVAL_5_MIN
+    if interval == Interval.day1:
+        return CandleInterval.CANDLE_INTERVAL_DAY
+    elif interval == Interval.hour1:
+        return CandleInterval.CANDLE_INTERVAL_HOUR
+    elif interval == Interval.min5:
+        return CandleInterval.CANDLE_INTERVAL_5_MIN
 
 
 class TTinkoffAbstractConnector(TMOEXConnector):
@@ -92,24 +95,78 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
     def show_settings(self):
         logger.info("account id = " + self.account_id)
 
-    def get_candles(self, symbol_name, interval):
+    def get_candles_2(self, figi, interval):
+
         try:
-            logger.info("start getting candles, symbol="+symbol_name+", Interval="+str(interval)+"...")
+            logger.info("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "...")
 
             if interval == Interval.day1:  # for Interval.day1 need absolutely all candles
-                from_2 = now() - timedelta(days=10)
-            else: from_2 = now() - timedelta(days=5)  # по каждому интервалу индивидуально
+                from_2 = now() - timedelta(days=100)
+            else:
+                from_2 = now() - timedelta(days=10)  # по каждому интервалу индивидуально
 
             with Client(self.token) as client:
                 settings = MarketDataCacheSettings(base_cache_dir=Path("market_data_cache"))
                 market_data_cache = MarketDataCache(settings=settings, services=client)
+
+                r = []
+
                 for candle in market_data_cache.get_all_candles(
-                        figi=symbol_name,
+                        figi=figi,
                         from_=from_2,
-                        interval=convert_interval(interval),
+                        interval=convert_interval(interval)
                 ):
-                    print(candle.time)
+                    r.append(TCandle(candle.time, cast_money(candle.open),
+                                     cast_money(candle.high), cast_money(candle.low),
+                                     cast_money(candle.close), cast_money(candle.volume), candle.is_complete))
+
             logger.info("...success")
+            return r
+
+        except Exception as ex:
+            logger.error(ex)
+
+    def get_candles(self, figi, interval):
+
+        try:
+            logger.info("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "...")
+
+            if interval == Interval.day1:  # for Interval.day1 need absolutely all candles
+                from_2 = now() - timedelta(days=100)
+            else:
+                from_2 = now() - timedelta(days=10)  # по каждому интервалу индивидуально
+
+            with Client(self.token) as client:
+                settings = MarketDataCacheSettings(base_cache_dir=Path("market_data_cache"))
+                market_data_cache = MarketDataCache(settings=settings, services=client)
+
+                # for candle in market_data_cache.get_all_candles(
+                #         figi=figi,
+                #         from_=from_2,
+                #         interval=convert_interval(interval)
+                # ):
+                #     print(candle.time)
+
+                df = DataFrame(
+                    [
+                        {
+                            'ts': c.time.timestamp(),
+                            'open': cast_money(c.open),
+                            'close': cast_money(c.close),
+                            'high': cast_money(c.high),
+                            'low': cast_money(c.low),
+                            'volume': c.volume,
+                            'dt': c.time
+                        } for c in market_data_cache.get_all_candles(
+                            figi=figi,
+                            from_=from_2,
+                            interval=convert_interval(interval))
+                    ]
+                )
+
+            logger.info("...success")
+            return df.set_index('ts')
+
         except Exception as ex:
             logger.error(ex)
 
@@ -145,4 +202,3 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
                 await asyncio.wait(tasks)
         except Exception as ex:
             logger.error(ex)
-

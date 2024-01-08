@@ -6,29 +6,37 @@ from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, sele
 import configparser
 
 
+class TCandles(List):
+    day1: DataFrame
+    hour1: DataFrame
+    min5: DataFrame
+
+
 class TSymbol:
     name = ''
     ticker = ''
     figi = ''
 
     quoted = False
-    future = False
-    spot = False
+    is_future = False
+    is_spot = False
 
     connector: TConnector
     _orm_symbol: Symbol
     _orm_candle: Candle
 
-    candles = {}
+    candles: TCandles  # so far so
 
     def __init__(self, name, ticker, figi, connector, **kwargs):
         self.name = name
         self.ticker = ticker
         self.figi = figi
         self.connector = connector
-        self.future = kwargs.get('future', False)
-        self.spot = kwargs.get('spot', False)
+        self.is_future = kwargs.get('future', False)
+        self.is_spot = kwargs.get('spot', False)
         self.quoted = kwargs.get('quoted', False)
+
+        self.candles = TCandles()
 
 
 class TMetaSymbol:
@@ -50,19 +58,25 @@ class TMetaSymbol:
         self.config = config
 
         self.alias = alias
-        self.name = config.get(alias, 'name')
+        self.name = config.get('META: ' + alias, 'name')
 
     def main(self):
-        # logger.info("getting candles ...")
         for symbol in self.symbols:
-            # if symbol.quoted:
-            print(f"name=[{symbol.name}], ticker=[{symbol.ticker}], figi=[{symbol.figi}], future={symbol.future}, "
-                  f"quoted={symbol.quoted}")
+            logger.info(f"name={symbol.name}, ticker={symbol.ticker}, figi={symbol.figi}, quoted={symbol.quoted}")
 
-            if symbol.quoted:
-                logger.info("... for symbol = " + symbol.name)
-                symbol.candles[Interval.day1] = symbol.connector.get_candles(symbol.name, Interval.day1)
-                # symbol.candles[Interval.hour1] = symbol.connector.get_candles(symbol.name, Interval.hour1)
+        # self.current_spot.candles_day1 = \
+        #     self.current_spot.connector.get_candles(self.current_spot.figi, Interval.day1)
+        # print(self.current_spot.candles_day1)
+
+        # ---worked---
+        self.current_spot.candles.day1 = \
+            self.current_spot.connector.get_candles(self.current_spot.figi, Interval.day1)
+        print(self.current_spot.candles.day1)
+
+        # symbol.candles[Interval.day1] = symbol.connector.get_candles(symbol.figi, Interval.day1)
+        # df = symbol.connector.get_candles(symbol.figi, Interval.day1)
+        # print(df)
+        # symbol.candles[Interval.hour1] = symbol.connector.get_candles(symbol.name, Interval.hour1)
 
 
 class TDataFeeder:

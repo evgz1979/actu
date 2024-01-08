@@ -8,10 +8,6 @@ class Trader:
         self.data = data
 
 
-class VolkTrader(Trader):
-    pass
-
-
 class JZTrader(Trader):
     pass
 

@@ -4,6 +4,11 @@ import pandas as pd
 from pandas import DataFrame
 
 
+def draw3(df: DataFrame):
+    fp.candlestick_ochl(df[['open', 'close', 'high', 'low']])
+    fp.show()
+
+
 def draw2(df: DataFrame):
     fp.background = '#cfc'
     fp.candle_bull_color = '#6c9'

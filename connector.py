@@ -31,7 +31,25 @@ class Interval:
 
 
 class TCandle:
-    pass
+    ts: int
+    dt: datetime
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+    is_complete: bool
+
+    def __init__(self, ts: int, dt: datetime, open: float, high: float, low: float, close: float, volume: float,
+                 is_complete: bool):
+        self.ts = ts
+        self.dt = dt
+        self.open = open
+        self.high = high
+        self.low = low
+        self.close = close
+        self.volume = volume
+        self.is_complete = is_complete
 
 
 class TConnector:

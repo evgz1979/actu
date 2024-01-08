@@ -1,5 +1,6 @@
 # ACTUaliZator, (c) JZ
 
+from drawer import *
 from trader import *
 from datafeed import *
 from ta.trend import ema_indicator
@@ -12,32 +13,16 @@ from connector import *
 import configparser
 
 
-def draw01(df):
-    df['ema'] = ema_indicator(close=df['close'], window=9)
-
-    # print(df[['time', 'close', 'ema']].tail(5))
-    ax = df.plot(x='time', y='close')
-    df.plot(ax=ax, x='time', y='ema')
-    plt.show()
-
-
 if __name__ == "__main__":
 
     data = TDataFeeder()
     c_tink = TTinkoffConnector(data.config)
     data.connectors.append(c_tink)
-    data.meta_symbols.append(TMetaSymbol('USD/RUB', c_tink, data.config))
+    ms1 = TMetaSymbol('USD/RUB', c_tink, data.config)
+    data.meta_symbols.append(ms1)
 
-    data.main()  # -> robot.main ?
+    trader = JZTrader(data)
+    data.main()  # -> robot.main(data, trader, drawer) ?
 
-    jz = JZTrader(data)
+    draw3(ms1.current_spot.candles.day1)
 
-    # draw01(s1.candles[TInterval.hour1])  # -> drawer
-
-    # print(s1.candles[Interval.day1].head(5))
-    # print(s1.candles[TInterval.hour1])
-
-# [API]
-# token=
-# app_name=
-# account=
