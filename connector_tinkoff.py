@@ -37,6 +37,8 @@ def convert_interval(interval):
         return CandleInterval.CANDLE_INTERVAL_HOUR
     elif interval == Interval.min5:
         return CandleInterval.CANDLE_INTERVAL_5_MIN
+    elif interval == Interval.week1:
+        return CandleInterval.CANDLE_INTERVAL_WEEK
 
 
 class TTinkoffAbstractConnector(TMOEXConnector):

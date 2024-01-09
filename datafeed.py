@@ -5,85 +5,9 @@ from typing import Optional, List
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
 import configparser
 
+from system import TAnalysisSystem
+from symbols import *
 
-class TCandles(List):
-    day1: DataFrame
-    hour1: DataFrame
-    min5: DataFrame
-
-
-class TSymbol:
-    name = ''
-    ticker = ''
-    figi = ''
-
-    quoted = False
-    is_future = False
-    is_spot = False
-
-    connector: TConnector
-    _orm_symbol: Symbol
-    _orm_candle: Candle
-
-    candles: TCandles  # so far so
-
-    def __init__(self, name, ticker, figi, connector, **kwargs):
-        self.name = name
-        self.ticker = ticker
-        self.figi = figi
-        self.connector = connector
-        self.is_future = kwargs.get('future', False)
-        self.is_spot = kwargs.get('spot', False)
-        self.quoted = kwargs.get('quoted', False)
-
-        self.candles = TCandles()
-
-
-class TMetaSymbol:
-    name = ''
-    alias = ''
-    # figi = ''
-    # future = ''
-    # description = ''
-
-    symbols = []
-    current_future: TSymbol
-    current_spot: TSymbol
-
-    connector: TConnector
-    config: configparser.ConfigParser
-
-    def __init__(self, alias, connector, config):
-        self.connector = connector
-        self.config = config
-
-        self.alias = alias
-        self.name = config.get('META: ' + alias, 'name')
-
-    def main(self):
-        for symbol in self.symbols:
-            logger.info(f"name={symbol.name}, ticker={symbol.ticker}, figi={symbol.figi}, quoted={symbol.quoted}")
-
-        # self.current_spot.candles_day1 = \
-        #     self.current_spot.connector.get_candles(self.current_spot.figi, Interval.day1)
-        # print(self.current_spot.candles_day1)
-
-        # print(self.config.get('META: '+self.alias, 'from_day'))
-
-        nn = now()
-        from22 = datetime.strptime(self.config.get('META: ' + self.alias, 'from_day'), '%Y-%m-%d').astimezone(nn.tzinfo)
-        print(from22)
-
-        self.current_spot.candles.day1 = \
-            self.current_spot.connector.get_candles(
-                self.current_spot.figi, Interval.day1, from22, now())
-
-        print(self.current_spot.candles.day1)
-
-        # symbol.candles[Interval.day1] = symbol.connector.get_candles(symbol.figi, Interval.day1)
-        # df = symbol.connector.get_candles(symbol.figi, Interval.day1)
-        # print(df)
-        # symbol.candles[Interval.hour1] = symbol.connector.get_candles(symbol.name, Interval.hour1)
 
 
 class TDataFeeder:
@@ -91,6 +15,7 @@ class TDataFeeder:
     connectors = []
     symbols = []
     meta_symbols = []
+    system: TAnalysisSystem = None
 
     #  db = TDataBase
     quoted_by_orm = []
@@ -132,7 +57,9 @@ class TDataFeeder:
         self.config = configparser.ConfigParser()
         self.config.read('cfg/settings.ini')
 
-    def main(self):
+    def main(self, system: TAnalysisSystem = None):
+        self.system = system
+
         logger.info("connectors starting ...")
 
         # for key, connector in self.connectors.items():
@@ -143,14 +70,6 @@ class TDataFeeder:
         for ms in self.meta_symbols:
             logger.info("... meta symbol: " + ms.alias + ' ...')
 
-            futures = ms.connector.get_futures(ms.alias)
-            for future in futures:
-                ms.symbols.append(TSymbol(future.name, future.ticker, future.figi, ms.connector, future=True))
-            if len(futures) > 0:
-                ms.current_future = ms.symbols[0]  # futures[0]
-                ms.current_future.quoted = True
-                logger.info('current future = ' + ms.current_future.ticker)
-
             s1 = None
             spots = ms.connector.get_spot(ms.name)
             for spot in spots:
@@ -158,10 +77,18 @@ class TDataFeeder:
                 if s1 is None:
                     s1 = s
                     s.quoted = True
-                    ms.current_spot = s
-                    logger.info('current spot = ' + ms.current_spot.ticker)
+                    ms.spot_T0 = s
+                    logger.info('current spot = ' + ms.spot_T0.ticker)
 
                 ms.symbols.append(s)
+
+            futures = ms.connector.get_futures(ms.alias)
+            for future in futures:
+                ms.symbols.append(TSymbol(future.name, future.ticker, future.figi, ms.connector, future=True))
+            if len(futures) > 0:
+                ms.future_current = ms.symbols[0]  # futures[0]
+                ms.future_current.quoted = True
+                logger.info('current future = ' + ms.future_current.ticker)
 
             ms.main()
 

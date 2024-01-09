@@ -60,6 +60,10 @@ class TConnector:
         pass
 
 
+class YFinanceConnector(TConnector):
+    pass
+
+
 class TPoligonIOConnector(TConnector):
     pass
 
