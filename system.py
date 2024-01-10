@@ -1,16 +1,17 @@
-class TMethod:
-    pass
+from symbols import *
 
 
-class TTendency(TMethod):
+class TAnalysisMethod:
     pass
 
 
 class TAnalysisSystem:
-    pass
+    ms: TMetaSymbol
+    methods: [TAnalysisMethod]
+
+    def __init__(self, ms: TMetaSymbol):
+        self.ms = ms
 
 
-class TVolkSystem(TAnalysisSystem):
-    methods: [TMethod]
-
+class TMetaSystem:
     pass

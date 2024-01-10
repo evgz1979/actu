@@ -18,7 +18,7 @@ if __name__ == "__main__":
     data.meta_symbols.append(ms1)
     trader = JZTrader(data)
 
-    data.main(TVolkSystem())  # -> robot.main(data, system, trader, drawer) -- later !
+    data.main(TVolkSystem(ms1))  # -> robot.main(data, system, trader, drawer) -- later !
 
     draw3(ms1.spot_T0.candles.day1)
 

@@ -9,7 +9,6 @@ from system import TAnalysisSystem
 from symbols import *
 
 
-
 class TDataFeeder:
     config: configparser.ConfigParser
     connectors = []
