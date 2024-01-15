@@ -3,13 +3,19 @@ from orm import *
 from datetime import datetime
 from typing import Optional, List
 import configparser
+from candles import *
 
 
-class TCandles(List):
-    week1: DataFrame
-    day1: DataFrame
-    hour1: DataFrame
-    min5: DataFrame
+class TCandles(DataFrame):
+    # переопредлить init --- сразу выставлять названия слобцов и индекс
+    pass
+
+
+class TCandlesCollection:
+    week1: TCandles
+    day1: TCandles
+    hour1: TCandles
+    min5: TCandles
 
 
 class TSymbol:
@@ -25,7 +31,7 @@ class TSymbol:
     _orm_symbol: Symbol
     _orm_candle: Candle
 
-    candles: TCandles  # so far so
+    candles: TCandlesCollection  # so far so
 
     def __init__(self, name, ticker, figi, connector, **kwargs):
         self.name = name

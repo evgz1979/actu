@@ -20,36 +20,7 @@ from orm import *
 # secret = "CjDOaNifYTCb7a2KmvGkAFtFOMKDy9dd3psflBzSlyek9rht0Xt1WRup37kxujtO"
 symbol_name_bi = 'BTCUSDT'
 symbol_name_ku = 'BTC/USDT'  # {'spot': 'BTC/USDT', 'futures': 'BTC/USDT:USDT'}
-
-
-class Interval:
-    day1 = 1
-    week1 = 2
-    month1 = 3
-    hour1 = 10
-    min5 = 100
-
-
-class TCandle:
-    ts: int
-    dt: datetime
-    open: float
-    high: float
-    low: float
-    close: float
-    volume: float
-    is_complete: bool
-
-    def __init__(self, ts: int, dt: datetime, open: float, high: float, low: float, close: float, volume: float,
-                 is_complete: bool):
-        self.ts = ts
-        self.dt = dt
-        self.open = open
-        self.high = high
-        self.low = low
-        self.close = close
-        self.volume = volume
-        self.is_complete = is_complete
+from candles import *
 
 
 class TConnector:

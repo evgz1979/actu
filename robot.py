@@ -9,7 +9,12 @@ from system import TAnalysisSystem
 from symbols import *
 
 
+class TDataFeeder:
+    pass
+
+
 class TRobot:
+    data: TDataFeeder
     config: configparser.ConfigParser
     connectors = []
     symbols = []
@@ -91,10 +96,15 @@ class TRobot:
 
             ms.main()
 
+        if self.system: self.system.main()
+
         logger.info("starting async data.amain() ...")
         self.amain()
 
-    def amain(self):  # data.amain() is not async !!! - async only connector.amain()
+    def amain(self):  # data.amain() is not async !!! - async only connector.amain() and system.amain()
+
+        # if self.system: self.system.amain()
+
         for connector in self.connectors:
             asyncio.run(connector.amain())
 
