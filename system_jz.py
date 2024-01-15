@@ -14,5 +14,9 @@ class TBalanceRelationsMethod(TAnalysisMethod):
     pass
 
 
+class TBreakingThroughMethod(TAnalysisMethod):  # пробитие в обратную сторону
+    pass
+
+
 class TJZSystem(TAnalysisSystem):
     pass

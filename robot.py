@@ -9,7 +9,7 @@ from system import TAnalysisSystem
 from symbols import *
 
 
-class TDataFeeder:
+class TRobot:
     config: configparser.ConfigParser
     connectors = []
     symbols = []

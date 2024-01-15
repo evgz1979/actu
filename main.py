@@ -1,9 +1,9 @@
 # ACTUaliZator, (c) JZ
 
 from drawer import *
-from system import *
+from system_volk import *
 from trader import *
-from datafeed import *
+from robot import *
 from connector_tinkoff import *
 # import yfinance as yf
 # import finplot as fplt
@@ -11,14 +11,15 @@ from connector_tinkoff import *
 
 if __name__ == "__main__":
 
-    data = TDataFeeder()
-    c_tink = TTinkoffConnector(data.config)
-    data.connectors.append(c_tink)
-    ms1 = TMetaSymbol('USD/RUB', c_tink, data.config)
-    data.meta_symbols.append(ms1)
-    trader = JZTrader(data)
+    robot = TRobot()
+    c_tink = TTinkoffConnector(robot.config)
+    robot.connectors.append(c_tink)
+    ms1 = TMetaSymbol('USD/RUB', c_tink, robot.config)
+    robot.meta_symbols.append(ms1)
+    trader = JZTrader(robot)
 
-    data.main(TVolkSystem(ms1))  # -> robot.main(data, system, trader, drawer) -- later !
+    # DataFeeder -> Robot а внутри робота - дата фидер (выделить в отдельный модуль, работает с базой и файлами)
+    robot.main(TVolkSystem(ms1))  # -> robot.main(data, system, trader, drawer) -- later !
 
     draw3(ms1.spot_T0.candles.day1)
 

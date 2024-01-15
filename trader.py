@@ -1,8 +1,8 @@
-from datafeed import *
+from robot import *
 
 
 class Trader:
-    data: TDataFeeder
+    data: TRobot
 
     def __init__(self, data):
         self.data = data
