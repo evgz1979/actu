@@ -153,6 +153,7 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
                 df = DataFrame(
                     [
                         {
+                            'index': c.time.timestamp(),
                             'ts': c.time.timestamp(),
                             'open': cast_money(c.open),
                             'close': cast_money(c.close),
@@ -168,7 +169,7 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
                 )
 
             logger.info("...success")
-            return df.set_index('ts')
+            return df.set_index('index')
 
         except Exception as ex:
             logger.error(ex)
@@ -184,7 +185,7 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
                 )
         except Exception as ex:
             logger.error(ex)
-        return create_df(r.candles)
+        return create_df(r.data)
 
     async def task01(self, client):
         pass

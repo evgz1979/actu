@@ -6,18 +6,6 @@ import configparser
 from candles import *
 
 
-class TCandles(DataFrame):
-    # переопредлить init --- сразу выставлять названия слобцов и индекс
-    pass
-
-
-class TCandlesCollection:
-    week1: TCandles
-    day1: TCandles
-    hour1: TCandles
-    min5: TCandles
-
-
 class TSymbol:
     name = ''
     ticker = ''
@@ -31,6 +19,7 @@ class TSymbol:
     _orm_symbol: Symbol
     _orm_candle: Candle
 
+    data: TCandlesData  # so far so
     candles: TCandlesCollection  # so far so
 
     def __init__(self, name, ticker, figi, connector, **kwargs):
@@ -42,7 +31,26 @@ class TSymbol:
         self.is_spot = kwargs.get('spot', False)
         self.quoted = kwargs.get('quoted', False)
 
-        self.candles = TCandles()
+        self.data = TCandlesData()
+        self.candles = TCandlesCollection()
+
+    def refresh(self):
+
+        # for day1 interval
+        self.candles.day1.clear()
+        i = 0
+        while i < self.data.day1.shape[0]:
+            d = self.data.day1.iloc[i]
+            # print(d)
+
+            c = TCandle(
+                d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True
+            )
+
+            self.candles.day1.append(c)
+            # print(c.dt, c.ts)
+
+            i = i+1
 
 
 class TMetaSymbol:
@@ -76,7 +84,7 @@ class TMetaSymbol:
         from22 = datetime.strptime(
             self.config.get('META: ' + self.alias, 'from_day_current_situation'), '%Y-%m-%d').astimezone(now().tzinfo)
 
-        self.spot_T0.candles.day1 = \
+        self.spot_T0.data.day1 = \
             self.spot_T0.connector.get_candles(self.spot_T0.figi, Interval.day1, from22, now())
 
         # self.spot_T0.candles.week1 = \

@@ -20,7 +20,8 @@ if __name__ == "__main__":
 
     robot.main(TVolkSystem(ms1))  # -> robot.main(data, system, trader, drawer) -- later !
 
-    draw3(ms1.spot_T0.candles.day1)  # -> robot
+    # print(ms1.spot_T0.data.day1)
+    draw3(ms1.spot_T0.data.day1)  # -> robot
 
 
 # data = [(instrument, yf.download(instrument, '2020-10-01')) for instrument in ('AAPL','GOOG','TSLA')]
