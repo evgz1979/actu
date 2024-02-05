@@ -20,8 +20,11 @@ if __name__ == "__main__":
 
     robot.main(TVolkSystem(ms1))  # -> robot.main(data, system, trader, drawer) -- later !
 
-    # print(ms1.spot_T0.data.day1)
-    draw3(ms1.spot_T0.data.day1)  # -> robot
+    drawer = TDrawer()
+    drawer.append(ms1.spot_T0.name+':day1', ms1.spot_T0.data.day1)
+    drawer.show()
+
+    robot.amain()  # start async part of app
 
 
 # data = [(instrument, yf.download(instrument, '2020-10-01')) for instrument in ('AAPL','GOOG','TSLA')]

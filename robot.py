@@ -99,7 +99,7 @@ class TRobot:
         if self.system: self.system.main()
 
         logger.info("starting async data.amain() ...")
-        self.amain()
+        # self.amain()
 
     def amain(self):  # data.amain() is not async !!! - async only connector.amain() and system.amain()
 

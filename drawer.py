@@ -4,11 +4,19 @@ import pandas as pd
 from pandas import DataFrame
 
 
-def draw3(df: DataFrame):
-    fp.candle_bull_color = '#6c9'
-    fp.candle_bull_body_color = '#6c9'
-    fp.candlestick_ochl(df[['open', 'close', 'high', 'low']])
-    fp.show()
+class TDrawer:
+    ax = {}
+
+    def __init__(self):
+        fp.candle_bull_color = '#6c9'
+        fp.candle_bull_body_color = '#6c9'
+
+    def append(self, name, df: DataFrame):
+        self.ax[name] = fp.candlestick_ochl(df[['open', 'close', 'high', 'low']])
+
+    @staticmethod
+    def show():
+        fp.show()
 
 
 def draw2(df: DataFrame):

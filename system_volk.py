@@ -24,6 +24,11 @@ class TStreamMethod(TVolkMethod):
         logger.info(">> Volk system -- Stream Method start")
 
 
+class TOpenForMethod(TVolkMethod):
+    description = ['открытие под продавца/покупателя']
+    pass
+
+
 class TTendencyMethod(TVolkMethod):
 
     def calc(self, candles: TCandleData):
