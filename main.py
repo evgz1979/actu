@@ -12,16 +12,18 @@ from connector_tinkoff import *
 if __name__ == "__main__":
 
     robot = TRobot()
+    drawer = TDrawer()
     c_tink = TTinkoffConnector(robot.config)
     robot.connectors.append(c_tink)
     ms1 = TMetaSymbol('USD/RUB', c_tink, robot.config)
     robot.meta_symbols.append(ms1)
-    trader = JZTrader(robot)
+    trader = JZTrader()
+    volk = TVolkSystem(ms1, drawer)
 
-    robot.main(TVolkSystem(ms1))  # -> robot.main(data, system, trader, drawer) -- later !
+    robot.main(volk, drawer)  # -> robot.main(data, system, trader, drawer) -- later !
 
-    drawer = TDrawer()
     drawer.append(ms1.spot_T0.name+':day1', ms1.spot_T0.data.day1)
+    volk.draw()
     drawer.show()
 
     robot.amain()  # start async part of app

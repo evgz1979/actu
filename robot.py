@@ -1,4 +1,6 @@
 from connector import *
+from drawer import *
+from trader import *
 from orm import *
 from datetime import datetime
 from typing import Optional, List
@@ -20,6 +22,7 @@ class TRobot:
     symbols = []
     meta_symbols = []
     system: TAnalysisSystem = None
+    drawer: TDrawer = None
 
     #  db = TDataBase
     quoted_by_orm = []
@@ -61,8 +64,9 @@ class TRobot:
         self.config = configparser.ConfigParser()
         self.config.read('cfg/settings.ini')
 
-    def main(self, system: TAnalysisSystem = None):
+    def main(self, system, drawer):
         self.system = system
+        self.drawer = drawer
 
         logger.info("connectors starting ...")
 

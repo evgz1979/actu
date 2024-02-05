@@ -53,40 +53,45 @@ class T2Candle:
     pushdown: False
 
 
-class TLimits:
+class TLimit:
+    # todo: list of candles for Limits ? or included from candle0 to candle1 ?
+    candle0: TCandle
+    candle1: TCandle
+    value: float
+
     body = False
     wick = False
     up = False
     dn = False
     close_open = False
 
-    # to-do: list of candles for Limits ? or included from candle0 to candle1 ?
-    candle0: TCandle
-    candle1: TCandle
-
-    def set_up(self, candle0, candle1: TCandle):
+    def __init__(self, candle0, candle1: TCandle):
         self.candle0 = candle0
         self.candle1 = candle1
+
+    def set_up(self, value):
+        self.value = value
         self.wick = True
         self.up = True
 
-    def set_dn(self, candle0, candle1: TCandle):
-        self.candle0 = candle0
-        self.candle1 = candle1
+    def set_dn(self, value):
+        self.value = value
         self.wick = True
         self.dn = True
 
-    def set_up_body(self, candle0, candle1: TCandle):
-        self.candle0 = candle0
-        self.candle1 = candle1
+    def set_up_body(self, value):
+        self.value = value
         self.body = True
         self.up = True
 
-    def set_dn_body(self, candle0, candle1: TCandle):
-        self.candle0 = candle0
-        self.candle1 = candle1
+    def set_dn_body(self, value):
+        self.value = value
         self.body = True
         self.dn = True
+
+
+class TLimits(list[TLimit]):
+    pass
 
 
 class TCandleData(DataFrame):

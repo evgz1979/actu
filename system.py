@@ -1,16 +1,16 @@
+from drawer import TDrawer
 from symbols import *
 
 
 class TAnalysisMethod:
     ms: TMetaSymbol
+    candles: TCandlesList = None
+    drawer: TDrawer
 
     def __init__(self, ms: TMetaSymbol):
         self.ms = ms
 
-    def main(self):
-        pass
-
-    def calc(self, candles: TCandlesList):
+    def calc(self):
         pass
 
     def draw(self):
@@ -20,17 +20,20 @@ class TAnalysisMethod:
 class TAnalysisSystem:
     ms: TMetaSymbol
     methods = []
+    drawer: TDrawer
 
-    def __init__(self, ms: TMetaSymbol):
+    def __init__(self, ms: TMetaSymbol, drawer: TDrawer):
         self.ms = ms
+        self.drawer = drawer
 
     def main(self):
         for m in self.methods:
-            m.main()
+            m.calc()
 
     def draw(self):
         for m in self.methods:
-            m.main()
+            m.drawer = self.drawer
+            m.draw()
 
     async def amain(self):
         pass
