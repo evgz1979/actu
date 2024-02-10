@@ -19,7 +19,7 @@ class TSymbol:
     _orm_symbol: Symbol
     _orm_candle: Candle
 
-    data: TCandlesData  # so far so
+    data: TCandlesCollectionData  # so far so
     candles: TCandlesCollection  # so far so
 
     def __init__(self, name, ticker, figi, connector, **kwargs):
@@ -31,7 +31,7 @@ class TSymbol:
         self.is_spot = kwargs.get('spot', False)
         self.quoted = kwargs.get('quoted', False)
 
-        self.data = TCandlesData()
+        self.data = TCandlesCollectionData()
         self.candles = TCandlesCollection()
 
     def refresh(self):
@@ -51,6 +51,12 @@ class TSymbol:
             # print(c.dt, c.ts)
 
             i = i+1
+
+        self.candles.max_all_high = self.data.day1['high'].max()
+        self.candles.min_all_low = self.data.day1['low'].min()
+
+        # print(self.candles.max_all_high)
+        # print(self.candles.min_all_low)
 
 
 class TMetaSymbol:

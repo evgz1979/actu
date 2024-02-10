@@ -23,9 +23,14 @@ class TCandle:
     body_max: float
     body_min: float
 
-    flat: False
-    bullish: False
-    bearish: False
+    flat: bool
+    bullish: bool
+    bearish: bool
+
+    for_buyer: bool
+    for_seller: bool
+    uptake: bool
+    pushdown: bool
 
     def __init__(self, ts: int, dt: datetime, _open: float, high: float, low: float, close: float, volume: float,
                  is_complete: bool):
@@ -45,72 +50,83 @@ class TCandle:
         self.bullish = close > _open
         self.bearish = _open > close
 
+        self.for_buyer = False
+        self.for_seller = False
+        self.uptake = False
+        self.pushdown = False
 
-class T2Candle:
-    for_buyer: False
-    for_seller: False
-    uptake: False
-    pushdown: False
+
+class TMoney:
+    candle0: TCandle
+    candle1: TCandle
+
+    up = False
+    dn = False
+    gap: False
+    maker: False
+
+    def __init__(self, candle0, candle1: TCandle, up=False, dn=False, gap=False, maker=False):
+        self.candle0 = candle0
+        self.candle1 = candle1
+
+        self.up = up
+        self.dn = dn
+        self.gap = gap
+        self.maker = maker
 
 
 class TLimit:
-    # todo: list of candles for Limits ? or included from candle0 to candle1 ?
     candle0: TCandle
     candle1: TCandle
-    value: float
 
+    value: float
     body = False
     wick = False
     up = False
     dn = False
-    close_open = False
+    co = False  # close_open
 
-    def __init__(self, candle0, candle1: TCandle):
+    def __init__(self, candle0, candle1: TCandle, value, body=False, wick=False, up=False, dn=False, co=False):
         self.candle0 = candle0
         self.candle1 = candle1
-
-    def set_up(self, value):
         self.value = value
-        self.wick = True
-        self.up = True
 
-    def set_dn(self, value):
-        self.value = value
-        self.wick = True
-        self.dn = True
-
-    def set_up_body(self, value):
-        self.value = value
-        self.body = True
-        self.up = True
-
-    def set_dn_body(self, value):
-        self.value = value
-        self.body = True
-        self.dn = True
+        self.body = body
+        self.wick = wick
+        self.up = up
+        self.dn = dn
+        self.co = co
 
 
 class TLimits(list[TLimit]):
     pass
 
 
-class TCandleData(DataFrame):
+class TMoneys(list[TMoney]):
     pass
 
 
-class TCandlesList(list):
+class TCandlesData(DataFrame):
+    pass
+
+
+class TCandlesList(list[TCandle]):
     limits: TLimits
+    moneys: TMoneys
+    max_all_high: float
+    min_all_low: float
 
     def __init__(self):
         super().__init__()
         self.limits = TLimits()
+        self.moneys = TMoneys()
 
 
-class TCandlesData:
-    week1: TCandleData
-    day1: TCandleData
-    hour1: TCandleData
-    min5: TCandleData
+class TCandlesCollectionData:
+    week1: TCandlesData
+    day1: TCandlesData
+    hour1: TCandlesData
+    min5: TCandlesData
 
     interval = {}  # other intervals and links to std-intervals
 

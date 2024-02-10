@@ -21,8 +21,8 @@ class TRobot:
     connectors = []
     symbols = []
     meta_symbols = []
-    system: TAnalysisSystem = None
-    drawer: TDrawer = None
+    # system: TAnalysisSystem = None
+    # drawer: TDrawer = None
 
     #  db = TDataBase
     quoted_by_orm = []
@@ -64,9 +64,9 @@ class TRobot:
         self.config = configparser.ConfigParser()
         self.config.read('cfg/settings.ini')
 
-    def main(self, system, drawer):
-        self.system = system
-        self.drawer = drawer
+    def main(self):  #, system, drawer):
+        # self.system = system
+        #self.drawer = drawer
 
         logger.info("connectors starting ...")
 
@@ -100,9 +100,9 @@ class TRobot:
 
             ms.main()
 
-        if self.system: self.system.main()
+        # if self.system: self.system.main()
 
-        logger.info("starting async data.amain() ...")
+        # logger.info("starting async data.amain() ...")
         # self.amain()
 
     def amain(self):  # data.amain() is not async !!! - async only connector.amain() and system.amain()

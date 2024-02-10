@@ -9,17 +9,30 @@ class TDrawer:
         fp.candle_bull_color = '#6c9'
         fp.candle_bull_body_color = '#6c9'
 
-    def append(self, name, df: DataFrame):
+    def add_candles(self, name, title, df: DataFrame):
         self.ax[name] = fp.candlestick_ochl(df[['open', 'close', 'high', 'low']])
 
     @staticmethod
     def add_limit(ts0, ts1, value):
-        fp.add_line((ts0, value), (ts1, value), color='#FF00FF', width=2)
+        fp.add_line((ts0, value), (ts1, value), color='#FF00FF', width=3)
 
     @staticmethod
     def show():
+        # fp.autoviewrestore()  # todo ?
         fp.show()
 
+# data = [(instrument, yf.download(instrument, '2020-10-01')) for instrument in ('AAPL','GOOG','TSLA')]
+#
+# for i,(instrument_a,dfa) in enumerate(data):
+#
+#     for instrument_b,dfb in data[i+1:]:
+#
+#         ax = fplt.create_plot(instrument_a+' vs. '+instrument_b+' (green/brown)', maximize=False)
+#         dfa['Open Close High Low'.split()].plot(kind='candle', ax=ax)
+#         pb = dfb['Open Close High Low'.split()].plot(kind='candle', ax=ax.overlay(scale=1.0))
+#         pb.colors['bull_body'] = '#0f0'
+#         pb.colors['bear_body'] = '#630'
+# fplt.show()
 
 
 #

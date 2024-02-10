@@ -26,6 +26,10 @@ class TProfileVolumeStructureMethod(TJZMethod):
     pass
 
 
+class TOpenInterest:
+    pass
+
+
 class TBalanceRelationsMethod(TJZMethod):
     pass
 
