@@ -35,10 +35,9 @@ class TAnalysisSystem:
             m.calc()
 
     def draw(self):
-        pass
-        # for m in self.methods:
-        #     m.drawer = self.drawer
-        #     m.draw()
+        for m in self.methods:
+            m.drawer = self.drawer
+            m.draw()
 
     async def amain(self):
         pass

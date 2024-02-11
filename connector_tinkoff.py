@@ -101,37 +101,6 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
     def show_settings(self):
         logger.info("account id = " + self.account_id)
 
-    def get_candles_2(self, figi, interval):
-
-        try:
-            logger.info("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "...")
-
-            if interval == Interval.day1:  # for Interval.day1 need absolutely all candles
-                from_2 = now() - timedelta(days=100)
-            else:
-                from_2 = now() - timedelta(days=10)  # по каждому интервалу индивидуально
-
-            with Client(self.token) as client:
-                settings = MarketDataCacheSettings(base_cache_dir=Path("market_data_cache"))
-                market_data_cache = MarketDataCache(settings=settings, services=client)
-
-                r = []
-
-                for candle in market_data_cache.get_all_candles(
-                        figi=figi,
-                        from_=from_2,
-                        interval=convert_interval(interval)
-                ):
-                    r.append(TCandle(candle.time, cast_money(candle.open),
-                                     cast_money(candle.high), cast_money(candle.low),
-                                     cast_money(candle.close), cast_money(candle.volume), candle.is_complete))
-
-            logger.info("...success")
-            return r
-
-        except Exception as ex:
-            logger.error(ex)
-
     def get_candles(self, figi, interval, from2, to2):
 
         try:
@@ -210,3 +179,35 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
                 await asyncio.wait(tasks)
         except Exception as ex:
             logger.error(ex)
+
+
+    # def get_candles_2(self, figi, interval):
+    #
+    #     try:
+    #         logger.info("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "...")
+    #
+    #         if interval == Interval.day1:  # for Interval.day1 need absolutely all candles
+    #             from_2 = now() - timedelta(days=100)
+    #         else:
+    #             from_2 = now() - timedelta(days=10)  # по каждому интервалу индивидуально
+    #
+    #         with Client(self.token) as client:
+    #             settings = MarketDataCacheSettings(base_cache_dir=Path("market_data_cache"))
+    #             market_data_cache = MarketDataCache(settings=settings, services=client)
+    #
+    #             r = []
+    #
+    #             for candle in market_data_cache.get_all_candles(
+    #                     figi=figi,
+    #                     from_=from_2,
+    #                     interval=convert_interval(interval)
+    #             ):
+    #                 r.append(TCandle(candle.time, cast_money(candle.open),
+    #                                  cast_money(candle.high), cast_money(candle.low),
+    #                                  cast_money(candle.close), cast_money(candle.volume), candle.is_complete))
+    #
+    #         logger.info("...success")
+    #         return r
+    #
+    #     except Exception as ex:
+    #         logger.error(ex)

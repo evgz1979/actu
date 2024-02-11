@@ -1,3 +1,13 @@
+# class PenStyle(int):
+#     NoPen = ...  # type: Qt.PenStyle
+#     SolidLine = ...  # type: Qt.PenStyle
+#     DashLine = ...  # type: Qt.PenStyle
+#     DotLine = ...  # type: Qt.PenStyle
+#     DashDotLine = ...  # type: Qt.PenStyle
+#     DashDotDotLine = ...  # type: Qt.PenStyle
+#     CustomDashLine = ...  # type: Qt.PenStyle
+#     MPenStyle = ...  # type: Qt.PenStyle
+
 import finplot as fp
 from pandas import DataFrame
 
@@ -19,6 +29,8 @@ class TDrawer:
     @staticmethod
     def show():
         # fp.autoviewrestore()  # todo ?
+        fp.winw = 1000  # todo ????
+        fp.winh = 1000
         fp.show()
 
 # data = [(instrument, yf.download(instrument, '2020-10-01')) for instrument in ('AAPL','GOOG','TSLA')]

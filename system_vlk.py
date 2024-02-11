@@ -1,5 +1,4 @@
-from asyncio import sleep
-
+from PyQt5.uic.properties import QtCore
 import drawer
 from system import *
 from candles import *
@@ -162,15 +161,16 @@ class TStreamMethod(TAnalysisMethod):
 
             if stream_stop(self.stream[-1], self.candles[i], self.candles[i + 1]):
 
+                # расчет точки остановки потока
                 if self.stream[-1].up:
                     stop_1 = self.candles[i].low
                 else:
                     stop_1 = self.candles[i].high
 
+                # расчет точки экстремума потока
                 j = self.stream[-1].index + 1
                 _i = j
-
-                while j <= i:  # +1: нет! с + 1 не работает, ниже отдельно проверять
+                while j <= i:  # + 1:  # нет! с + 1 не работает, ниже отдельно проверять
                     if self.stream[-1].up:
                         if self.candles[j].high > self.stream[-1].maxmin:
                             self.stream[-1].maxmin = self.candles[j].high
@@ -186,30 +186,76 @@ class TStreamMethod(TAnalysisMethod):
                 #         and self.candles[i + 1].high > self.stream[-1].maxmin:
                 #     self.stream[-1].maxmin = self.candles[i + 1].high
                 #     _i = i+1
-                #
+
                 # if not self.stream[-1].up and self.candles[i+1].bullish \
                 #         and self.candles[i + 1].low < self.stream[-1].maxmin:
                 #     self.stream[-1].maxmin = self.candles[i + 1].low
                 #     _i = i+1
 
-                self.stream.append(
-                    TStreamItem(self.candles[_i].ts,
-                                self.stream[-1].maxmin,
-                                _i,
-                                up=not self.stream[-1].up,
-                                maxmin=self.stream[-1].maxmin))  # направление противоположное посл точке потока
+                _up = self.stream[-1].up
+                _maxmin = self.stream[-1].maxmin
+                _ts = self.candles[_i].ts
+
+                # уточнение точек экстремума
+                # todo (i+1 и внутренние!!!)
+                if _up and self.candles[i + 1].bearish and self.candles[i + 1].high > _maxmin:
+                    print(i + 1, _maxmin, self.candles[i + 1].high)
+                    _maxmin = self.candles[i + 1].high
+                    _ts = self.candles[i + 1].ts
+                    _i = i + 1
+                # if not _up and self.candles[i + 1].bullish and self.candles[i + 1].low < _maxmin:
+                #     print(i + 1, _maxmin, self.candles[i + 1].low)
+                #     _maxmin = self.candles[i + 1].low
+                #     _ts = self.candles[i + 1].ts
+                #     _i = i + 1
+
+                # добавить точку экстремума потока
+                item = TStreamItem(_ts,
+                                   _maxmin,
+                                   _i,
+                                   up=not self.stream[-1].up,  # направление противоположное посл точке потока
+                                   maxmin=_maxmin)
+                self.stream.append(item)
+
+                # item = TStreamItem(self.candles[_i].ts,
+                #                    self.stream[-1].maxmin,
+                #                    _i,
+                #                    up=not self.stream[-1].up,  # направление противоположное посл точке потока
+                #                    maxmin=self.stream[-1].maxmin)
+                # self.stream.append(item)
+
+                # добавить точку остановки потока в запись точки экстремума потока (после нахождения экстремума !)
+                # не перемещать этот блок выше!
                 self.stream[-1].stop_index = i
                 self.stream[-1].stop_ts = self.candles[i].ts
                 self.stream[-1].stop_value = stop_1
+
+
+
+                #     _i = i+1
+
             i += 1
 
     def draw(self):
         df = self.stream.get_df()
-        dfs = self.stream.get_df_stop()  # todo self.drawer.add_stream(stream.get_df())
+        dfs = self.stream.get_df_stop()
         # df.reset_index(drop=True)
         # print(df)
         drawer.fp.plot(df['ts'], df['value'], style='o')
         drawer.fp.plot(dfs['ts'], dfs['value'], style='>')
+
+        i = 0
+        while i < len(self.stream)-1:
+            drawer.fp.add_line(
+                (self.stream[i].ts, self.stream[i].value),
+                (self.stream[i+1].ts, self.stream[i+1].value),
+                color="#B9A6FF"
+            )
+            if self.stream[i].up: s = 'ˆ'
+            else: s = 'v'
+            drawer.fp.add_text((self.stream[i].ts, self.stream[i].value), s=s)
+            i += 1
+
 
 
 # class TTendencyMethod(TVolkMethod):
@@ -252,7 +298,6 @@ class TVlkSystem(TAnalysisSystem):
         self.ms.spot_T0.refresh()
         super().main()
 
-
         # while i < 30:  # len(self.candles) - 1:
         #
         #     if stream_stop(self.stream[-1], self.candles[i], self.candles[i + 1]):
@@ -273,7 +318,6 @@ class TVlkSystem(TAnalysisSystem):
         #                 self.stream[-1].maxmin = self.candles[i].low
         #                 self.stream[-1].index = i
         #     i += 1
-
 
 # if self.stream[-1].up:
 #     maxmin = max(maxmin, self.candles[i].high)

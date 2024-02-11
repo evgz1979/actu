@@ -22,6 +22,7 @@ class TSymbol:
     _orm_candle: Candle
 
     data: TCandlesCollectionData  # so far so
+    data_oi: TOICollectionData
     candles: TCandlesCollection  # so far so
 
     def __init__(self, name, ticker, figi, connector, **kwargs):
@@ -34,10 +35,11 @@ class TSymbol:
         self.quoted = kwargs.get('quoted', False)
 
         self.data = TCandlesCollectionData()
-        self.open_interest_data = TOICollectionData()
+        self.data_oi = TOICollectionData()
         self.candles = TCandlesCollection()
 
     def refresh(self):
+        # todo и обновлять открытый интерес
 
         # for day1 interval
         self.candles.day1.clear()
@@ -100,7 +102,7 @@ class TMetaSymbol:
             self.spot_T0.connector.get_candles(self.spot_T0.figi, Interval.day1, from22, now())
 
         # todo - без дат!!! - запрашивать у DataFeeder (у него всегда все готово должно быть)
-        self.future_current.open_interest_data.day1\
+        self.future_current.data_oi.day1\
             = self.moex.get_futures_oi(symbol='si', from_date=from22, to_date=now())
 
         # print(self.future_current.open_interest_data.day1)
