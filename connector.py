@@ -15,15 +15,20 @@ from tinkoff.invest import CandleInterval, Client, HistoricCandle, AsyncClient
 from tinkoff.invest.utils import now
 from settings import *
 from orm import *
+import configparser
 
 # key = "VGBlKCHW0Thc0Qk63JvO2FE8Z7lDQpxxlriqgGR1g8ED5OdFgINLqrilvYvlCnze"
 # secret = "CjDOaNifYTCb7a2KmvGkAFtFOMKDy9dd3psflBzSlyek9rht0Xt1WRup37kxujtO"
 symbol_name_bi = 'BTCUSDT'
 symbol_name_ku = 'BTC/USDT'  # {'spot': 'BTC/USDT', 'futures': 'BTC/USDT:USDT'}
-from candles import *
 
 
 class TConnector:
+    config: configparser.ConfigParser
+
+    def __init__(self, config):
+        self.config = config
+
     def get_candles(self, symbol_name, interval, from2, to2):
         pass
 
@@ -36,10 +41,6 @@ class YFinanceConnector(TConnector):
 
 
 class TPoligonIOConnector(TConnector):
-    pass
-
-
-class TMOEXConnector(TConnector):
     pass
 
 

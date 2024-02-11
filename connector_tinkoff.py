@@ -1,5 +1,6 @@
 from tinkoff.invest.services import *
 
+from candles import Interval
 from connector import *
 import asyncio
 from datetime import timedelta
@@ -41,13 +42,16 @@ def convert_interval(interval):
         return CandleInterval.CANDLE_INTERVAL_WEEK
 
 
-class TTinkoffAbstractConnector(TMOEXConnector):
-    config: configparser.ConfigParser
+# todo Для получения информации о дате начала истории добавлены параметры
+# todo first_1min_candle_date и first_1day_candle_date в методах сервиса инструментов.
+
+class TTinkoffAbstractConnector(TConnector):
     account_id = 0
     token = ''
     app_name = ''
 
     def __init__(self, config):
+        super().__init__(config)
         self.token = config.get('CONNECTOR: TINKOFF', 'token')
         self.app_name = config.get('CONNECTOR: TINKOFF', 'app_name')
 

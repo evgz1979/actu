@@ -1,9 +1,11 @@
 from connector import *
+from connector_moex import *
 from orm import *
 from datetime import datetime
 from typing import Optional, List
 import configparser
 from candles import *
+import pandas as pd
 
 
 class TSymbol:
@@ -32,6 +34,7 @@ class TSymbol:
         self.quoted = kwargs.get('quoted', False)
 
         self.data = TCandlesCollectionData()
+        self.open_interest_data = TOICollectionData()
         self.candles = TCandlesCollection()
 
     def refresh(self):
@@ -73,11 +76,14 @@ class TMetaSymbol:
     spot_T1: TSymbol = None
     spot_T2: TSymbol = None
 
-    connector: TConnector
+    connector: TConnector  # todo --> унифицировать
+    moex: TMOEXConnector  # todo --> унифицировать
+
     config: configparser.ConfigParser
 
-    def __init__(self, alias, connector, config):
+    def __init__(self, alias, connector, moex, config):
         self.connector = connector
+        self.moex = moex
         self.config = config
 
         self.alias = alias
@@ -93,11 +99,9 @@ class TMetaSymbol:
         self.spot_T0.data.day1 = \
             self.spot_T0.connector.get_candles(self.spot_T0.figi, Interval.day1, from22, now())
 
-        # self.spot_T0.candles.week1 = \
-        #     self.spot_T0.connector.get_candles(self.spot_T0.figi, Interval.week1, from22, now())
-        #
-        # self.future_current.candles.day1 = \
-        #     self.spot_T0.connector.get_candles(self.future_current.figi, Interval.day1, from22, now())
-        #
-        # self.future_current.candles.week1 = \
-        #     self.spot_T0.connector.get_candles(self.future_current.figi, Interval.week1, from22, now())
+        # todo - без дат!!! - запрашивать у DataFeeder (у него всегда все готово должно быть)
+        self.future_current.open_interest_data.day1\
+            = self.moex.get_futures_oi(symbol='si', from_date=from22, to_date=now())
+
+        # print(self.future_current.open_interest_data.day1)
+

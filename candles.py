@@ -110,6 +110,10 @@ class TCandlesData(DataFrame):
     pass
 
 
+class TOIData(DataFrame):
+    pass
+
+
 class TCandlesList(list[TCandle]):
     limits: TLimits
     moneys: TMoneys
@@ -120,6 +124,11 @@ class TCandlesList(list[TCandle]):
         super().__init__()
         self.limits = TLimits()
         self.moneys = TMoneys()
+
+
+class TOICollectionData:
+    day1: TOIData
+    min5: TOIData
 
 
 class TCandlesCollectionData:
