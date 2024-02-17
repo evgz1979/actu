@@ -152,12 +152,9 @@ class TStreamMethod(TAnalysisMethod):
 
     def calc(self):
 
-        # c0    c+1 !!! -- вперед + 1 надо смотреть!!! ###
         def stream_stop(_item: TStreamItem, _c0, _c1: TCandle):
-            if _item.up:
-                return _c1.low < _c0.low
-            else:
-                return _c1.high > _c0.high
+            if _item.up: return _c1.low < _c0.low
+            else: return _c1.high > _c0.high
 
         # for zero point stream:
         c0 = self.candles[0]
@@ -168,27 +165,63 @@ class TStreamMethod(TAnalysisMethod):
             self.stream.append(TStreamItem(c0.ts, c0.low, up=True, maxmin=c0.high))
             self.stream[-1].stop_value = c0.low
         self.stream[-1].stop_index = 0
-        self.stream[-1].stop_ts = c0.ts
-        self.stream[-1].next_ts = c0.ts
+        self.stream[-1].stop_ts = self.stream[-1].next_ts = c0.ts
 
         i = 0
-        while i < len(self.candles) - 2:
-            print(i)
+        while i < len(self.candles)-1:
+
             if stream_stop(self.stream[-1], self.candles[i], self.candles[i + 1]):
+
                 # расчет точки остановки потока
-                if self.stream[-1].up:
-                    stop_1 = self.candles[i].low
-                else:
-                    stop_1 = self.candles[i].high
+                if self.stream[-1].up: stop_1 = self.candles[i].low
+                else: stop_1 = self.candles[i].high
 
-                print('before', i, self.stream[-1].up)
-                # пока добавляем, потом будем уточнять
-                # if (not ((self.candles[i].bullish and self.candles[i + 1].bullish) or
-                #          (self.candles[i].bearish and self.candles[i + 1].bearish))) and \
-                #         (self.stream[-1].stop_index - i > 0):
-                self.stream.append(TStreamItem(0, 0, up=not self.stream[-1].up))
-                print('after add', i, self.stream[-1].up)
+                # расчет точки экстремума потока
+                if self.stream[-1].up:  # up
+                    j = self.stream[-1].stop_index
+                    _i = j
+                    while j <= i:  # + 1:  # нет! с + 1 не работает, ниже отдельно проверять
+                        if self.candles[j].high > self.stream[-1].maxmin:
+                            self.stream[-1].maxmin = self.candles[j].high
+                            _i = j
+                        j += 1
 
+                else:  # dn
+                    j = self.stream[-1].stop_index
+                    _i = j
+                    while j <= i:  # + 1:  # нет! с + 1 не работает, ниже отдельно проверять
+                        if self.candles[j].low < self.stream[-1].maxmin:
+                            self.stream[-1].maxmin = self.candles[j].low
+                            _i = j
+                        j += 1
+
+                _up = self.stream[-1].up
+                _maxmin = self.stream[-1].maxmin
+                _ts = self.candles[_i].ts
+
+                # уточнение точек экстремума
+                # todo (i+1 и внутренние!!!)  # todo -- уточнить для bullish !!!!
+                if _up \
+                        and self.candles[i + 1].high > _maxmin:
+                    _maxmin = self.candles[i + 1].high
+                    _ts = self.candles[i + 1].ts
+                    _i = i + 1
+                if not _up \
+                        and self.candles[i + 1].low < _maxmin:
+                    _maxmin = self.candles[i + 1].low
+                    _ts = self.candles[i + 1].ts
+                    _i = i + 1
+
+                # добавить точку экстремума потока
+                item = TStreamItem(_ts,
+                                   _maxmin,
+                                   _i,
+                                   up=not self.stream[-1].up,  # направление противоположное посл точке потока
+                                   maxmin=_maxmin)
+                self.stream.append(item)
+
+                # добавить точку остановки потока в запись точки экстремума потока (после нахождения экстремума !)
+                # не перемещать этот блок выше!
                 self.stream[-1].stop_index = i
                 self.stream[-1].stop_ts = self.candles[i].ts
                 self.stream[-1].stop_value = stop_1
@@ -198,10 +231,10 @@ class TStreamMethod(TAnalysisMethod):
                     # если добавились две точки остановки потока на одной свече
                     i += 1
 
-            else:
-                i += 1
-
-        # todo -- последнюю свечу уточнять тоже
+            # todo здесь хз !!!
+            i += 1
+            # else:
+            #     i += 1
 
     def draw(self):
         # df = self.stream.get_df()
@@ -211,27 +244,23 @@ class TStreamMethod(TAnalysisMethod):
         # drawer.fp.plot(df['ts'], df['value'], style='o')
         # drawer.fp.plot(dfs['ts'], dfs['value'], style='>', color="#aaa")
 
-        print(dfs)
-
         i = 0
         while i < len(self.stream) - 2:
             drawer.fp.add_line(
                 (self.stream[i].stop_ts, self.stream[i].stop_value),
-                (self.stream[i].next_ts, self.stream[i].stop_value)
+                (self.stream[i].next_ts, self.stream[i].stop_value),
+                color="#bbb"
             )
             i += 1
 
-        # i = 0
-        # while i < len(self.stream)-1:
-        #     drawer.fp.add_line(
-        #         (self.stream[i].ts, self.stream[i].value),
-        #         (self.stream[i+1].ts, self.stream[i+1].value),
-        #         color="#B9A6FF"
-        #     )
-        #     # if self.stream[i].up: s = 'ˆ'
-        #     # else: s = 'v'
-        #     # drawer.fp.add_text((self.stream[i].ts, self.stream[i].value), s=s)
-        #     i += 1
+        i = 0
+        while i < len(self.stream)-1:
+            drawer.fp.add_line(
+                (self.stream[i].ts, self.stream[i].value),
+                (self.stream[i+1].ts, self.stream[i+1].value),
+                color="#B9A6FF", width=3
+            )
+            i += 1
 
 
 # class TTendencyMethod(TVolkMethod):
@@ -273,6 +302,69 @@ class TVlkSystem(TAnalysisSystem):
     def main(self):
         self.ms.spot_T0.refresh()
         super().main()
+
+
+
+
+
+
+        # # c0    c+1 !!! -- вперед + 1 надо смотреть!!! ###
+        # def stream_stop(_item: TStreamItem, _c0, _c1: TCandle):
+        #     if _item.up:
+        #         return _c1.low < _c0.low
+        #     else:
+        #         return _c1.high > _c0.high
+        #
+        # # for zero point stream:
+        # c0 = self.candles[0]
+        # if self.candles[1].high < c0.high:
+        #     self.stream.append(TStreamItem(c0.ts, c0.high, up=False, maxmin=c0.low))
+        #     self.stream[-1].stop_value = c0.high
+        # else:
+        #     self.stream.append(TStreamItem(c0.ts, c0.low, up=True, maxmin=c0.high))
+        #     self.stream[-1].stop_value = c0.low
+        # self.stream[-1].stop_index = 0
+        # self.stream[-1].stop_ts = c0.ts
+        # self.stream[-1].next_ts = c0.ts
+        #
+        # i = 0
+        # while i < len(self.candles) - 2:
+        #     print(i)
+        #     if stream_stop(self.stream[-1], self.candles[i], self.candles[i + 1]):
+        #         # расчет точки остановки потока
+        #         if self.stream[-1].up:
+        #             stop_1 = self.candles[i].low
+        #         else:
+        #             stop_1 = self.candles[i].high
+        #
+        #         print('before', i, self.stream[-1].up)
+        #         # пока добавляем, потом будем уточнять
+        #         # if (not ((self.candles[i].bullish and self.candles[i + 1].bullish) or
+        #         #          (self.candles[i].bearish and self.candles[i + 1].bearish))) and \
+        #         #         (self.stream[-1].stop_index - i > 0):
+        #         self.stream.append(TStreamItem(0, 0, up=not self.stream[-1].up))
+        #         print('after add', i, self.stream[-1].up)
+        #
+        #         self.stream[-1].stop_index = i
+        #         self.stream[-1].stop_ts = self.candles[i].ts
+        #         self.stream[-1].stop_value = stop_1
+        #         self.stream[-1].next_ts = self.candles[i + 1].ts
+        #
+        #         if len(self.stream) > 1 and self.stream[-1].stop_index - self.stream[-2].stop_index == 0:
+        #             # если добавились две точки остановки потока на одной свече
+        #             i += 1
+        #
+        #     else:
+        #         i += 1
+        #
+        #
+        #
+        #
+
+
+
+
+
 
         # if stream_stop(self.stream[-1], self.candles[i], self.candles[i + 1]):
         #
