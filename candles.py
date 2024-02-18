@@ -64,6 +64,7 @@ class TMoney:
     dn = False
     gap: False
     maker: False
+    limit: False
 
     def __init__(self, candle0, candle1: TCandle, up=False, dn=False, gap=False, maker=False):
         self.candle0 = candle0
@@ -73,6 +74,9 @@ class TMoney:
         self.dn = dn
         self.gap = gap
         self.maker = maker
+
+        self.limit = (up and (candle1.open - candle0.close == 0)) or \
+                     (dn and (candle0.close - candle1.open == 0))
 
 
 class TLimit:
@@ -114,9 +118,76 @@ class TOIData(DataFrame):
     pass
 
 
+class TStreamItem:
+    up: bool = False
+
+    ts: int = 0
+    value: float = 0
+    index: int = 0
+
+    stop_index: int = 0
+    stop_ts: int = 0
+    stop_value: float = 0
+
+    maxmin: float = 0
+
+    def __init__(self,
+                 ts: int, value: float, index, stop_ts, stop_value, stop_index, up=False, maxmin: float = 0):
+        self.ts = ts
+        self.value = value
+        self.index = index
+
+        self.stop_ts = stop_ts
+        self.stop_value = stop_value
+        self.stop_index = stop_index
+
+        self.up = up
+        self.maxmin = maxmin
+
+    def is_stop(self, ci, ci1: TCandle):  # c[i], c[i+1]
+        if self.up:
+            return ci1.low < ci.low
+        else:
+            return ci1.high > ci.high
+
+    def is_duble_stop(self, ci, ci1: TCandle):  # c[i], c[i+1]
+        if self.up:
+            return ci1.high > ci.high
+        else:
+            return ci1.low < ci.low
+
+
+class TStream(list[TStreamItem]):
+    def get_df(self):
+        df = DataFrame(columns=['ts', 'value'])
+        for st in self:
+            df.loc[len(df.index)] = [st.ts, st.value]
+        return df
+
+    def get_df_stop(self):
+        dfs = DataFrame(columns=['ts', 'value'])
+        for st in self:
+            dfs.loc[len(dfs.index)] = [st.stop_ts, st.stop_value]
+        return dfs
+
+    def get_stop_value(self, ci):
+        if self[-1].up:
+            return ci.low
+        else:
+            return ci.high
+
+    def get_stop_value_invert(self, ci):
+        if self[-1].up:
+            return ci.high
+        else:
+            return ci.low
+
+
 class TCandlesList(list[TCandle]):
     limits: TLimits
     moneys: TMoneys
+    stream: TStream
+
     max_all_high: float
     min_all_low: float
 
@@ -124,6 +195,7 @@ class TCandlesList(list[TCandle]):
         super().__init__()
         self.limits = TLimits()
         self.moneys = TMoneys()
+        self.stream = TStream()
 
 
 class TOICollectionData:

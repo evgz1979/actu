@@ -23,10 +23,6 @@ class TDrawer:
         self.ax[name] = fp.candlestick_ochl(df[['open', 'close', 'high', 'low']])
 
     @staticmethod
-    def add_limit(ts0, ts1, value):
-        fp.add_line((ts0, value), (ts1, value), color='#FF00FF', width=3)
-
-    @staticmethod
     def show():
         # fp.autoviewrestore()  # todo ?
         fp.winw = 1000  # todo ????
