@@ -183,10 +183,24 @@ class TStream(list[TStreamItem]):
             return ci.low
 
 
+class TTendencyNode:
+    up = False
+    stream_item: TStreamItem
+
+    def __init__(self, stream_item: TStreamItem, up=False):
+        self.up = up
+        self.stream_item = stream_item
+
+
+class TTendency(list[TTendencyNode]):
+    pass
+
+
 class TCandlesList(list[TCandle]):
     limits: TLimits
     moneys: TMoneys
     stream: TStream
+    tendency: TTendency
 
     max_all_high: float
     min_all_low: float
@@ -196,6 +210,7 @@ class TCandlesList(list[TCandle]):
         self.limits = TLimits()
         self.moneys = TMoneys()
         self.stream = TStream()
+        self.tendency = TTendency()
 
 
 class TOICollectionData:

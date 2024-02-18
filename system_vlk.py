@@ -224,7 +224,19 @@ class TTendencyMethod(TAnalysisMethod):
     id = 'TENDENCY'
 
     def calc(self):
-        pass
+
+        # нужна будет рекурурсия !
+
+        if len(self.candles.stream) > 2:
+            tc = self.candles.tendency
+
+            if len(tc) == 0:
+                tc.append(TTendencyNode(self.candles.stream[0]))
+
+            # i = 0
+            # while i < len(self.candles.stream):
+            #     sti = self.candles.stream[i]
+            #     sti1 = self.candles.stream[i+1]
 
 
 # class TCorrectionMethod(TVolkMethod):
