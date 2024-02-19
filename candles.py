@@ -184,16 +184,52 @@ class TStream(list[TStreamItem]):
 
 
 class TTendencyNode:
-    up = False
-    stream_item: TStreamItem
+    stream_item: TStreamItem = None
+    # parent: 'TTendencyNode' = None
+    # inside: 'TTendencyNode' = None
 
-    def __init__(self, stream_item: TStreamItem, up=False):
-        self.up = up
+    def __init__(self, parent, stream_item: TStreamItem):
+        # self.parent = parent
         self.stream_item = stream_item
 
 
+# class TMetaFlow()  todo ?
+
 class TTendency(list[TTendencyNode]):
-    pass
+    frsi: int = 0  # first result stream index
+    lrsi: int = 0  # last result stream index
+
+    inside: 'TTendency'
+    parent: 'TTendency'
+
+    def between(self, si: TStreamItem):
+
+        return (self[-2].stream_item.up and
+                self[-2].stream_item.value <= si.value <= self[-1].stream_item.value) or \
+               (not self[-2].stream_item.up and self[-1].stream_item.value <= si.value <= self[-2].stream_item.value)
+
+
+class TCorrectionNode:
+    stream_item: TStreamItem = None
+    # parent: 'TTendencyNode' = None
+    # inside: 'TTendencyNode' = None
+
+    def __init__(self, parent, stream_item: TStreamItem):
+        # self.parent = parent
+        self.stream_item = stream_item
+
+
+class TCorrection(list[TCorrectionNode]):
+
+    inside: 'TCorrection'
+    parent: 'TCorrection'
+
+    def between(self, si: TStreamItem):
+        # if len(self) > 1:
+
+        return (self[-2].stream_item.up and
+                self[-2].stream_item.value <= si.value <= self[-1].stream_item.value) or \
+               (not self[-2].stream_item.up and self[-1].stream_item.value <= si.value <= self[-2].stream_item.value)
 
 
 class TCandlesList(list[TCandle]):

@@ -5,6 +5,7 @@ from candles import *
 
 
 class TInfoMethod(TAnalysisMethod):
+    id = 'BASEINFO'
     description = ['Candles Info Method',
                    'UpTake/PushDown candles',
                    'for _Buyer/for _Seller candles)',
@@ -72,13 +73,13 @@ class TMoneyMethod(TAnalysisMethod):
                 ci = self.candles[i]
                 ci1 = self.candles[i+1]
 
-                if (ci.bullish or ci.flat) and (ci1.bullish or ci1.flat) and (not (ci.flat and ci1.flat)):
+                if (ci.bullish or ci.flat) and (ci1.bullish or ci1.flat) and (not (ci.flat and ci1.flat)) and ci1.high > ci.high:
                     if ci1.open > ci.close:
                         self.candles.moneys.append(TMoney(ci, ci1, up=True, gap=True))
                     else:
                         self.candles.moneys.append(TMoney(ci, ci1, up=True, maker=True))
 
-                if (ci.bearish or ci.flat) and (ci1.bearish or ci1.flat) and (not (ci.flat and ci1.flat)):
+                if (ci.bearish or ci.flat) and (ci1.bearish or ci1.flat) and (not (ci.flat and ci1.flat)) and ci1.low < ci.low:
                     if ci1.open < ci.close:
                         self.candles.moneys.append(TMoney(ci, ci1, dn=True, gap=True))
                     # todo ??? elif ci1.high <= ci.high:
@@ -88,12 +89,6 @@ class TMoneyMethod(TAnalysisMethod):
                 i += 1  # ! while
 
     def draw(self):
-
-        def max_ts(_ts_: float):
-            if _ts_ > self.candles[-1].ts:
-                return self.candles[-1].ts
-            else:
-                return _ts_
 
         delta_ts = self.candles[1].ts - self.candles[0].ts
 
@@ -113,9 +108,9 @@ class TMoneyMethod(TAnalysisMethod):
                                            (_ts+delta_ts, money.candle1.open), color="FFFFBF")
                     elif money.maker:
                         drawer.fp.add_line((_ts, money.candle0.close),
-                                           (max_ts(_ts+delta_ts*5), money.candle0.close), color="59B359", width=1)
+                                           (self.ts_max(_ts+delta_ts*5), money.candle0.close), color="59B359", width=1)
                         drawer.fp.add_rect((_ts, money.candle0.close),
-                                           (_ts+delta_ts, money.candle1.low), color="BFFFBF")
+                                           (_ts+delta_ts, max(money.candle1.low, money.candle0.low)), color="BFFFBF")
 
                 else:  # dn
                     if money.limit:
@@ -128,9 +123,9 @@ class TMoneyMethod(TAnalysisMethod):
                                            (_ts+delta_ts, money.candle1.open), color="FFFFBF")
                     elif money.maker:
                         drawer.fp.add_line((_ts, money.candle0.close),
-                                           (max_ts(_ts+delta_ts*5), money.candle0.close), color="D96C6C", width=1)
+                                           (self.ts_max(_ts+delta_ts*5), money.candle0.close), color="D96C6C", width=1)
                         drawer.fp.add_rect((_ts, money.candle0.close),
-                                           (_ts+delta_ts, money.candle1.high), color="FFD9D9")
+                                           (_ts+delta_ts, min(money.candle1.high, money.candle0.high)), color="FFD9D9")
 
 
 class TStreamMethod(TAnalysisMethod):
@@ -223,24 +218,69 @@ class TStreamMethod(TAnalysisMethod):
 class TTendencyMethod(TAnalysisMethod):
     id = 'TENDENCY'
 
-    def calc(self):
+    def find_rs(self, from_index):  # найти РЕЗУЛЬТАТИВНЫЙ ПОТОК, начиная с индека потока
+        i = from_index
+        r = 0
+        while i < len(self.candles.stream)-3:
+            p1 = self.candles.stream[i]
+            p2 = self.candles.stream[i+1]
+            p3 = self.candles.stream[i+2]
+            p4 = self.candles.stream[i+3]
 
-        # нужна будет рекурурсия !
+            if (p1.up and p4.value > p2.value) or (not p1.up and p4.value < p2.value):
+                # r = p3.index  # это индекс свечи, неправильно!
+                r = i+2  # вернкть индекс в потоке 3ей точки
+                break
 
-        if len(self.candles.stream) > 2:
-            tc = self.candles.tendency
+            i += 1
 
-            if len(tc) == 0:
-                tc.append(TTendencyNode(self.candles.stream[0]))
+        return r
 
-            # i = 0
-            # while i < len(self.candles.stream):
-            #     sti = self.candles.stream[i]
-            #     sti1 = self.candles.stream[i+1]
+    def find_segment(self, tn: TTendencyNode):
+        pass
+
+    def calc(self):         # нужна будет рекурурсия !?
+        st = self.candles.stream
+        tc = self.candles.tendency
+        tc.frsi = self.find_rs(0)
+
+        tc.append(TTendencyNode(None, st[0]))  # point 1
+        tc.append(TTendencyNode(None, st[1]))  # point 2
+
+        if tc.between(st[2]):
+            tc.inside = TTendency()
+            tc.inside.append(TTendencyNode(tc, st[2]))
+            tc.inside.append(TTendencyNode(tc, st[3]))
+
+
+
+
+
+
+
+    def draw(self):
+        if self.candles.tendency.frsi != 0:
+            #  draw first result steam
+            drawer.fp.add_line(
+                (self.candles.stream[self.candles.tendency.frsi].ts, self.candles.stream[self.candles.tendency.frsi].value),
+                (self.ts_max(self.candles.stream[self.candles.tendency.frsi].ts + self.ts_delta() * 3),
+                 self.candles.stream[self.candles.tendency.frsi].value),
+                color="000000", width=2
+            )
+
 
 
 # class TCorrectionMethod(TVolkMethod):
 #
+
+        # tc.append(TTendencyNode(None, st[0]))  # point 1
+        # tc.append(TTendencyNode(None, st[1]))  # point 2
+        #
+        # if tc.between(st[2]):
+        #     tc.inside = TTendency()
+        #     tc.inside.append(TTendencyNode(tc, st[2]))
+        #     tc.inside.append(TTendencyNode(tc, st[3]))
+
 #     def main(self):
 #         logger.info(">> Volk system -- Correction Method start")
 #

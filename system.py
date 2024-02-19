@@ -20,6 +20,15 @@ class TAnalysisMethod:
     def analisis(self):  # test? analize? --- анализирование данных
         pass
 
+    def ts_max(self, _ts_: float):
+        if _ts_ > self.candles[-1].ts:
+            return self.candles[-1].ts
+        else:
+            return _ts_
+
+    def ts_delta(self):
+        return self.candles[1].ts - self.candles[0].ts
+
 
 class TAnalysisSystem:
     ms: TMetaSymbol
