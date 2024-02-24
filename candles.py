@@ -182,31 +182,84 @@ class TStream(list[TStreamItem]):
         else:
             return ci.low
 
+    def between(self, i, ii, ii1):
 
-class TTendencyNode:
-    stream_item: TStreamItem = None
-    # parent: 'TTendencyNode' = None
-    # inside: 'TTendencyNode' = None
+        return (self[ii].up and self[ii].value <= self[i].value <= self[ii1].value) or \
+               (not self[ii].up and self[ii1].value <= self[i].value <= self[ii].value)
 
-    def __init__(self, parent, stream_item: TStreamItem):
-        # self.parent = parent
-        self.stream_item = stream_item
+    def find_min(self, si, si1: TStreamItem):
+        i = self.index(si)
+        i1 = self.index(si1)
+        r = si
+        while i < i1:
+            if self[i].value < r.value: r = self[i]
+            i += 1
+        return r
+
+    # def get_delta_ts(self):
+    #     return (self[1].ts - self[0].ts) / (self[1].index - self[0].index)
 
 
-# class TMetaFlow()  todo ?
+class TTendencyPoint:
+    si: TStreamItem = None
+    enlarge = False
+    index: int = 0
+    range: int = 0
+    prev: 'TTendencyPoint'  # break point
 
-class TTendency(list[TTendencyNode]):
-    frsi: int = 0  # first result stream index
-    lrsi: int = 0  # last result stream index
+    def __init__(self, stream_item: TStreamItem, index, _range=0, prev=None):
+        self.si = stream_item
+        self.enlarge = False
+        self.index = index
+        self.prev = prev
+        self.range = _range
 
-    inside: 'TTendency'
-    parent: 'TTendency'
+    def coord(self, delta=0, value=0):
+        if value != 0:
+            v = value
+        else:
+            v = self.si.value
+        return self.si.ts + delta, v
 
-    def between(self, si: TStreamItem):
 
-        return (self[-2].stream_item.up and
-                self[-2].stream_item.value <= si.value <= self[-1].stream_item.value) or \
-               (not self[-2].stream_item.up and self[-1].stream_item.value <= si.value <= self[-2].stream_item.value)
+class TTendency(list[TTendencyPoint]):
+    # frsi: int = 0  # first result stream index
+    # lrsi: int = 0  # last result stream index
+
+    def enlarge(self, ep: TTendencyPoint, si: TStreamItem, bp):
+        ep.enlarge = True
+        ep.index = 1
+        p = TTendencyPoint(si, 2, prev=ep.prev)
+        self.append(p)
+        return p
+
+    def start2p(self, si0, si1: TStreamItem):  # start 2 point
+        p1 = TTendencyPoint(si0, 1)
+        p1.enlarge = True
+        self.append(p1)
+        p2 = TTendencyPoint(si1, 2, prev=p1)
+        self.append(p2)
+        return p2
+
+    def add2p(self, ep, si, si1: TStreamItem):  # add 2 point
+        self.append(TTendencyPoint(si, ep.index + 1))
+        self.append(TTendencyPoint(si1, ep.index + 2))
+
+    def begin(self):
+        i = len(self) - 1
+        while i >= 0:
+            if self[i].enlarge:
+                return self[i]
+                # break
+            i -= 1
+
+    def between_last2p(self, si: TStreamItem):
+        p_1 = self[-1].si  # last
+        p_2 = self[-2].si  # pre last
+        # p_2 = self.begin().si   # self[-2].si  # pre last
+
+        return (p_2.up and p_2.value <= si.value <= p_1.value) or \
+               (not p_2.up and p_1.value <= si.value <= p_2.value)
 
 
 class TCorrectionNode:
@@ -232,6 +285,9 @@ class TCorrection(list[TCorrectionNode]):
                (not self[-2].stream_item.up and self[-1].stream_item.value <= si.value <= self[-2].stream_item.value)
 
 
+# class TMetaFlow()  todo ?
+
+
 class TCandlesList(list[TCandle]):
     limits: TLimits
     moneys: TMoneys
@@ -247,6 +303,10 @@ class TCandlesList(list[TCandle]):
         self.moneys = TMoneys()
         self.stream = TStream()
         self.tendency = TTendency()
+
+    # delta ts
+    def get_dts(self):
+        return self[1].ts - self[0].ts
 
 
 class TOICollectionData:

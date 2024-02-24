@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     robot = TRobot()
     drawer = TDrawer()
-    tink = TTinkoffConnector(robot.config)
+    tink = TTinkoffConnector(robot.config)  # todo config --> global
     robot.connectors.append(tink)
     moex = TMOEXConnector(robot.config)
     robot.connectors.append(tink)
