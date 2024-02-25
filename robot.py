@@ -5,10 +5,11 @@ from orm import *
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
-import configparser
+
 
 from system import TAnalysisSystem
 from symbols import *
+from settings import *
 
 
 class TDataFeeder:
@@ -20,7 +21,7 @@ class TRobot:
     config: configparser.ConfigParser
     connectors = []
     symbols = []
-    meta_symbols = []
+    metas = []  # meta symbols
     # system: TAnalysisSystem = None
     # drawer: TDrawer = None
 
@@ -61,8 +62,10 @@ class TRobot:
                                        quoted=True)
         self._load_from_db()
 
-        self.config = configparser.ConfigParser()
-        self.config.read('cfg/settings.ini')
+    def find_connector(self, _id):
+        for c in self.connectors:
+            if c.id == _id:
+                return c
 
     def main(self):  #, system, drawer):
         # self.system = system
@@ -75,12 +78,17 @@ class TRobot:
             connector.main()
 
         logger.info("meta symbols init ...")
-        for ms in self.meta_symbols:
+        for ms in self.metas:
             logger.info("... meta symbol: " + ms.alias + ' ...')
 
             s1 = None
 
-            spots = ms.connector.get_spot('USD000UTSTOM')
+            a = ms.cfg('spot.T1').split(':')
+            conn = self.find_connector(a[0])
+            print(a[0])
+
+            spots = conn.get_spot(a[1])
+
             # spots = ms.connector.get_currency()
             # print('spot num', len(spots))
             #
@@ -89,7 +97,7 @@ class TRobot:
 
             for spot in spots:
                 # print('spot: ' + spot.name)
-                s = TSymbol(spot.name, spot.ticker, spot.figi, ms.connector, spot=True)
+                s = TSymbol(spot.name, spot.ticker, spot.figi, spot=True)
                 if s1 is None:
                     s1 = s
                     s.quoted = True
@@ -98,7 +106,10 @@ class TRobot:
                     ms.spot_T1 = s
                     print('spot_T1 (TOM, tomorow) = ' + ms.spot_T1.ticker)
 
+                    s.connector = conn
+
                 ms.symbols.append(s)
+
 
             # isin: str = _grpc_helpers.string_field(1)
             # figi: str = _grpc_helpers.string_field(2)
@@ -124,9 +135,9 @@ class TRobot:
             # ms.spot_T0 = s_t1
             # logger.info('spot_T0 = (TOD, today) = ' + ms.spot_T0.ticker)
 
-            futures = ms.connector.get_futures(ms.alias)
+            futures = conn.get_futures(ms.alias)
             for future in futures:
-                ms.symbols.append(TSymbol(future.name, future.ticker, future.figi, ms.connector, future=True))
+                ms.symbols.append(TSymbol(future.name, future.ticker, future.figi, future=True))
             if len(futures) > 0:
                 ms.future_current = futures[0]
                 ms.future_current.quoted = True

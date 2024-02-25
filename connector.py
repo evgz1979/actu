@@ -19,20 +19,27 @@ import configparser
 
 # key = "VGBlKCHW0Thc0Qk63JvO2FE8Z7lDQpxxlriqgGR1g8ED5OdFgINLqrilvYvlCnze"
 # secret = "CjDOaNifYTCb7a2KmvGkAFtFOMKDy9dd3psflBzSlyek9rht0Xt1WRup37kxujtO"
-symbol_name_bi = 'BTCUSDT'
-symbol_name_ku = 'BTC/USDT'  # {'spot': 'BTC/USDT', 'futures': 'BTC/USDT:USDT'}
+# symbol_name_bi = 'BTCUSDT'
+# symbol_name_ku = 'BTC/USDT'  # {'spot': 'BTC/USDT', 'futures': 'BTC/USDT:USDT'}
 
 
 class TConnector:
-    config: configparser.ConfigParser
+    id = ''
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, _id):
+        self.id = _id
+        pass
 
     def get_candles(self, symbol_name, interval, from2, to2):
         pass
 
     def get_by_asset(self, alias):
+        pass
+
+    def main(self):
+        pass
+
+    def amain(self):
         pass
 
 
@@ -48,34 +55,34 @@ class TCryptoConnector(TConnector):
     pass
 
 
-class TKUCoinConnector(TCryptoConnector):
-    spot = kucoin
-    futures = kucoinfutures
-
-    def __init__(self):
-        self.spot = ccxt.kucoin({'enableRateLimit': True,
-                                 'apiKey': ku_spot_apikey, 'secret': ku_spot_secret, 'password': ku_spot_password})
-
-        self.futures = ccxt.kucoinfutures({'enableRateLimit': True,
-                                           'apiKey': ku_futures_apikey,
-                                           'secret': ku_futures_secret,
-                                           'password': ku_futures_password})
-
-        self.spot.load_markets()
-        self.futures.load_markets({'future': True})
-
-        # print(">> KU-Coin connector init")
-
-    def get_candles_df(self, s: str, interval):
-        candles = self.spot.fetch_ohlcv(s, interval, limit=500)
-
-        df = pd.DataFrame(candles, columns='ts open high low close volume'.split()).astype(
-            {'ts': int, 'open': float, 'high': float, 'low': float, 'close': float, 'volume': float})
-        df.insert(1, 'dt', '')
-        df['dt'] = df.apply(lambda x: timestamp2iso(x['ts'], format='%Y-%m-%d %H:%M:%S'), axis=1)
-        df.insert(1, 'interval', '1d')
-        df.insert(1, 'symbol_id', 1)
-        return df.set_index('ts')
+# class TKUCoinConnector(TCryptoConnector):
+#     spot = kucoin
+#     futures = kucoinfutures
+#
+#     def __init__(self):
+#         self.spot = ccxt.kucoin({'enableRateLimit': True,
+#                                  'apiKey': ku_spot_apikey, 'secret': ku_spot_secret, 'password': ku_spot_password})
+#
+#         self.futures = ccxt.kucoinfutures({'enableRateLimit': True,
+#                                            'apiKey': ku_futures_apikey,
+#                                            'secret': ku_futures_secret,
+#                                            'password': ku_futures_password})
+#
+#         self.spot.load_markets()
+#         self.futures.load_markets({'future': True})
+#
+#         # print(">> KU-Coin connector init")
+#
+#     def get_candles_df(self, s: str, interval):
+#         candles = self.spot.fetch_ohlcv(s, interval, limit=500)
+#
+#         df = pd.DataFrame(candles, columns='ts open high low close volume'.split()).astype(
+#             {'ts': int, 'open': float, 'high': float, 'low': float, 'close': float, 'volume': float})
+#         df.insert(1, 'dt', '')
+#         df['dt'] = df.apply(lambda x: timestamp2iso(x['ts'], format='%Y-%m-%d %H:%M:%S'), axis=1)
+#         df.insert(1, 'interval', '1d')
+#         df.insert(1, 'symbol_id', 1)
+#         return df.set_index('ts')
 
 # get_candles(quoted_symbols[0].name, 'D')
 # df = candles_to_df3(get_candles_old(symbol_name_ku, '1d'))

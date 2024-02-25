@@ -11,8 +11,8 @@ class TMOEXConnectorNoAuth(TConnector):
     url_iss = ''
     session = None
 
-    def __init__(self, config):
-        super().__init__(config)
+    def __init__(self):
+        super().__init__('MOEX')
         self.url_iss = config.get('CONNECTOR: MOEX', 'url_iss')
 
     # def a1(self):
@@ -32,8 +32,8 @@ class TMOEXConnector(TMOEXConnectorNoAuth):
     url_auth = ''
     url_oi = ''
 
-    def __init__(self, config):
-        super().__init__(config)
+    def __init__(self):
+        super().__init__()
 
         self.login = config.get('CONNECTOR: MOEX', 'login')
         self.password = config.get('CONNECTOR: MOEX', 'password')

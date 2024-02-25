@@ -15,7 +15,6 @@ from tinkoff.invest.utils import now
 from settings import *
 from orm import *
 from tinkoff.invest.utils import now
-import configparser
 
 
 def create_df(candles: [HistoricCandle]):  # -> tink_connector.py
@@ -45,13 +44,36 @@ def convert_interval(interval):
 # todo Для получения информации о дате начала истории добавлены параметры
 # todo first_1min_candle_date и first_1day_candle_date в методах сервиса инструментов.
 
-class TTinkoffAbstractConnector(TConnector):
-    account_id = 0
-    token = ''
-    app_name = ''
+# class TTinkoffAbstractConnector(TConnector):
+#     account_id = 0
+#     token = ''
+#     app_name = ''
+#
+#     def __init__(self):
+#         super().__init__()
+#         self.token = config.get('CONNECTOR: TINKOFF', 'token')
+#         self.app_name = config.get('CONNECTOR: TINKOFF', 'app_name')
+#
+#         with Client(self.token) as client:
+#             r = client.users.get_accounts()
+#             self.account_id = r.accounts[0].id
+#
+#     def main(self):
+#         pass
+#
+#     async def amain(self):
+#         pass
 
-    def __init__(self, config):
-        super().__init__(config)
+
+# class TTinkoffHistoryConnector(TTinkoffAbstractConnector):
+#     def __init__(self, token):
+#         super().__init__(token)
+#         logger.info(">> Tinkoff history connector init")
+
+
+class TTinkoffConnector(TConnector):
+    def __init__(self):
+        super().__init__('TINKOFF')
         self.token = config.get('CONNECTOR: TINKOFF', 'token')
         self.app_name = config.get('CONNECTOR: TINKOFF', 'app_name')
 
@@ -59,22 +81,6 @@ class TTinkoffAbstractConnector(TConnector):
             r = client.users.get_accounts()
             self.account_id = r.accounts[0].id
 
-    def main(self):
-        pass
-
-    async def amain(self):
-        pass
-
-
-class TTinkoffHistoryConnector(TTinkoffAbstractConnector):
-    def __init__(self, token):
-        super().__init__(token)
-        logger.info(">> Tinkoff history connector init")
-
-
-class TTinkoffConnector(TTinkoffAbstractConnector):
-    def __init__(self, token):
-        super().__init__(token)
         logger.info(">> Tinkoff connector init")
 
     def get_futures(self, alias):

@@ -14,26 +14,22 @@ if __name__ == "__main__":
 
     robot = TRobot()
     drawer = TDrawer()
-    tink = TTinkoffConnector(robot.config)  # todo config --> global
-    robot.connectors.append(tink)
-    moex = TMOEXConnector(robot.config)
-    robot.connectors.append(tink)
 
-    ms1 = TMetaSymbol('USD/RUB', connector=tink, moex=moex, config=robot.config)
-
-    robot.meta_symbols.append(ms1)
+    robot.connectors.append(TTinkoffConnector())
+    robot.connectors.append(TMOEXConnector())
+    robot.metas.append(TMetaSymbol('USD/RUB'))
 
     trader = JZTrader()
     robot.main()
 
-    vlk = TVlkSystem(ms1, drawer)
+    vlk = TVlkSystem(robot.metas[0], drawer)
     vlk.main()
 
-    drawer.add_candles(ms1.spot_T1.name+':day1', '', ms1.spot_T1.data.day1)
+    drawer.add_candles(robot.metas[0].spot_T1.name+':day1', '', robot.metas[0].spot_T1.data.day1)
     # drawer.add_candles(ms1.spot_T1.name+':day1', '', ms1.spot_T1.data.day1)
 
-    vlk.draw()  # пока все на 1 ТФ
-    drawer.show()  # пока все на 1 ТФ
+    vlk.draw()
+    drawer.show()
 
     # start async part of app
     robot.amain()
