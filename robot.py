@@ -79,24 +79,58 @@ class TRobot:
             logger.info("... meta symbol: " + ms.alias + ' ...')
 
             s1 = None
-            spots = ms.connector.get_spot(ms.name)
+
+            spots = ms.connector.get_spot('USD000UTSTOM')
+            # spots = ms.connector.get_currency()
+            # print('spot num', len(spots))
+            #
+            # for spot in spots:
+            #     print(spot.name, spot.ticker, spot.figi)
+
             for spot in spots:
+                # print('spot: ' + spot.name)
                 s = TSymbol(spot.name, spot.ticker, spot.figi, ms.connector, spot=True)
                 if s1 is None:
                     s1 = s
                     s.quoted = True
-                    ms.spot_T0 = s
-                    logger.info('current spot = ' + ms.spot_T0.ticker)
+                    s.first_1min_candle_date = spot.first_1min_candle_date
+                    s.first_1day_candle_date = spot.first_1day_candle_date
+                    ms.spot_T1 = s
+                    print('spot_T1 (TOM, tomorow) = ' + ms.spot_T1.ticker)
 
                 ms.symbols.append(s)
+
+            # isin: str = _grpc_helpers.string_field(1)
+            # figi: str = _grpc_helpers.string_field(2)
+            # ticker: str = _grpc_helpers.string_field(3)
+            # class_code: str = _grpc_helpers.string_field(4)
+            # instrument_type: str = _grpc_helpers.string_field(5)
+            # name: str = _grpc_helpers.string_field(6)
+            # uid: str = _grpc_helpers.string_field(7)
+            # position_uid: str = _grpc_helpers.string_field(8)
+            # instrument_kind: "InstrumentType" = _grpc_helpers.enum_field(10)
+            # api_trade_available_flag: str = _grpc_helpers.string_field(11)
+            # for_iis_flag: bool = _grpc_helpers.bool_field(12)
+            # first_1min_candle_date: datetime = _grpc_helpers.message_field(26)
+            # first_1day_candle_date: datetime = _grpc_helpers.message_field(27)
+            # for_qual_investor_flag: bool = _grpc_helpers.bool_field(28)
+            # weekend_flag: bool = _grpc_helpers.bool_field(29)
+            # blocked_tca_flag: bool = _grpc_helpers.bool_field(30)
+
+
+            # spots = ms.connector.get_spot(self.config.get('META: USD/RUB', 'spot_T0'))
+            # s_t1 = TSymbol(spots[0].name, spots[0].ticker, spots[0].figi, ms.connector, spot=True)
+            # s_t1.quoted = True
+            # ms.spot_T0 = s_t1
+            # logger.info('spot_T0 = (TOD, today) = ' + ms.spot_T0.ticker)
 
             futures = ms.connector.get_futures(ms.alias)
             for future in futures:
                 ms.symbols.append(TSymbol(future.name, future.ticker, future.figi, ms.connector, future=True))
             if len(futures) > 0:
-                ms.future_current = ms.symbols[0]  # futures[0]
+                ms.future_current = futures[0]
                 ms.future_current.quoted = True
-                logger.info('current future = ' + ms.future_current.ticker)
+                print('current future = ' + ms.future_current.ticker)
 
             ms.main()
 

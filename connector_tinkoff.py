@@ -98,6 +98,17 @@ class TTinkoffConnector(TTinkoffAbstractConnector):
 
         return spot
 
+    def get_currency(self, name=''):
+
+        with Client(self.token) as client:
+            r1 = client.instruments.currencies()
+            # r1 = client.instruments.currency_by()
+
+        c = list(r1.instruments)
+        c.sort(key=lambda item: item.name)
+
+        return c
+
     def show_settings(self):
         logger.info("account id = " + self.account_id)
 

@@ -13,6 +13,9 @@ class TSymbol:
     ticker = ''
     figi = ''
 
+    first_1min_candle_date: datetime
+    first_1day_candle_date: datetime
+
     quoted = False
     is_future = False
     is_spot = False
@@ -55,7 +58,7 @@ class TSymbol:
             self.candles.day1.append(c)
             # print(c.dt, c.ts)
 
-            i = i+1
+            i = i + 1
 
         self.candles.max_all_high = self.data.day1['high'].max()
         self.candles.min_all_low = self.data.day1['low'].min()
@@ -98,12 +101,15 @@ class TMetaSymbol:
         from22 = datetime.strptime(
             self.config.get('META: ' + self.alias, 'from_day_current_situation'), '%Y-%m-%d').astimezone(now().tzinfo)
 
-        self.spot_T0.data.day1 = \
-            self.spot_T0.connector.get_candles(self.spot_T0.figi, Interval.day1, from22, now())
+        if not self.spot_T1 is None:
+            self.spot_T1.data.day1 = \
+                self.spot_T1.connector.get_candles(self.spot_T1.figi, Interval.day1, from22, now())
+
+        # self.spot_T0.data.day1 = \
+        #     self.spot_T0.connector.get_candles(self.spot_T0.figi, Interval.day1, from22, now())
 
         # todo - без дат!!! - запрашивать у DataFeeder (у него всегда все готово должно быть)
-        self.future_current.data_oi.day1\
+        self.spot_T1.data_oi.day1 \
             = self.moex.get_futures_oi(symbol='si', from_date=from22, to_date=now())
 
         # print(self.future_current.open_interest_data.day1)
-

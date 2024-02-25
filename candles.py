@@ -196,6 +196,15 @@ class TStream(list[TStreamItem]):
             i += 1
         return r
 
+    def find_max(self, si, si1: TStreamItem):
+        i = self.index(si)
+        i1 = self.index(si1)
+        r = si
+        while i < i1:
+            if self[i].value > r.value: r = self[i]
+            i += 1
+        return r
+
     # def get_delta_ts(self):
     #     return (self[1].ts - self[0].ts) / (self[1].index - self[0].index)
 
@@ -228,7 +237,7 @@ class TTendency(list[TTendencyPoint]):
 
     def enlarge(self, ep: TTendencyPoint, si: TStreamItem, bp):
         ep.enlarge = True
-        ep.index = 1
+        # ep.index = 1
         p = TTendencyPoint(si, 2, prev=ep.prev)
         self.append(p)
         return p
@@ -242,11 +251,16 @@ class TTendency(list[TTendencyPoint]):
         return p2
 
     def add2p(self, ep, si, si1: TStreamItem):  # add 2 point
-        self.append(TTendencyPoint(si, ep.index + 1))
-        self.append(TTendencyPoint(si1, ep.index + 2))
+        ind = 1 if ep.enlarge else ep.index
+        self.append(TTendencyPoint(si, ind + 1))
+        p2 = TTendencyPoint(si1, ind + 2)
+        self.append(p2)
+        return p2
 
-    def begin(self):
-        i = len(self) - 1
+    def begin(self, start=0):
+        if start == 0: i = len(self) - 1
+        else: i = start
+
         while i >= 0:
             if self[i].enlarge:
                 return self[i]

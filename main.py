@@ -29,7 +29,9 @@ if __name__ == "__main__":
     vlk = TVlkSystem(ms1, drawer)
     vlk.main()
 
-    drawer.add_candles(ms1.spot_T0.name+':day1', '', ms1.spot_T0.data.day1)
+    drawer.add_candles(ms1.spot_T1.name+':day1', '', ms1.spot_T1.data.day1)
+    # drawer.add_candles(ms1.spot_T1.name+':day1', '', ms1.spot_T1.data.day1)
+
     vlk.draw()  # пока все на 1 ТФ
     drawer.show()  # пока все на 1 ТФ
 

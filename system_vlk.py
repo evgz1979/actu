@@ -243,26 +243,30 @@ class TTendencyMethod(TAnalysisMethod):
 
         def recurcy(ep):  # ep - even point
             i = st.index(ep.si) + 1
-            while tc.between_last2p(st[i]):
-                i += 1
+            if i < len(st)-1:
+                while i < len(st)-1 and tc.between_last2p(st[i]):
+                    i += 1
 
-            if tc.begin().si.up:
-                if st[i].value > ep.si.value:
-                    tc.add2p(ep, st.find_min(ep.si, st[i]), st[i])
-                else:
-                    pass
-            else:  # dn
-                if st[i].value > ep.prev.si.value:
-                    recurcy(tc.enlarge(ep, st[i], ep.prev))
-                else:
-                    pass
+                if tc.begin().si.up:
+                    if st[i].value > ep.si.value:
+                        recurcy(tc.add2p(ep, st.find_min(ep.si, st[i]), st[i]))
+                    else:
+                        recurcy(tc.enlarge(ep, st[i], ep.prev))
+                else:  # dn
+                    if st[i].value > ep.si.value:
+                        recurcy(tc.enlarge(ep, st[i], ep.prev))
+                    else:
+                        recurcy(tc.add2p(ep, st.find_max(ep.si, st[i]), st[i]))
 
         recurcy(tc.start2p(st[0], st[1]))
 
     @staticmethod
     def color(p: TTendencyPoint):
         # todo config
-        return "59B359" if p.si.up else "D96C6C"
+        if p is None:
+            return "eee"
+        else:
+            return "59B359" if p.si.up else "D96C6C"
 
     @staticmethod
     def title(p: TTendencyPoint):
@@ -278,13 +282,16 @@ class TTendencyMethod(TAnalysisMethod):
         i = 0
         while i < len(tc)-1:
             drawer.fp.add_line(tc[i].coord(), tc[i+1].coord(), color="00FFF0")
+            drawer.fp.add_text(tc[i].coord(), self.title(tc[i]), self.color(tc.begin(i-1)))  # color="eee")
+            if tc[i].enlarge:
+                drawer.fp.add_line(tc[i].coord(), tc[i+1].coord(value=tc[i].si.value), color="00FFF0", width=1)
             i += 1
 
-        for p in tc:
-            if p.index > 1:
-                drawer.fp.add_text(p.coord(), self.title(p), self.color(tc.begin()))
-
-        drawer.fp.add_line(tc[-2].coord(), tc[-1].coord(value=tc[-2].si.value), color="00FFF0", width=3)
+        # for p in tc:
+        #     if p.index > 1:
+        #         drawer.fp.add_text(p.coord(), self.title(p), self.color(tc.begin()))
+        #
+        # drawer.fp.add_line(tc[-2].coord(), tc[-1].coord(value=tc[-2].si.value), color="00FFF0", width=2)
 
 
 # class TCorrectionMethod(TVolkMethod):
@@ -316,15 +323,15 @@ class TVlkSystem(TAnalysisSystem):
         super().__init__(ms, _drawer)
         logger.info(">> Vlk system init")
 
-        self.methods.append(TInfoMethod(self.ms, self.ms.spot_T0.candles.day1))
-        self.methods.append(TMoneyMethod(self.ms, self.ms.spot_T0.candles.day1))
-        self.methods.append(TStreamMethod(self.ms, self.ms.spot_T0.candles.day1))
-        self.methods.append(TTendencyMethod(self.ms, self.ms.spot_T0.candles.day1))
+        self.methods.append(TInfoMethod(self.ms, self.ms.spot_T1.candles.day1))
+        self.methods.append(TMoneyMethod(self.ms, self.ms.spot_T1.candles.day1))
+        self.methods.append(TStreamMethod(self.ms, self.ms.spot_T1.candles.day1))
+        self.methods.append(TTendencyMethod(self.ms, self.ms.spot_T1.candles.day1))
 
         # self.methods.append(TCorrectionMethod(self.ms))
 
     def main(self):
-        self.ms.spot_T0.refresh()
+        self.ms.spot_T1.refresh()
         super().main()
 
         # # c0    c+1 !!! -- вперед + 1 надо смотреть!!! ###
