@@ -7,25 +7,9 @@ import json
 from datetime import datetime
 
 
-class TMOEXConnectorNoAuth(TConnector):
+class TMOEXConnector(TConnector):
     url_iss = ''
     session = None
-
-    def __init__(self):
-        super().__init__('MOEX')
-        self.url_iss = config.get('CONNECTOR: MOEX', 'url_iss')
-
-    # def a1(self):
-    #     with requests.Session() as session:
-    #         data = apimoex.get_board_history(session, 'SNGSP')
-    #         df = pd.DataFrame(data)
-    #         df.set_index('TRADEDATE', inplace=True)
-    #         print(df.head(), '\n')
-    #         # print(df.tail(), '\n')
-    #         # df.info()
-
-
-class TMOEXConnector(TMOEXConnectorNoAuth):
     login = ''
     password = ''
     cookies = None
@@ -33,7 +17,8 @@ class TMOEXConnector(TMOEXConnectorNoAuth):
     url_oi = ''
 
     def __init__(self):
-        super().__init__()
+        super().__init__('MOEX')
+        self.url_iss = config.get('CONNECTOR: MOEX', 'url_iss')
 
         self.login = config.get('CONNECTOR: MOEX', 'login')
         self.password = config.get('CONNECTOR: MOEX', 'password')
@@ -44,7 +29,7 @@ class TMOEXConnector(TMOEXConnectorNoAuth):
         self.cookies = {'MicexPasswordCert': self.session.cookies['MicexPassportCert']}
         self.url_oi = config.get('CONNECTOR: MOEX', 'url_oi')
 
-    def get_futures_oi(self, symbol, from_date: datetime = None, to_date: datetime = None):
+    def get_oi(self, symbol, from_date: datetime = None, to_date: datetime = None):
         # fd = from_date.date().strftime('%Y-%m-%d')
         # td = to_date.date().strftime('%Y-%m-%d')
         # print(fd)
@@ -58,3 +43,25 @@ class TMOEXConnector(TMOEXConnectorNoAuth):
 
         return df
 
+    # def get_spot(self, s):
+    #     r = requests.get(config.get('CONNECTOR: MOEX', 'url_securities') + '/' + s)
+    #     js = json.loads(r.content)
+    #
+    #     return spot
+
+    @staticmethod
+    def get_info(ticker):
+        r = requests.get(config.get('CONNECTOR: MOEX', 'url_securities') + '/' + ticker + '.json')
+        return json.loads(r.content)
+
+    @staticmethod
+    def convert_interval(interval):
+        if interval == 1: return 31
+
+    def get_candles(self, ticker, interval, from2, to2):
+        logger.info("moex connector, start getting candles, symbol=" + ticker + ", Interval=" + str(interval) + "...")
+        r = apimoex.get_market_candles(self.session, ticker, interval=31)
+        print(r)
+
+# worked
+# http://iss.moex.com/iss/history/engines/currency/markets/selt/securities/USD000UTSTOM

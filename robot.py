@@ -1,15 +1,4 @@
-from connector import *
-from drawer import *
-from trader import *
-from orm import *
-from datetime import datetime
-from typing import Optional, List
-from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
-
-
-from system import TAnalysisSystem
 from symbols import *
-from settings import *
 
 
 class TDataFeeder:
@@ -18,12 +7,9 @@ class TDataFeeder:
 
 class TRobot:
     data: TDataFeeder
-    config: configparser.ConfigParser
     connectors = []
     symbols = []
     metas = []  # meta symbols
-    # system: TAnalysisSystem = None
-    # drawer: TDrawer = None
 
     #  db = TDataBase
     quoted_by_orm = []
@@ -41,7 +27,7 @@ class TRobot:
 
             results = session.exec(statement)
 
-            for symbol in results:  ### упростить и объеденить нижний блок такойжке
+            for symbol in results:
                 self.quoted_by_orm.append(symbol)
 
             if len(self.quoted_by_orm) == 0:
@@ -64,84 +50,66 @@ class TRobot:
 
     def find_connector(self, _id):
         for c in self.connectors:
-            if c.id == _id:
-                return c
+            if c.id == _id: return c
 
-    def main(self):  #, system, drawer):
-        # self.system = system
-        #self.drawer = drawer
-
-        logger.info("connectors starting ...")
-
-        # for key, connector in self.connectors.items():
+    def main(self):
         for connector in self.connectors:
             connector.main()
 
-        logger.info("meta symbols init ...")
         for ms in self.metas:
-            logger.info("... meta symbol: " + ms.alias + ' ...')
+            print("... meta symbol: " + ms.alias + ' ...')
 
-            s1 = None
+            # пока тупо все заточено под рубль/долл
 
+            # T0
+            b = ms.cfg('spot.T0').split(':')
+            moex: TMOEXConnector = self.find_connector(b[0])
+
+            st0 = TSymbol('', b[1], '', spot=True)
+            st0.info = moex.get_info(b[1])
+            st0.connector = moex
+            ms.symbols.append(st0)
+            ms.sT0 = st0
+            print('spot_T0 (TOD, today) = ' + ms.sT0.ticker)
+
+            # T1
             a = ms.cfg('spot.T1').split(':')
             conn = self.find_connector(a[0])
-            print(a[0])
 
             spots = conn.get_spot(a[1])
 
-            # spots = ms.connector.get_currency()
-            # print('spot num', len(spots))
-            #
-            # for spot in spots:
-            #     print(spot.name, spot.ticker, spot.figi)
+            s = TSymbol(spots[0].name, spots[0].ticker, spots[0].figi, spot=True)
+            s.quoted = True
+            s.first_1min_candle_date = spots[0].first_1min_candle_date
+            s.first_1day_candle_date = spots[0].first_1day_candle_date
+            ms.sT1 = s
+            print('spot_T1 (TOM, tomorow) = ' + ms.sT1.ticker)
+            s.connector = conn
+            ms.symbols.append(s)
 
-            for spot in spots:
-                # print('spot: ' + spot.name)
-                s = TSymbol(spot.name, spot.ticker, spot.figi, spot=True)
-                if s1 is None:
-                    s1 = s
-                    s.quoted = True
-                    s.first_1min_candle_date = spot.first_1min_candle_date
-                    s.first_1day_candle_date = spot.first_1day_candle_date
-                    ms.spot_T1 = s
-                    print('spot_T1 (TOM, tomorow) = ' + ms.spot_T1.ticker)
-
-                    s.connector = conn
-
-                ms.symbols.append(s)
-
-
-            # isin: str = _grpc_helpers.string_field(1)
-            # figi: str = _grpc_helpers.string_field(2)
-            # ticker: str = _grpc_helpers.string_field(3)
-            # class_code: str = _grpc_helpers.string_field(4)
-            # instrument_type: str = _grpc_helpers.string_field(5)
-            # name: str = _grpc_helpers.string_field(6)
-            # uid: str = _grpc_helpers.string_field(7)
-            # position_uid: str = _grpc_helpers.string_field(8)
-            # instrument_kind: "InstrumentType" = _grpc_helpers.enum_field(10)
-            # api_trade_available_flag: str = _grpc_helpers.string_field(11)
-            # for_iis_flag: bool = _grpc_helpers.bool_field(12)
-            # first_1min_candle_date: datetime = _grpc_helpers.message_field(26)
-            # first_1day_candle_date: datetime = _grpc_helpers.message_field(27)
-            # for_qual_investor_flag: bool = _grpc_helpers.bool_field(28)
-            # weekend_flag: bool = _grpc_helpers.bool_field(29)
-            # blocked_tca_flag: bool = _grpc_helpers.bool_field(30)
-
-
-            # spots = ms.connector.get_spot(self.config.get('META: USD/RUB', 'spot_T0'))
-            # s_t1 = TSymbol(spots[0].name, spots[0].ticker, spots[0].figi, ms.connector, spot=True)
-            # s_t1.quoted = True
-            # ms.spot_T0 = s_t1
-            # logger.info('spot_T0 = (TOD, today) = ' + ms.spot_T0.ticker)
-
+            # futures
             futures = conn.get_futures(ms.alias)
             for future in futures:
-                ms.symbols.append(TSymbol(future.name, future.ticker, future.figi, future=True))
-            if len(futures) > 0:
-                ms.future_current = futures[0]
-                ms.future_current.quoted = True
-                print('current future = ' + ms.future_current.ticker)
+
+                fut_s = TSymbol(future.name, future.ticker, future.figi, future=True)
+                print(fut_s.ticker)
+
+                fut_s.connector = conn
+                ms.symbols.append(fut_s)
+
+            ms.future = ms.find_by_ticker(futures[0].ticker)
+            ms.future.quoted = True
+            print('current future = ' + ms.future.ticker)
+
+            # print(st0.info['description']['data'])
+
+            # oi
+            c = ms.cfg('oi').split(':')
+            oi = TSymbol(c[1], '', '', spot=True)
+            oi.connector = moex
+            ms.symbols.append(st0)
+            ms.oi = oi
+            print('OI (open interest) = ' + ms.oi.name)
 
             ms.main()
 
@@ -151,11 +119,12 @@ class TRobot:
         # self.amain()
 
     def amain(self):  # data.amain() is not async !!! - async only connector.amain() and system.amain()
+        pass
 
         # if self.system: self.system.amain()
 
-        for connector in self.connectors:
-            asyncio.run(connector.amain())
+        # for connector in self.connectors:
+        #     asyncio.run(connector.amain())
 
 
 def load_from_file(file_name: str):  # temp function --- >>> TCandles

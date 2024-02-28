@@ -42,6 +42,9 @@ class TConnector:
     def amain(self):
         pass
 
+    def get_oi(self, symbol, from_date: datetime = None, to_date: datetime = None):
+        pass
+
 
 class YFinanceConnector(TConnector):
     pass

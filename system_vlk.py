@@ -131,7 +131,7 @@ class TMoneyMethod(TAnalysisMethod):
 
                     elif money.gap:
                         drawer.fp.add_line((_ts, money.candle0.close),
-                                           (_ts + delta_ts + delta_ts, money.candle0.close), color="F2F200", width=1)
+                                           (self.ts_max(_ts + delta_ts*2), money.candle0.close), color="F2F200", width=1)
                         drawer.fp.add_rect((_ts, money.candle0.close),
                                            (_ts + delta_ts, money.candle1.open), color="FFFFBF")
                     # elif money.maker: drawer.fp.add_line((_ts, money.candle0.close), (self.ts_max(_ts+delta_ts*3),
@@ -260,6 +260,11 @@ class TTendencyMethod(TAnalysisMethod):
 
         recurcy(tc.start2p(st[0], st[1]))
 
+        # todo recurcy(recurcy)
+
+        if tc.between_last2p(tc[-1].si):
+            tc[-1].si = tc[-2].si
+
     @staticmethod
     def color(p: TTendencyPoint):
         # todo config
@@ -283,8 +288,8 @@ class TTendencyMethod(TAnalysisMethod):
         while i < len(tc)-1:
             drawer.fp.add_line(tc[i].coord(), tc[i+1].coord(), color="00FFF0")
             drawer.fp.add_text(tc[i].coord(), self.title(tc[i]), self.color(tc.begin(i-1)))  # color="eee")
-            if tc[i].enlarge:
-                drawer.fp.add_line(tc[i].coord(), tc[i+1].coord(value=tc[i].si.value), color="00FFF0", width=1)
+            if tc[i].enlarge and i > 0:
+                drawer.fp.add_line(tc[i-1].coord(), tc[i+1].coord(value=tc[i-1].si.value), color="ddd", width=1)
             i += 1
 
         # for p in tc:
@@ -323,15 +328,15 @@ class TVlkSystem(TAnalysisSystem):
         super().__init__(ms, _drawer)
         logger.info(">> Vlk system init")
 
-        self.methods.append(TInfoMethod(self.ms, self.ms.spot_T1.candles.day1))
-        self.methods.append(TMoneyMethod(self.ms, self.ms.spot_T1.candles.day1))
-        self.methods.append(TStreamMethod(self.ms, self.ms.spot_T1.candles.day1))
-        self.methods.append(TTendencyMethod(self.ms, self.ms.spot_T1.candles.day1))
+        self.methods.append(TInfoMethod(self.ms, self.ms.sT1.candles.day1))
+        self.methods.append(TMoneyMethod(self.ms, self.ms.sT1.candles.day1))
+        self.methods.append(TStreamMethod(self.ms, self.ms.sT1.candles.day1))
+        self.methods.append(TTendencyMethod(self.ms, self.ms.sT1.candles.day1))
 
         # self.methods.append(TCorrectionMethod(self.ms))
 
     def main(self):
-        self.ms.spot_T1.refresh()
+        self.ms.sT1.refresh()
         super().main()
 
         # # c0    c+1 !!! -- вперед + 1 надо смотреть!!! ###

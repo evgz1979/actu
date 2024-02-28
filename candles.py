@@ -214,6 +214,7 @@ class TTendencyPoint:
     enlarge = False
     index: int = 0
     range: int = 0
+    breakp: int = 0
     prev: 'TTendencyPoint'  # break point
 
     def __init__(self, stream_item: TStreamItem, index, _range=0, prev=None):
@@ -276,7 +277,7 @@ class TTendency(list[TTendencyPoint]):
                (not p_2.up and p_1.value <= si.value <= p_2.value)
 
 
-class TCorrectionNode:
+class TCorrectionPoint:
     stream_item: TStreamItem = None
     # parent: 'TTendencyNode' = None
     # inside: 'TTendencyNode' = None
@@ -286,7 +287,7 @@ class TCorrectionNode:
         self.stream_item = stream_item
 
 
-class TCorrection(list[TCorrectionNode]):
+class TCorrection(list[TCorrectionPoint]):
 
     inside: 'TCorrection'
     parent: 'TCorrection'

@@ -12,15 +12,30 @@ import finplot as fp
 from pandas import DataFrame
 
 
+class TDrawerPlot:
+    ax = []
+    items = [fp.CandlestickItem]
+
+    def __init__(self, title, rows):
+        self.ax = fp.create_plot(title, maximize=False, rows=rows)
+
+    def add_candles(self, df: DataFrame, row=0):
+        r = fp.candlestick_ochl(df[['open', 'close', 'high', 'low']], ax=self.ax[row])
+        self.items.append(r)
+        return r
+
+
+class TDrawerPlots(list[TDrawerPlot]):
+    pass
+
+
 class TDrawer:
-    ax = {}
+    plots = TDrawerPlots
 
     def __init__(self):
         fp.candle_bull_color = '#6c9'
         fp.candle_bull_body_color = '#6c9'
-
-    def add_candles(self, name, title, df: DataFrame):
-        self.ax[name] = fp.candlestick_ochl(df[['open', 'close', 'high', 'low']])
+        self.plots = TDrawerPlots()
 
     @staticmethod
     def show():

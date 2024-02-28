@@ -30,17 +30,6 @@ def create_df(candles: [HistoricCandle]):  # -> tink_connector.py
     return df
 
 
-def convert_interval(interval):
-    if interval == Interval.day1:
-        return CandleInterval.CANDLE_INTERVAL_DAY
-    elif interval == Interval.hour1:
-        return CandleInterval.CANDLE_INTERVAL_HOUR
-    elif interval == Interval.min5:
-        return CandleInterval.CANDLE_INTERVAL_5_MIN
-    elif interval == Interval.week1:
-        return CandleInterval.CANDLE_INTERVAL_WEEK
-
-
 # todo Для получения информации о дате начала истории добавлены параметры
 # todo first_1min_candle_date и first_1day_candle_date в методах сервиса инструментов.
 
@@ -82,6 +71,17 @@ class TTinkoffConnector(TConnector):
             self.account_id = r.accounts[0].id
 
         logger.info(">> Tinkoff connector init")
+
+    @staticmethod
+    def convert_interval(interval):
+        if interval == Interval.day1:
+            return CandleInterval.CANDLE_INTERVAL_DAY
+        elif interval == Interval.hour1:
+            return CandleInterval.CANDLE_INTERVAL_HOUR
+        elif interval == Interval.min5:
+            return CandleInterval.CANDLE_INTERVAL_5_MIN
+        elif interval == Interval.week1:
+            return CandleInterval.CANDLE_INTERVAL_WEEK
 
     def get_futures(self, alias):
 
@@ -154,7 +154,7 @@ class TTinkoffConnector(TConnector):
                         } for c in market_data_cache.get_all_candles(
                             figi=figi,
                             from_=from2,
-                            interval=convert_interval(interval))
+                            interval=self.convert_interval(interval))
                     ]
                 )
 
@@ -171,7 +171,7 @@ class TTinkoffConnector(TConnector):
                     figi=symbol_name,
                     from_=datetime.utcnow() - timedelta(days=7),
                     to=datetime.utcnow(),
-                    interval=convert_interval(interval)
+                    interval=self.convert_interval(interval)
                 )
         except Exception as ex:
             logger.error(ex)

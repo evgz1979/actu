@@ -1,19 +1,18 @@
 # ACTUaliZator, (c) JZ
-
 from drawer import *
 from system_vlk import *
 from trader import *
 from robot import *
 from connector_tinkoff import *
 from connector_moex import *
-# import yfinance as yf
-# import finplot as fplt
 
 
 if __name__ == "__main__":
 
     robot = TRobot()
     drawer = TDrawer()
+    drawer.plots.append(TDrawerPlot('usd/rub', 3))
+    # drawer.plots.append(TDrawerPlot('si', 1))
 
     robot.connectors.append(TTinkoffConnector())
     robot.connectors.append(TMOEXConnector())
@@ -25,13 +24,13 @@ if __name__ == "__main__":
     vlk = TVlkSystem(robot.metas[0], drawer)
     vlk.main()
 
-    drawer.add_candles(robot.metas[0].spot_T1.name+':day1', '', robot.metas[0].spot_T1.data.day1)
-    # drawer.add_candles(ms1.spot_T1.name+':day1', '', ms1.spot_T1.data.day1)
+    a0 = drawer.plots[0].add_candles(robot.metas[0].sT1.data.day1, 0)
+    a1 = drawer.plots[0].add_candles(robot.metas[0].sT1.data.day1, 1)  # todo st0 !!! from MOEX
+    a2 = drawer.plots[0].add_candles(robot.metas[0].future.data.day1, 2)
 
     vlk.draw()
     drawer.show()
 
-    # start async part of app
-    robot.amain()
+    robot.amain()  # start async part of app
 
 
