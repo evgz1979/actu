@@ -348,6 +348,8 @@ class TCandlesCollection:
 
     def __init__(self):
         self.day1 = TCandlesList()
+        self.hour1 = TCandlesList()
+        self.min5 = TCandlesList()
 
 
 

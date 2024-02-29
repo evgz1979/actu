@@ -1,11 +1,7 @@
-from connector import *
 from connector_moex import *
 from orm import *
-from datetime import datetime
-from typing import Optional, List
-import configparser
 from candles import *
-import pandas as pd
+from drawer import *
 
 
 class TSymbol:
@@ -43,7 +39,7 @@ class TSymbol:
         self.candles = TCandlesCollection()
 
     def refresh(self):
-        # todo и обновлять открытый интерес
+        # todo и обновлять открытый интерес --- вообще обновлять всю дату, которая есть
 
         # for day1 interval
         self.candles.day1.clear()
@@ -57,6 +53,15 @@ class TSymbol:
         self.candles.max_all_high = self.data.day1['high'].max()
         self.candles.min_all_low = self.data.day1['low'].min()
 
+        # for hour1 interval
+        self.candles.hour1.clear()
+        i = 0
+        while i < self.data.hour1.shape[0]:
+            d = self.data.hour1.iloc[i]
+            c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
+            self.candles.hour1.append(c)
+            i = i + 1
+
 
 class TMetaSymbol:
     name = ''
@@ -64,8 +69,8 @@ class TMetaSymbol:
 
     symbols = []
 
-    sT0: TSymbol = None
-    sT1: TSymbol = None
+    spotT0: TSymbol = None
+    spotT1: TSymbol = None
     future: TSymbol = None
     oi: TSymbol = None
 
@@ -75,8 +80,9 @@ class TMetaSymbol:
     def cfg(self, option):
         return config.get('META: ' + self.alias, option)
 
-    def _from(self):
-        return datetime.strptime(self.cfg('from,1d'), '%Y-%m-%d').astimezone(now().tzinfo)
+    @staticmethod
+    def _from(s):
+        return datetime.strptime(s, '%Y-%m-%d').astimezone(now().tzinfo)
 
     def __init__(self, alias):
         self.alias = alias
@@ -90,9 +96,13 @@ class TMetaSymbol:
                 return r
 
     def main(self):
+        f1 = self._from(self.cfg('from,1d'))
+        f2 = self._from('2024-01-01')
+        self.spotT1.data.day1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.day1, f1, now())
+        self.spotT0.data.day1 = self.spotT1.connector.get_candles(self.spotT0.figi, Interval.day1, f1, now())
+        self.future.data.day1 = self.future.connector.get_candles(self.future.figi, Interval.day1, f1, now())
 
-        self.sT1.data.day1 = self.sT1.connector.get_candles(self.sT1.figi, Interval.day1, self._from(), now())
-        self.sT0.data.day1 = self.sT1.connector.get_candles(self.sT0.figi, Interval.day1, self._from(), now())
-        self.future.data.day1 = self.future.connector.get_candles(self.future.figi, Interval.day1, self._from(), now())
+        self.spotT1.data.hour1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour1, f2, now())
+
         self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
 

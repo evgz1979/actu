@@ -121,7 +121,8 @@ class TTinkoffConnector(TConnector):
     def get_candles(self, figi, interval, from2, to2):
 
         try:
-            logger.info("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "...")
+            print("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "...")
+            print("convert interval="+str(self.convert_interval(interval)))
 
             # if interval == Interval.day1:  # for Interval.day1 need absolutely all candles
             #     from_2 = now() - timedelta(days=100)
@@ -132,13 +133,6 @@ class TTinkoffConnector(TConnector):
             with Client(self.token) as client:
                 settings = MarketDataCacheSettings(base_cache_dir=Path("market_data_cache"))
                 market_data_cache = MarketDataCache(settings=settings, services=client)
-
-                # for candle in market_data_cache.get_all_candles(
-                #         figi=figi,
-                #         from_=from_2,
-                #         interval=convert_interval(interval)
-                # ):
-                #     print(candle.time)
 
                 df = DataFrame(
                     [
@@ -158,7 +152,7 @@ class TTinkoffConnector(TConnector):
                     ]
                 )
 
-            logger.info("...success")
+            print(figi + ", Interval=" + str(interval) + "...success")
             return df.set_index('index')
 
         except Exception as ex:

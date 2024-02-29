@@ -1,4 +1,4 @@
-from drawer import TDrawer
+from drawer import *
 from symbols import *
 
 
@@ -6,10 +6,12 @@ class TAnalysisMethod:
     ms: TMetaSymbol
     candles: TCandlesList = None
     drawer: TDrawer
+    ax = None
 
-    def __init__(self, ms: TMetaSymbol, candles: TCandlesList):
+    def __init__(self, ms: TMetaSymbol, candles: TCandlesList, _ax):
         self.ms = ms
         self.candles = candles
+        self.ax = _ax
 
     def calc(self):
         pass

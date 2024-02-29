@@ -16,17 +16,20 @@ class TDrawerPlot:
     ax = []
     items = [fp.CandlestickItem]
 
-    def __init__(self, title, rows):
+    def __init__(self, title, rows=1):
         self.ax = fp.create_plot(title, maximize=False, rows=rows)
 
     def add_candles(self, df: DataFrame, row=0):
         r = fp.candlestick_ochl(df[['open', 'close', 'high', 'low']], ax=self.ax[row])
         self.items.append(r)
-        return r
+        return self.ax[row]
 
 
 class TDrawerPlots(list[TDrawerPlot]):
-    pass
+
+    def append(self, __object: TDrawerPlot) -> TDrawerPlot:
+        super().append(__object)
+        return __object
 
 
 class TDrawer:

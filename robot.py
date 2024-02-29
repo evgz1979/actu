@@ -69,8 +69,8 @@ class TRobot:
             st0.info = moex.get_info(b[1])
             st0.connector = moex
             ms.symbols.append(st0)
-            ms.sT0 = st0
-            print('spot_T0 (TOD, today) = ' + ms.sT0.ticker)
+            ms.spotT0 = st0
+            print('spot_T0 (TOD, today) = ' + ms.spotT0.ticker)
 
             # T1
             a = ms.cfg('spot.T1').split(':')
@@ -82,8 +82,8 @@ class TRobot:
             s.quoted = True
             s.first_1min_candle_date = spots[0].first_1min_candle_date
             s.first_1day_candle_date = spots[0].first_1day_candle_date
-            ms.sT1 = s
-            print('spot_T1 (TOM, tomorow) = ' + ms.sT1.ticker)
+            ms.spotT1 = s
+            print('spot_T1 (TOM, tomorow) = ' + ms.spotT1.ticker)
             s.connector = conn
             ms.symbols.append(s)
 
@@ -105,7 +105,7 @@ class TRobot:
 
             # oi
             c = ms.cfg('oi').split(':')
-            oi = TSymbol(c[1], '', '', spot=True)
+            oi = TSymbol(c[1], '', '')
             oi.connector = moex
             ms.symbols.append(st0)
             ms.oi = oi

@@ -53,7 +53,7 @@ class TInfoMethod(TAnalysisMethod):
         pass
         for limit in self.candles.limits:
             drawer.fp.add_line((limit.candle0.ts, limit.value),
-                               (limit.candle1.ts, limit.value), color='#FF00FF', width=4)
+                               (limit.candle1.ts, limit.value), color='#FF00FF', width=4, ax=self.ax)
 
         # for candle in self.candles:
         #     if candle.uptake:
@@ -105,15 +105,17 @@ class TMoneyMethod(TAnalysisMethod):
                         #                    (_ts+delta_ts*3, money.candle1.open), color="CCFFCC", width=3)
                         drawer.fp.add_line((_ts, money.candle0.close),
                                            (self.ts_max(_ts + delta_ts * 3), money.candle0.close), color="59B359",
-                                           width=1)
+                                           width=1, ax=self.ax)
                         drawer.fp.add_rect((_ts, money.candle0.close),
-                                           (_ts + delta_ts, max(money.candle1.low, money.candle0.low)), color="BFFFBF")
+                                           (_ts + delta_ts, max(money.candle1.low, money.candle0.low)),
+                                           color="BFFFBF", ax=self.ax)
 
                     elif money.gap:
                         drawer.fp.add_line((_ts, money.candle0.close),
-                                           (_ts + delta_ts + delta_ts, money.candle0.close), color="F2F200", width=1)
+                                           (_ts + delta_ts + delta_ts, money.candle0.close), color="F2F200",
+                                           width=1, ax=self.ax)
                         drawer.fp.add_rect((_ts, money.candle0.close),
-                                           (_ts + delta_ts, money.candle1.open), color="FFFFBF")
+                                           (_ts + delta_ts, money.candle1.open), color="FFFFBF", ax=self.ax)
                     # elif money.maker: drawer.fp.add_line((_ts, money.candle0.close), (self.ts_max(_ts+delta_ts*3),
                     # money.candle0.close), color="59B359", width=1) drawer.fp.add_rect((_ts, money.candle0.close),
                     # (_ts+delta_ts, max(money.candle1.low, money.candle0.low)), color="BFFFBF")
@@ -124,16 +126,17 @@ class TMoneyMethod(TAnalysisMethod):
                         #                    (_ts+delta_ts*3, money.candle1.open), color="FFBFBF", width=3)
                         drawer.fp.add_line((_ts, money.candle0.close),
                                            (self.ts_max(_ts + delta_ts * 3), money.candle0.close), color="D96C6C",
-                                           width=1)
+                                           width=1, ax=self.ax)
                         drawer.fp.add_rect((_ts, money.candle0.close),
                                            (_ts + delta_ts, min(money.candle1.high, money.candle0.high)),
-                                           color="FFD9D9")
+                                           color="FFD9D9", ax=self.ax)
 
                     elif money.gap:
                         drawer.fp.add_line((_ts, money.candle0.close),
-                                           (self.ts_max(_ts + delta_ts*2), money.candle0.close), color="F2F200", width=1)
+                                           (self.ts_max(_ts + delta_ts*2), money.candle0.close), color="F2F200",
+                                           width=1, ax=self.ax)
                         drawer.fp.add_rect((_ts, money.candle0.close),
-                                           (_ts + delta_ts, money.candle1.open), color="FFFFBF")
+                                           (_ts + delta_ts, money.candle1.open), color="FFFFBF", ax=self.ax)
                     # elif money.maker: drawer.fp.add_line((_ts, money.candle0.close), (self.ts_max(_ts+delta_ts*3),
                     # money.candle0.close), color="D96C6C", width=1) drawer.fp.add_rect((_ts, money.candle0.close),
                     # (_ts+delta_ts, min(money.candle1.high, money.candle0.high)), color="FFD9D9")
@@ -226,7 +229,7 @@ class TStreamMethod(TAnalysisMethod):
                 drawer.fp.add_line(
                     (self.candles.stream[i].ts, self.candles.stream[i].value),
                     (self.candles.stream[i + 1].ts, self.candles.stream[i + 1].value),
-                    color="#B9A6FF", width=1
+                    color="#B9A6FF", width=1, ax=self.ax
                 )
                 i += 1
 
@@ -286,10 +289,11 @@ class TTendencyMethod(TAnalysisMethod):
 
         i = 0
         while i < len(tc)-1:
-            drawer.fp.add_line(tc[i].coord(), tc[i+1].coord(), color="00FFF0")
-            drawer.fp.add_text(tc[i].coord(), self.title(tc[i]), self.color(tc.begin(i-1)))  # color="eee")
+            drawer.fp.add_line(tc[i].coord(), tc[i+1].coord(), color="00FFF0", ax=self.ax)
+            drawer.fp.add_text(tc[i].coord(), self.title(tc[i]), self.color(tc.begin(i-1)), ax=self.ax)  # color="eee")
             if tc[i].enlarge and i > 0:
-                drawer.fp.add_line(tc[i-1].coord(), tc[i+1].coord(value=tc[i-1].si.value), color="ddd", width=1)
+                drawer.fp.add_line(tc[i-1].coord(), tc[i+1].coord(value=tc[i-1].si.value), color="ddd",
+                                   width=1, ax=self.ax)
             i += 1
 
         # for p in tc:
@@ -328,15 +332,27 @@ class TVlkSystem(TAnalysisSystem):
         super().__init__(ms, _drawer)
         logger.info(">> Vlk system init")
 
-        self.methods.append(TInfoMethod(self.ms, self.ms.sT1.candles.day1))
-        self.methods.append(TMoneyMethod(self.ms, self.ms.sT1.candles.day1))
-        self.methods.append(TStreamMethod(self.ms, self.ms.sT1.candles.day1))
-        self.methods.append(TTendencyMethod(self.ms, self.ms.sT1.candles.day1))
+    def add_methods(self, interval: Interval, _ax):
+        if interval == Interval.day1:
+            self.methods.append(TInfoMethod(self.ms, self.ms.spotT1.candles.day1, _ax))
+            self.methods.append(TMoneyMethod(self.ms, self.ms.spotT1.candles.day1, _ax))
+            self.methods.append(TStreamMethod(self.ms, self.ms.spotT1.candles.day1, _ax))
+            self.methods.append(TTendencyMethod(self.ms, self.ms.spotT1.candles.day1, _ax))
+        elif interval == Interval.hour1:
+            self.methods.append(TInfoMethod(self.ms, self.ms.spotT1.candles.hour1, _ax))
+            self.methods.append(TMoneyMethod(self.ms, self.ms.spotT1.candles.hour1, _ax))
+            self.methods.append(TStreamMethod(self.ms, self.ms.spotT1.candles.hour1, _ax))
+            self.methods.append(TTendencyMethod(self.ms, self.ms.spotT1.candles.hour1, _ax))
+        elif interval == Interval.min5:
+            self.methods.append(TInfoMethod(self.ms, self.ms.spotT1.candles.min5, _ax))
+            self.methods.append(TMoneyMethod(self.ms, self.ms.spotT1.candles.min5, _ax))
+            self.methods.append(TStreamMethod(self.ms, self.ms.spotT1.candles.min5, _ax))
+            self.methods.append(TTendencyMethod(self.ms, self.ms.spotT1.candles.min5, _ax))
 
         # self.methods.append(TCorrectionMethod(self.ms))
 
     def main(self):
-        self.ms.sT1.refresh()
+        self.ms.spotT1.refresh()
         super().main()
 
         # # c0    c+1 !!! -- вперед + 1 надо смотреть!!! ###
