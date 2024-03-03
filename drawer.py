@@ -11,6 +11,8 @@
 import finplot as fp
 from pandas import DataFrame
 
+from settings import *
+
 
 class TDrawerPlot:
     ax = []
@@ -20,9 +22,14 @@ class TDrawerPlot:
         self.ax = fp.create_plot(title, maximize=False, rows=rows)
 
     def add_candles(self, df: DataFrame, row=0):
-        r = fp.candlestick_ochl(df[['open', 'close', 'high', 'low']], ax=self.ax[row])
-        self.items.append(r)
-        return self.ax[row]
+        if row == 0:
+            r = fp.candlestick_ochl(df[['open', 'close', 'high', 'low']], ax=self.ax)
+            self.items.append(r)
+            return self.ax
+        else:
+            r = fp.candlestick_ochl(df[['open', 'close', 'high', 'low']], ax=self.ax[row])
+            self.items.append(r)
+            return self.ax[row]
 
 
 class TDrawerPlots(list[TDrawerPlot]):
@@ -38,7 +45,12 @@ class TDrawer:
     def __init__(self):
         fp.candle_bull_color = '#6c9'
         fp.candle_bull_body_color = '#6c9'
+        fp.background = self.cfg('COLORS', 'bg')
         self.plots = TDrawerPlots()
+
+    @staticmethod
+    def cfg(section, option):
+        return config.get('DRAWER: ' + section, option)
 
     @staticmethod
     def show():
@@ -46,6 +58,8 @@ class TDrawer:
         fp.winw = 1000  # todo ????
         fp.winh = 1000
         fp.show()
+
+
 
 # data = [(instrument, yf.download(instrument, '2020-10-01')) for instrument in ('AAPL','GOOG','TSLA')]
 #

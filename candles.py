@@ -7,6 +7,7 @@ class Interval:
     week1 = 2
     month1 = 3
     hour1 = 10
+    hour4 = 14
     min5 = 100
 
 
@@ -145,10 +146,17 @@ class TStreamItem:
         self.maxmin = maxmin
 
     def is_stop(self, ci, ci1: TCandle):  # c[i], c[i+1]
+        # todo ignore.flat-candle
         if self.up:
-            return ci1.low < ci.low
+            return ci1.low < ci.low and not ci.flat
         else:
-            return ci1.high > ci.high
+            return ci1.high > ci.high and not ci.flat
+
+    def get_stop(self, ci, ci1: TCandle):  # c[i], c[i+1]
+        if self.up:
+            return ci.low
+        else:
+            return ci.high
 
     def is_duble_stop(self, ci, ci1: TCandle):  # c[i], c[i+1]
         if self.up:
@@ -320,7 +328,7 @@ class TCandlesList(list[TCandle]):
         self.tendency = TTendency()
 
     # delta ts
-    def get_dts(self):
+    def dts(self):
         return self[1].ts - self[0].ts
 
 
@@ -333,6 +341,7 @@ class TCandlesCollectionData:
     week1: TCandlesData
     day1: TCandlesData
     hour1: TCandlesData
+    hour4: TCandlesData
     min5: TCandlesData
 
     interval = {}  # other intervals and links to std-intervals
@@ -349,7 +358,19 @@ class TCandlesCollection:
     def __init__(self):
         self.day1 = TCandlesList()
         self.hour1 = TCandlesList()
+        self.hour4 = TCandlesList()
         self.min5 = TCandlesList()
+
+    def get(self, interval: Interval):
+        if interval == Interval.day1:
+            return self.day1
+        elif interval == Interval.hour1:
+            return self.hour1
+        elif interval == Interval.hour4:
+            return self.hour4
+        elif interval == Interval.min5:
+            return self.min5
+
 
 
 

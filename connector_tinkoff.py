@@ -82,6 +82,8 @@ class TTinkoffConnector(TConnector):
             return CandleInterval.CANDLE_INTERVAL_5_MIN
         elif interval == Interval.week1:
             return CandleInterval.CANDLE_INTERVAL_WEEK
+        elif interval == Interval.hour4:
+            return CandleInterval.CANDLE_INTERVAL_4_HOUR
 
     def get_futures(self, alias):
 

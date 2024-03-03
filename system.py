@@ -7,13 +7,18 @@ class TAnalysisMethod:
     candles: TCandlesList = None
     drawer: TDrawer
     ax = None
+    visible = False
 
-    def __init__(self, ms: TMetaSymbol, candles: TCandlesList, _ax):
+    def __init__(self, ms: TMetaSymbol, candles: TCandlesList, _ax, visible=True):
         self.ms = ms
         self.candles = candles
         self.ax = _ax
+        self.visible = visible
 
     def calc(self):
+        pass
+
+    def acalc(self):  # asinc
         pass
 
     def draw(self):  # только расчет, без анализа
