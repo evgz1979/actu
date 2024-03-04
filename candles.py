@@ -33,6 +33,9 @@ class TCandle:
     uptake: bool
     pushdown: bool
 
+    enter: float
+    exit: float
+
     def __init__(self, ts: int, dt: datetime, _open: float, high: float, low: float, close: float, volume: float,
                  is_complete: bool):
         self.ts = ts
@@ -55,6 +58,13 @@ class TCandle:
         self.for_seller = False
         self.uptake = False
         self.pushdown = False
+
+        if self.bullish:
+            self.enter = low
+            self.exit = high
+        else:
+            self.enter = high
+            self.exit = low
 
 
 class TMoney:
@@ -120,7 +130,7 @@ class TOIData(DataFrame):
 
 
 class TStreamItem:
-    up: bool = False
+    up: bool = False  # todo up() return exit > enter
 
     ts: int = 0
     value: float = 0
@@ -132,8 +142,11 @@ class TStreamItem:
 
     maxmin: float = 0
 
-    def __init__(self,
-                 ts: int, value: float, index, stop_ts, stop_value, stop_index, up=False, maxmin: float = 0):
+    enter: (int, float, int)  # ts, value, index
+    exit: (int, float, int)
+    stop: (int, float, int)
+
+    def __init__(self, ts: int, value: float, index, stop_ts, stop_value, stop_index, up=False, maxmin: float = 0):
         self.ts = ts
         self.value = value
         self.index = index
@@ -144,6 +157,9 @@ class TStreamItem:
 
         self.up = up
         self.maxmin = maxmin
+
+        self.enter = 0
+        self.exit = 0
 
     def is_stop(self, ci, ci1: TCandle):  # c[i], c[i+1]
         # todo ignore.flat-candle

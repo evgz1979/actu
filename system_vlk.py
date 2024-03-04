@@ -293,6 +293,21 @@ class TStreamMethod(TAnalysisMethod):
 
             i += 1
 
+    # def calc(self):  # ver 0.3
+    #
+    #     c0 = self.candles[0]
+    #
+    #     if self.candles[1].high < c0.high:
+    #         self.candles.stream.append(TStreamItem(
+    #             c0.ts, c0.high, 0, c0.ts, c0.high, 0, up=False, maxmin=c0.low))
+    #     else:
+    #         self.candles.stream.append(TStreamItem(
+    #             c0.ts, c0.low, 0, c0.ts, c0.low, 0, up=True, maxmin=c0.high))
+    #
+    #     # add 0 point
+    #     if self.candles[0].bullish
+
+
     def draw(self):
         if not self.visible: return
         if len(self.candles.stream) > 2:
