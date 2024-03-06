@@ -144,6 +144,30 @@ class TMoneyMethod(TAnalysisMethod):
                     # (_ts+delta_ts, min(money.candle1.high, money.candle0.high)), color="FFD9D9")
 
 
+# class TStreamZeroMethod(TAnalysisMethod):
+#     id = 'STREAM0'
+#
+#     def calc(self):
+#         st = self.candles.stream0
+#         c = self.candles
+#
+#         i = 0
+#         while i < len(c)-1:
+#             st.append(TStreamItem(c[i].enter, c[i].exit))
+#             if
+#             st.append(TStreamItem(c[i].exit, c[i+1].enter))
+#             i += 1
+#
+#     def draw(self):
+#         if not self.visible: return
+#         st = self.candles.stream0
+#
+#         i = 0
+#         while i < len(st) - 1:
+#             drawer.fp.add_line(st[i].enter, st[i].exit, color="#B9A6FF", width=3, ax=self.ax)
+#             i += 1
+
+
 class TStreamMethod(TAnalysisMethod):
     id = 'STREAM'
 
@@ -251,52 +275,9 @@ class TStreamMethod(TAnalysisMethod):
             _ii = i
         return m, _ts, _ii
 
-    def calc(self):  # ver 0.2
-
-        c0 = self.candles[0]
-        if self.candles[1].high < c0.high:
-            self.candles.stream.append(TStreamItem(
-                c0.ts, c0.high, 0, c0.ts, c0.high, 0, up=False, maxmin=c0.low))
-        else:
-            self.candles.stream.append(TStreamItem(
-                c0.ts, c0.low, 0, c0.ts, c0.low, 0, up=True, maxmin=c0.high))
-
-        i = 0
-        while i < len(self.candles) - 1:
-            ci = self.candles[i]
-            ci1 = self.candles[i + 1]
-            st = self.candles.stream[-1]
-
-            if st.is_stop(ci, ci1):
-                m, _ts, _ii = self.find_extr(i, st)
-                self.candles.stream.append(TStreamItem(
-                    _ts, m, _ii, ci.ts, st.get_stop(ci, ci1), i, up=not st.up, maxmin=m))
-                print('append', _ii, 'for stop point', i, not st.up)
-
-                # внутри вернехого if !!! - то есть после того, как добавили
-                st1 = self.candles.stream[-1]
-                # если еще на этойже свече есть остановка потока в другую сторону
-                if st1.is_stop(ci, ci1) and st1.index != i and st1.index != i+1:  # todo add V-pattern ?
-                    # print('inside', i, st1.up)
-
-                    m, _ts, _ii = self.find_extr_invert(i, st1)
-
-                    self.candles.stream.append(TStreamItem(
-                        _ts, m, _ii, ci.ts, st1.get_stop(ci, ci1), i, up=not st1.up, maxmin=m))
-                    print('append inside', _ii, 'for stop point', i, not st1.up)
-
-                    st2 = self.candles.stream[-1]
-                    m, _ts, _ii = self.find_extr_invert(i+1, st2)
-                    self.candles.stream.append(TStreamItem(
-                        _ts, m, _ii, ci.ts, st1.get_stop(ci, ci1), i, up=not st2.up, maxmin=m))
-                    print('append inside', _ii, 'for stop point', i, not st2.up)
-
-            i += 1
-
-    # def calc(self):  # ver 0.3
+    # def calc(self):  # ver 0.2
     #
     #     c0 = self.candles[0]
-    #
     #     if self.candles[1].high < c0.high:
     #         self.candles.stream.append(TStreamItem(
     #             c0.ts, c0.high, 0, c0.ts, c0.high, 0, up=False, maxmin=c0.low))
@@ -304,29 +285,130 @@ class TStreamMethod(TAnalysisMethod):
     #         self.candles.stream.append(TStreamItem(
     #             c0.ts, c0.low, 0, c0.ts, c0.low, 0, up=True, maxmin=c0.high))
     #
-    #     # add 0 point
-    #     if self.candles[0].bullish
+    #     i = 0
+    #     while i < len(self.candles) - 1:
+    #         ci = self.candles[i]
+    #         ci1 = self.candles[i + 1]
+    #         st = self.candles.stream[-1]
+    #
+    #         if st.is_stop(ci, ci1):
+    #             m, _ts, _ii = self.find_extr(i, st)
+    #             self.candles.stream.append(TStreamItem(
+    #                 _ts, m, _ii, ci.ts, st.get_stop(ci, ci1), i, up=not st.up, maxmin=m))
+    #             print('append', _ii, 'for stop point', i, not st.up)
+    #
+    #             # внутри вернехого if !!! - то есть после того, как добавили
+    #             st1 = self.candles.stream[-1]
+    #             # если еще на этойже свече есть остановка потока в другую сторону
+    #             if st1.is_stop(ci, ci1) and st1.index != i and st1.index != i+1:  # todo add V-pattern ?
+    #                 # print('inside', i, st1.up)
+    #
+    #                 m, _ts, _ii = self.find_extr_invert(i, st1)
+    #
+    #                 self.candles.stream.append(TStreamItem(
+    #                     _ts, m, _ii, ci.ts, st1.get_stop(ci, ci1), i, up=not st1.up, maxmin=m))
+    #                 print('append inside', _ii, 'for stop point', i, not st1.up)
+    #
+    #                 st2 = self.candles.stream[-1]
+    #                 m, _ts, _ii = self.find_extr_invert(i+1, st2)
+    #                 self.candles.stream.append(TStreamItem(
+    #                     _ts, m, _ii, ci.ts, st1.get_stop(ci, ci1), i, up=not st2.up, maxmin=m))
+    #                 print('append inside', _ii, 'for stop point', i, not st2.up)
+    #
+    #         i += 1
+
+    def calc(self):  # ver 0.5
+        i = 0
+        c = self.candles
+
+        def level0():
+            st.append(TStreamItem(c[i].enter, c[i].exit))
+            st.append(TStreamItem(c[i].exit, c[i+1].enter))
+
+        def level1():
+            if len(st) > 0 and st[-1].is_beetwin(c[i], c[i + 1]):
+                st.append(TStreamItem(c[i].enter, c[i+1].enter))
+            elif len(st) > 0 and st[-1].is_correction(c[i], c[i + 1]):
+                st.append(TStreamItem(c[i].enter, c[i+1].enter))
+            else:
+                level0()
+
+        st = self.candles.stream0  # Stream Zero Level
+        i = 0
+        while i < len(c)-1:
+            level0()
+            i += 1
+
+        st = self.candles.stream1  # Stream Level 1
+        i = 0
+        while i < len(c)-1:
+            level1()
+            i += 1
+        st.normalize()
+
+        # st = self.candles.stream  # Base Stream
+        #
+        # i = 0
+        # while i < len(c)-1:
+        #     if len(st) > 0 and st[-1].is_beetwin(c[i], c[i + 1]):
+        #         st.append(TStreamItem(c[i].enter, c[i+1].enter))
+        #     elif len(st) > 0 and st[-1].is_correction(c[i], c[i + 1]):
+        #         st.append(TStreamItem(c[i].enter, c[i+1].enter))
+        #     else:
+        #         st.append(TStreamItem(c[i].enter, c[i].exit))
+        #         st.append(TStreamItem(c[i].exit, c[i + 1].enter))
+        #     i += 1
+        #
+        # st.normalize()
+
+
+        # st = self.candles.stream
+        # c = self.candles
+        # st.append(TStreamItem(c[0].enter, c[0].exit, c[0].enter))
+
+        # i = 0
+        # while i < len(c) - 1:
+        #     st[-1].move_exit(c[i])  # сместить экстремум
+        #
+        #     if st[-1].is_stop(c[i+1]):  # todo перед добавлением проверять со второй стороны!! ??
+        #
+        #         # st[-1].move_exit(c[i+1])
+        #         st.append(TStreamItem(st[-1].exit, c[i+1].exit, c[i+1].enter))
+        #         if i < 25: print('append for stop=', i)
+        #     else: st[-1].move_stop(c[i+1])
+        #     i += 1
+
+        # i = 0
+        # while i < len(c) - 1:
+        #     st.append(TStreamItem(c[i].enter, c[i].exit))
+        #     st.append(TStreamItem(c[i].exit, c[i+1].enter))
+        #     i += 1
 
 
     def draw(self):
         if not self.visible: return
-        if len(self.candles.stream) > 2:
-            dts = self.candles.dts()
-            i = 0
-            while i < len(self.candles.stream) - 1:
-                # debug-mode: показывает точки остановки потока
-                if bool(config.get('METHOD: STREAM', 'debug.stop-points')):
-                    drawer.fp.add_line(
-                        (self.candles.stream[i].stop_ts-dts, self.candles.stream[i].stop_value),
-                        (self.ts_max(self.candles.stream[i].stop_ts + dts), self.candles.stream[i].stop_value),
-                        color="000"
-                    )
-                drawer.fp.add_line(
-                    (self.candles.stream[i].ts, self.candles.stream[i].value),
-                    (self.candles.stream[i + 1].ts, self.candles.stream[i + 1].value),
-                    color="#B9A6FF", width=1, ax=self.ax
-                )
-                i += 1
+
+        for st in self.candles.stream0:
+            drawer.fp.add_line(st.enter, st.exit, color="#B9A6FF", width=1, ax=self.ax)
+
+        for st in self.candles.stream1:
+            drawer.fp.add_line(st.enter, st.exit, color="#B9A6FF", width=2, ax=self.ax)
+
+        # for st in self.candles.stream:
+        #     drawer.fp.add_line(st.enter, st.exit, color="#B9A6FF", width=3, ax=self.ax)
+
+        # if not self.visible: return
+        # st = self.candles.stream
+        # c = self.candles
+        #
+        # i = 0
+        # while i < len(st) - 1:
+        #     # drawer.fp.add_line(c.dts(st[i].stop, -0.5), c.dts(st[i].stop, 0.5), width=3, ax=self.ax)
+        #     drawer.fp.add_line(st[i].enter, st[i].exit, color="#B9A6FF", width=3, ax=self.ax)
+        #     # drawer.fp.add_text(st[i].enter, 'ˆ' if st[i].up else 'v')
+        #     i += 1
+
+
 
 
 class TTendencyMethod(TAnalysisMethod):
@@ -339,29 +421,29 @@ class TTendencyMethod(TAnalysisMethod):
         st = self.candles.stream
         tc = self.candles.tendency
 
-        def recurcy(ep):  # ep - even point
-            i = st.index(ep.si) + 1
-            if i < len(st)-1:
-                while i < len(st)-1 and tc.between_last2p(st[i]):
-                    i += 1
-
-                if tc.begin().si.up:
-                    if st[i].value > ep.si.value:
-                        recurcy(tc.add2p(ep, st.find_min(ep.si, st[i]), st[i]))
-                    else:
-                        recurcy(tc.enlarge(ep, st[i], ep.prev))
-                else:  # dn
-                    if st[i].value > ep.si.value:
-                        recurcy(tc.enlarge(ep, st[i], ep.prev))
-                    else:
-                        recurcy(tc.add2p(ep, st.find_max(ep.si, st[i]), st[i]))
-
-        recurcy(tc.start2p(st[0], st[1]))
-
-        # todo recurcy(recurcy)
-
-        if tc.between_last2p(tc[-1].si):
-            tc[-1].si = tc[-2].si
+        # def recurcy(ep):  # ep - even point
+        #     i = st.index(ep.si) + 1
+        #     if i < len(st)-1:
+        #         while i < len(st)-1 and tc.between_last2p(st[i]):
+        #             i += 1
+        #
+        #         if tc.begin().si.up:
+        #             if st[i].value > ep.si.value:
+        #                 recurcy(tc.add2p(ep, st.find_min(ep.si, st[i]), st[i]))
+        #             else:
+        #                 recurcy(tc.enlarge(ep, st[i], ep.prev))
+        #         else:  # dn
+        #             if st[i].value > ep.si.value:
+        #                 recurcy(tc.enlarge(ep, st[i], ep.prev))
+        #             else:
+        #                 recurcy(tc.add2p(ep, st.find_max(ep.si, st[i]), st[i]))
+        #
+        # recurcy(tc.start2p(st[0], st[1]))
+        #
+        # # todo recurcy(recurcy)
+        #
+        # if tc.between_last2p(tc[-1].si):
+        #     tc[-1].si = tc[-2].si
 
     @staticmethod
     def color(p: TTendencyPoint):
@@ -381,16 +463,16 @@ class TTendencyMethod(TAnalysisMethod):
 
     def draw(self):  # todo debug-mode -- ? отображение надписей, в обыном режиме - рисовать
         if not self.visible: return
-        tc = self.candles.tendency
-
-        i = 0
-        while i < len(tc)-1:
-            drawer.fp.add_line(tc[i].coord(), tc[i+1].coord(), color="00FFF0", ax=self.ax)
-            drawer.fp.add_text(tc[i].coord(), self.title(tc[i]), self.color(tc.begin(i-1)), ax=self.ax)  # color="eee")
-            if tc[i].enlarge and i > 0:
-                drawer.fp.add_line(tc[i-1].coord(), tc[i+1].coord(value=tc[i-1].si.value), color="ddd",
-                                   width=1, ax=self.ax)
-            i += 1
+        # tc = self.candles.tendency
+        #
+        # i = 0
+        # while i < len(tc)-1:
+        #     drawer.fp.add_line(tc[i].coord(), tc[i+1].coord(), color="00FFF0", ax=self.ax)
+        #     drawer.fp.add_text(tc[i].coord(), self.title(tc[i]), self.color(tc.begin(i-1)), ax=self.ax)  # color="eee")
+        #     if tc[i].enlarge and i > 0:
+        #         drawer.fp.add_line(tc[i-1].coord(), tc[i+1].coord(value=tc[i-1].si.value), color="ddd",
+        #                            width=1, ax=self.ax)
+        #     i += 1
 
 
 class TTemplateMethod(TAnalysisMethod):  # (SourceTrace)
@@ -410,13 +492,14 @@ class TVlkSystem(TAnalysisSystem):
         d = self.ms.future.candles.get(interval)
         self.methods.append(TInfoMethod(self.ms, d, _ax, visible=False))
         self.methods.append(TMoneyMethod(self.ms, d, _ax, visible=False))
+        # self.methods.append(TStreamZeroMethod(self.ms, d, _ax))
         self.methods.append(TStreamMethod(self.ms, d, _ax))
         self.methods.append(TTendencyMethod(self.ms, d, _ax, visible=False))
 
         # self.methods.append(TCorrectionMethod(self.ms))
 
     def main(self):
-        self.ms.spotT1.refresh()
+        # self.ms.spotT1.refresh()
         self.ms.future.refresh()
         super().main()
 

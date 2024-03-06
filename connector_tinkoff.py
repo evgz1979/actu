@@ -124,7 +124,8 @@ class TTinkoffConnector(TConnector):
 
         try:
             print("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "...")
-            print("convert interval="+str(self.convert_interval(interval)))
+            print(from2)
+            # print("convert interval="+str(self.convert_interval(interval)))
 
             # if interval == Interval.day1:  # for Interval.day1 need absolutely all candles
             #     from_2 = now() - timedelta(days=100)

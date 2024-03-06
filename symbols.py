@@ -1,3 +1,5 @@
+from datetime import *
+
 from connector_moex import *
 from orm import *
 from candles import *
@@ -53,23 +55,23 @@ class TSymbol:
         self.candles.max_all_high = self.data.day1['high'].max()
         self.candles.min_all_low = self.data.day1['low'].min()
 
-        # for hour1 interval
-        self.candles.hour1.clear()
-        i = 0
-        while i < self.data.hour1.shape[0]:
-            d = self.data.hour1.iloc[i]
-            c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
-            self.candles.hour1.append(c)
-            i = i + 1
-
-        # for hour4 interval
-        self.candles.hour4.clear()
-        i = 0
-        while i < self.data.hour4.shape[0]:
-            d = self.data.hour4.iloc[i]
-            c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
-            self.candles.hour4.append(c)
-            i = i + 1
+        # # for hour1 interval
+        # self.candles.hour1.clear()
+        # i = 0
+        # while i < self.data.hour1.shape[0]:
+        #     d = self.data.hour1.iloc[i]
+        #     c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
+        #     self.candles.hour1.append(c)
+        #     i = i + 1
+        #
+        # # for hour4 interval
+        # self.candles.hour4.clear()
+        # i = 0
+        # while i < self.data.hour4.shape[0]:
+        #     d = self.data.hour4.iloc[i]
+        #     c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
+        #     self.candles.hour4.append(c)
+        #     i = i + 1
 
 
 class TMetaSymbol:
@@ -91,7 +93,8 @@ class TMetaSymbol:
 
     @staticmethod
     def _from(s):
-        return datetime.strptime(s, '%Y-%m-%d').astimezone(now().tzinfo)
+        moscow = timezone(timedelta(hours=3), "Moscow")
+        return datetime.strptime(s, '%Y-%m-%d').astimezone(datetime.now(moscow).tzinfo)
 
     def __init__(self, alias):
         self.alias = alias
@@ -108,15 +111,16 @@ class TMetaSymbol:
         f1 = self._from(self.cfg('from,1d'))
         f2 = self._from('2024-01-01')
 
-        self.spotT0.data.day1 = self.spotT1.connector.get_candles(self.spotT0.figi, Interval.day1, f1, now())
+        # self.spotT0.data.day1 = self.spotT1.connector.get_candles(self.spotT0.figi, Interval.day1, f1, now())
 
-        self.spotT1.data.day1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.day1, f1, now())
-        self.spotT1.data.hour4 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour4, f2, now())
-        self.spotT1.data.hour1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour1, f2, now())
-
+        # self.spotT1.data.day1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.day1, f1, now())
+        # self.spotT1.data.hour4 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour4, f2, now())
+        # self.spotT1.data.hour1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour1, f2, now())
+        #
         self.future.data.day1 = self.future.connector.get_candles(self.future.figi, Interval.day1, f1, now())
-        self.future.data.hour1 = self.future.connector.get_candles(self.future.figi, Interval.hour1, f2, now())
-        self.future.data.hour4 = self.future.connector.get_candles(self.future.figi, Interval.hour4, f2, now())
 
-        self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
+        # self.future.data.hour1 = self.future.connector.get_candles(self.future.figi, Interval.hour1, f2, now())
+        # self.future.data.hour4 = self.future.connector.get_candles(self.future.figi, Interval.hour4, f2, now())
+        #
+        # self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
 

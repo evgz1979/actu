@@ -24,6 +24,9 @@ class TCandle:
     body_max: float
     body_min: float
 
+    # max: float
+    # min: float
+
     flat: bool
     bullish: bool
     bearish: bool
@@ -33,8 +36,8 @@ class TCandle:
     uptake: bool
     pushdown: bool
 
-    enter: float
-    exit: float
+    enter: (int, float)
+    exit: (int, float)
 
     def __init__(self, ts: int, dt: datetime, _open: float, high: float, low: float, close: float, volume: float,
                  is_complete: bool):
@@ -59,12 +62,15 @@ class TCandle:
         self.uptake = False
         self.pushdown = False
 
+        # self.max = max(high, low)
+        # self.min = min(high, low)
+
         if self.bullish:
-            self.enter = low
-            self.exit = high
+            self.enter = (ts, low)
+            self.exit = (ts, high)
         else:
-            self.enter = high
-            self.exit = low
+            self.enter = (ts, high)
+            self.exit = (ts, low)
 
 
 class TMoney:
@@ -130,43 +136,96 @@ class TOIData(DataFrame):
 
 
 class TStreamItem:
-    up: bool = False  # todo up() return exit > enter
+    up: bool = False
 
-    ts: int = 0
-    value: float = 0
-    index: int = 0
+    enter: (int, float)  # ts, value
+    exit: (int, float)
+    # extr: (int, float)
+    stop: (int, float)
 
-    stop_index: int = 0
-    stop_ts: int = 0
-    stop_value: float = 0
+    # ts: int = 0
+    # value: float = 0
+    # index: int = 0
+    #
+    # stop_index: int = 0
+    # stop_ts: int = 0
+    # stop_value: float = 0
+    #
+    # maxmin: float = 0
 
-    maxmin: float = 0
+    def __init__(self, enter, _exit, stop=(0, 0)):
+        self.enter = enter
+        self.exit = _exit
+        self.stop = stop
+        self.up = self.enter[1] < self.exit[1]
 
-    enter: (int, float, int)  # ts, value, index
-    exit: (int, float, int)
-    stop: (int, float, int)
+    #
+    # def __init__(self, ts: int, value: float, index, stop_ts, stop_value, stop_index, up=False, maxmin: float = 0):
+    #     self.ts = ts
+    #     self.value = value
+    #     self.index = index
+    #
+    #     self.stop_ts = stop_ts
+    #     self.stop_value = stop_value
+    #     self.stop_index = stop_index
+    #
+    #     self.up = up
+    #     self.maxmin = maxmin
+    #
+    #     self.enter = 0
+    #     self.exit = 0
 
-    def __init__(self, ts: int, value: float, index, stop_ts, stop_value, stop_index, up=False, maxmin: float = 0):
-        self.ts = ts
-        self.value = value
-        self.index = index
+    @staticmethod
+    def is_beetwin(ci, ci1: TCandle):
+        return ci.enter[1] <= ci.exit[1] <= ci1.enter[1] or ci1.enter[1] <= ci.exit[1] <= ci.enter[1]
 
-        self.stop_ts = stop_ts
-        self.stop_value = stop_value
-        self.stop_index = stop_index
+    @staticmethod
+    def is_correction(ci, ci1: TCandle):
+        return (ci.bullish and ci1.bullish and ci.enter[1] <= ci1.enter[1] <= ci1.exit[1] and ci1.exit[1] > ci.exit[1]) or (
+                ci.bearish and ci1.bearish and ci.enter[1] >= ci1.enter[1] >= ci.exit[1] > ci1.exit[1])
 
-        self.up = up
-        self.maxmin = maxmin
 
-        self.enter = 0
-        self.exit = 0
-
-    def is_stop(self, ci, ci1: TCandle):  # c[i], c[i+1]
-        # todo ignore.flat-candle
+    def merge(self, c: TCandle):
         if self.up:
-            return ci1.low < ci.low and not ci.flat
+            if c.high > self.exit[1]:
+                if c.bullish:
+                    self.exit = c.exit
+                    self.stop = c.enter
+                else:
+                    self.exit = c.enter
+                    self.stop = c.exit
         else:
-            return ci1.high > ci.high and not ci.flat
+            if c.low < self.exit[1]:
+                if c.bullish:
+                    self.exit = c.enter
+                    self.stop = c.exit
+                else:
+                    self.exit = c.exit
+                    self.stop = c.enter
+
+    def is_stop(self, c: TCandle):  # c[i], c[i+1]
+        # todo ignore.flat-candle
+        # if self.up:
+        #     r = ci1.low < ci.low  # and not ci.flat
+        #     # if r: self.stop = ci.ts, ci.low
+        # else:
+        #     r = ci1.high > ci.high  # and not ci.flat
+        #     # if r: self.stop = ci.ts, ci.high
+        #
+        # return r
+        # return ((self.up and ci1.exit < ci.enter) or (not self.up and ci1.exit > ci.enter)) and not ci.flat
+        return (self.up and c.low < self.stop[1]) or (not self.up and c.high > self.stop[1])
+
+    def move_exit(self, c: TCandle):
+        if self.up and c.high > self.exit[1]: self.exit = c.ts, c.high
+        if not self.up and c.low < self.exit[1]: self.exit = c.ts, c.low
+
+        # if self.up and ci1.low > ci.low: self.exit = ci1.ts, ci1.high
+        # if not self.up and ci1.high < ci.high: self.exit = ci1.ts, ci1.low
+
+    def move_stop(self, c: TCandle):
+        if self.up: self.stop = c.ts, c.low
+        else: self.stop = c.ts, c.high
 
     def get_stop(self, ci, ci1: TCandle):  # c[i], c[i+1]
         if self.up:
@@ -182,6 +241,17 @@ class TStreamItem:
 
 
 class TStream(list[TStreamItem]):
+
+    def normalize(self):
+        pass
+        # i = 0
+        # while i < len(self):
+        #     pass
+
+    def append(self, __object: TStreamItem) -> TStreamItem:
+        super().append(__object)
+        return __object
+
     def get_df(self):
         df = DataFrame(columns=['ts', 'value'])
         for st in self:
@@ -331,6 +401,8 @@ class TCandlesList(list[TCandle]):
     limits: TLimits
     moneys: TMoneys
     stream: TStream
+    stream0: TStream
+    stream1: TStream
     tendency: TTendency
 
     max_all_high: float
@@ -341,11 +413,14 @@ class TCandlesList(list[TCandle]):
         self.limits = TLimits()
         self.moneys = TMoneys()
         self.stream = TStream()
+        self.stream0 = TStream()
+        self.stream1 = TStream()
         self.tendency = TTendency()
 
     # delta ts
-    def dts(self):
-        return self[1].ts - self[0].ts
+    def dts(self, value, multiple):
+        d = self[-1].ts - self[-2].ts
+        return value[0] + d * multiple, value[1]
 
 
 class TOICollectionData:
