@@ -1,5 +1,6 @@
 from datetime import datetime
 from pandas import DataFrame
+from settings import *
 
 
 class Interval:
@@ -143,6 +144,8 @@ class TStreamItem:
     # extr: (int, float)
     stop: (int, float)
 
+    visible: bool
+
     # ts: int = 0
     # value: float = 0
     # index: int = 0
@@ -153,11 +156,17 @@ class TStreamItem:
     #
     # maxmin: float = 0
 
-    def __init__(self, enter, _exit, stop=(0, 0)):
+    @property
+    def color(self):
+        if self.up: return cUp
+        else: return cDn
+
+    def __init__(self, enter, _exit, stop=(0, 0), visible=False):
         self.enter = enter
         self.exit = _exit
         self.stop = stop
         self.up = self.enter[1] < self.exit[1]
+        self.visible = visible
 
     #
     # def __init__(self, ts: int, value: float, index, stop_ts, stop_value, stop_index, up=False, maxmin: float = 0):
@@ -175,15 +184,16 @@ class TStreamItem:
     #     self.enter = 0
     #     self.exit = 0
 
-    @staticmethod
-    def is_beetwin(ci, ci1: TCandle):
-        return ci.enter[1] <= ci.exit[1] <= ci1.enter[1] or ci1.enter[1] <= ci.exit[1] <= ci.enter[1]
+    # @staticmethod
+    # def is_smothing(ci, ci1: TCandle):
+    #     return ci.enter[1] <= ci.exit[1] <= ci1.enter[1] or ci1.enter[1] <= ci.exit[1] <= ci.enter[1]
 
-    @staticmethod
-    def is_correction(ci, ci1: TCandle):
-        return (ci.bullish and ci1.bullish and ci.enter[1] <= ci1.enter[1] <= ci1.exit[1] and ci1.exit[1] > ci.exit[1]) or (
-                ci.bearish and ci1.bearish and ci.enter[1] >= ci1.enter[1] >= ci.exit[1] > ci1.exit[1])
-
+    # @staticmethod
+    # def is_correction(ci, ci1: TCandle):
+        # return (ci.bullish and ci1.bullish and ci.enter[1] <= ci1.enter[1] <= ci1.exit[1] and ci1.exit[1] > ci.exit[1]) or (
+        #         ci.bearish and ci1.bearish and ci.enter[1] >= ci1.enter[1] >= ci.exit[1] > ci1.exit[1])
+        # return (ci.bullish and ci.enter[1] <= ci1.low <= ci.exit[1] < ci1.high) or (
+        #         ci.bearish and ci.enter[1] >= ci1.high >= ci.exit[1] > ci1.low)
 
     def merge(self, c: TCandle):
         if self.up:
@@ -203,6 +213,18 @@ class TStreamItem:
                     self.exit = c.exit
                     self.stop = c.enter
 
+    def is_stop2(self, ci, ci1: TCandle):  # c[i], c[i+1]
+        if self.up:
+            return ci1.low < ci.low  # and not ci.flat
+        else:
+            return ci1.high > ci.high  # and not ci.flat
+
+    def get_stop(self, c: TCandle):  # c[i], c[i+1]
+        if self.up:
+            return c.ts, c.low
+        else:
+            return c.ts, c.high
+
     def is_stop(self, c: TCandle):  # c[i], c[i+1]
         # todo ignore.flat-candle
         # if self.up:
@@ -216,9 +238,9 @@ class TStreamItem:
         # return ((self.up and ci1.exit < ci.enter) or (not self.up and ci1.exit > ci.enter)) and not ci.flat
         return (self.up and c.low < self.stop[1]) or (not self.up and c.high > self.stop[1])
 
-    def move_exit(self, c: TCandle):
-        if self.up and c.high > self.exit[1]: self.exit = c.ts, c.high
-        if not self.up and c.low < self.exit[1]: self.exit = c.ts, c.low
+    def move_exit(self, ci, ci1: TCandle):
+        if self.up and ci1.high > self.exit[1]: self.exit = ci1.ts, ci1.high  # and not ci.bullish
+        if not self.up and ci1.low < self.exit[1]: self.exit = ci1.ts, ci1.low  # and not ci.bearish
 
         # if self.up and ci1.low > ci.low: self.exit = ci1.ts, ci1.high
         # if not self.up and ci1.high < ci.high: self.exit = ci1.ts, ci1.low
@@ -227,20 +249,27 @@ class TStreamItem:
         if self.up: self.stop = c.ts, c.low
         else: self.stop = c.ts, c.high
 
-    def get_stop(self, ci, ci1: TCandle):  # c[i], c[i+1]
-        if self.up:
-            return ci.low
-        else:
-            return ci.high
-
     def is_duble_stop(self, ci, ci1: TCandle):  # c[i], c[i+1]
         if self.up:
             return ci1.high > ci.high
         else:
             return ci1.low < ci.low
 
+    def get_exit(self, c: TCandle):
+        if self.up:
+            return c.ts, c.low
+        else:
+            return c.ts, c.high
+
 
 class TStream(list[TStreamItem]):
+
+    def get_exit(self, si: TStreamItem, ci, ci1: TCandle):
+        pass
+        # if si.up:
+        #     return c.ts, c.low
+        # else:
+        #     return c.ts, c.high
 
     def normalize(self):
         pass
@@ -286,7 +315,7 @@ class TStream(list[TStreamItem]):
         i1 = self.index(si1)
         r = si
         while i < i1:
-            if self[i].value < r.value: r = self[i]
+            if self[i].enter[1] < r.enter[1]: r = self[i]
             i += 1
         return r
 
@@ -295,9 +324,13 @@ class TStream(list[TStreamItem]):
         i1 = self.index(si1)
         r = si
         while i < i1:
-            if self[i].value > r.value: r = self[i]
+            if self[i].enter[1] > r.enter[1]: r = self[i]
             i += 1
         return r
+
+    def find(self, f):
+        for si in self:
+            if si.enter[0] == f[0] or si.exit[0] == f[0]: return si
 
     # def get_delta_ts(self):
     #     return (self[1].ts - self[0].ts) / (self[1].index - self[0].index)
@@ -322,8 +355,8 @@ class TTendencyPoint:
         if value != 0:
             v = value
         else:
-            v = self.si.value
-        return self.si.ts + delta, v
+            v = self.si.enter[1]
+        return self.si.enter[0] + delta, v
 
 
 class TTendency(list[TTendencyPoint]):
@@ -367,8 +400,8 @@ class TTendency(list[TTendencyPoint]):
         p_2 = self[-2].si  # pre last
         # p_2 = self.begin().si   # self[-2].si  # pre last
 
-        return (p_2.up and p_2.value <= si.value <= p_1.value) or \
-               (not p_2.up and p_1.value <= si.value <= p_2.value)
+        return (p_2.up and p_2.enter[1] <= si.enter[1] <= p_1.enter[1]) or \
+               (not p_2.up and p_1.enter[1] <= si.enter[1] <= p_2.enter[1])
 
 
 class TCorrectionPoint:
@@ -403,6 +436,7 @@ class TCandlesList(list[TCandle]):
     stream: TStream
     stream0: TStream
     stream1: TStream
+    stream2: TStream
     tendency: TTendency
 
     max_all_high: float
@@ -415,12 +449,27 @@ class TCandlesList(list[TCandle]):
         self.stream = TStream()
         self.stream0 = TStream()
         self.stream1 = TStream()
+        self.stream2 = TStream()
         self.tendency = TTendency()
 
-    # delta ts
-    def dts(self, value, multiple):
-        d = self[-1].ts - self[-2].ts
-        return value[0] + d * multiple, value[1]
+    def _calc_dts(self):
+        r = self[1].ts - self[0].ts
+        if len(self) > 5:
+            i = 1
+            while i <= 5:
+                a = self[i+1].ts-self[i].ts
+                if a < r: r = a
+                i += 1
+        return r
+
+    def ts_max(self, _ts_: float):
+        if _ts_ > self[-1].ts:
+            return self[-1].ts
+        else:
+            return _ts_
+
+    def dts(self, value, multiple):  # delta ts
+        return self.ts_max(value[0] + self._calc_dts() * multiple), value[1]
 
 
 class TOICollectionData:

@@ -65,3 +65,7 @@ class TBaseSystem:
 
 class TMetaSystem:
     pass
+
+class TFractalSystem:
+    pass
+

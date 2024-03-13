@@ -134,8 +134,8 @@ class TTinkoffConnector(TConnector):
             #     from_2 = now() - timedelta(days=10)  # по каждому интервалу индивидуально
 
             with Client(self.token) as client:
-                settings = MarketDataCacheSettings(base_cache_dir=Path("market_data_cache"))
-                market_data_cache = MarketDataCache(settings=settings, services=client)
+                settings = MarketDataCacheSettings(base_cache_dir=Path("cache"))
+                cache = MarketDataCache(settings=settings, services=client)
 
                 df = DataFrame(
                     [
@@ -148,7 +148,7 @@ class TTinkoffConnector(TConnector):
                             'low': cast_money(c.low),
                             'volume': c.volume,
                             'dt': c.time
-                        } for c in market_data_cache.get_all_candles(
+                        } for c in cache.get_all_candles(
                             figi=figi,
                             from_=from2,
                             interval=self.convert_interval(interval))
