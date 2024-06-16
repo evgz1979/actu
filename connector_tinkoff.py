@@ -60,7 +60,7 @@ def create_df(candles: [HistoricCandle]):  # -> tink_connector.py
 #         logger.info(">> Tinkoff history connector init")
 
 
-class TTinkoffConnector(TConnector):
+class TBankConnector(TConnector):
     def __init__(self):
         super().__init__('TINKOFF')
         self.token = config.get('CONNECTOR: TINKOFF', 'token')

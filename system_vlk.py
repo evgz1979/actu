@@ -361,7 +361,7 @@ class TVlkFlowMethods(TFlowDonwgradeMethod):
 
 
 class TVlkSystem(TAnalysisSystem):
-    def __init__(self, ms: TMetaSymbol, _drawer: TDrawer):
+    def __init__(self, ms: MetaSymbol, _drawer: TDrawer):
         super().__init__(ms, _drawer)
         logger.info(">> Vlk system init")
 

@@ -8,12 +8,10 @@ class TRobot:
     connectors = TConnectors
     metas = TMetaSymbols
     trader = Trader
-    drawer = TDrawer
 
-    def __init__(self, trader: Trader, drawer: TDrawer, _metas: [TMetaSymbol]):
+    def __init__(self, trader: Trader, _metas: [MetaSymbol]):
         self.metas = TMetaSymbols()
         self.trader = trader
-        self.drawer = drawer
 
         self.connectors = TConnectors()
 

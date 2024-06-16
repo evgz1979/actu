@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 
 
-class TMOEXConnector(TConnector):
+class MOEXConnector(TConnector):
     url_iss = ''
     session = None
     login = ''

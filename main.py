@@ -1,36 +1,30 @@
-# ACTUaliZator, (c) JZ
-from drawer import *
-from system_vlk import *
+# ACTU@liZator, (c) JZ
 
+from system_vlk import *
 from robot import *
 from connector_tinkoff import *
 from connector_moex import *
 from trader import JZTrader
 
 
-class TRobot1(TRobot):
-    moex: TMOEXConnector
-    tbank: TTinkoffConnector
-    vlk: TVlkSystem
+class MetaSi(MetaSymbol):
+    moex: MOEXConnector
+    tbank: TBankConnector
+
+    def __init__(self):
+        super().__init__('USD/RUB')
 
     def main(self):
-        super().main()
-
-        self.tbank = self.connectors.append(TTinkoffConnector())
-        self.moex = self.connectors.append(TMOEXConnector())
-
-        ms = self.metas[0]  # пока тупо все заточено под рубль/долл
-
-        b = ms.cfg('spot.T0').split(':')
+        b = self.cfg('spot.T0').split(':')
 
         st0 = TSymbol('', b[1], '', spot=True)
         st0.info = self.moex.get_info(b[1])
         st0.connector = self.moex
-        ms.symbols.append(st0)
-        ms.spotT0 = st0
-        print('spot_T0 (TOD, today) = ' + ms.spotT0.ticker)
+        self.symbols.append(st0)
+        self.spotT0 = st0
+        print('spot_T0 (TOD, today) = ' + self.spotT0.ticker)
 
-        a = ms.cfg('spot.T1').split(':')
+        a = self.cfg('spot.T1').split(':')
 
         spots = self.tbank.get_spot(a[1])
 
@@ -38,50 +32,65 @@ class TRobot1(TRobot):
         s.quoted = True
         s.first_1min_candle_date = spots[0].first_1min_candle_date
         s.first_1day_candle_date = spots[0].first_1day_candle_date
-        ms.spotT1 = s
-        print('spot_T1 (TOM, tomorow) = ' + ms.spotT1.ticker)
+        self.spotT1 = s
+        print('spot_T1 (TOM, tomorow) = ' + m_si.spotT1.ticker)
         s.connector = self.tbank
-        ms.symbols.append(s)
+        self.symbols.append(s)
 
         # futures
-        futures = self.tbank.get_futures(ms.alias)
+        futures = self.tbank.get_futures(self.alias)
         for future in futures:
 
             fut_s = TSymbol(future.name, future.ticker, future.figi, future=True)
             print(fut_s.ticker)
 
             fut_s.connector = self.tbank
-            ms.symbols.append(fut_s)
+            self.symbols.append(fut_s)
 
-        ms.future = ms.find_by_ticker(futures[0].ticker)
-        ms.future.quoted = True
-        print('current future = ' + ms.future.ticker)
+        m_si.future = m_si.find_by_ticker(futures[0].ticker)
+        m_si.future.quoted = True
+        print('current future = ' + self.future.ticker)
 
         # oi
-        c = ms.cfg('oi').split(':')
+        c = self.cfg('oi').split(':')
         oi = TSymbol(c[1], '', '')
         oi.connector = self.moex
-        ms.symbols.append(st0)
-        ms.oi = oi
-        print('OI (open interest) = ' + ms.oi.name)
+        self.symbols.append(st0)
+        self.oi = oi
+        print('OI (open interest) = ' + self.oi.name)
 
-        robot.metas[0].main()  # todo пока так, --> TRobot (сделать всеболее абстрактным)
+        super().main()
 
-        p1 = self.drawer.plots.append(TDrawerPlot(ms.future.ticker))
-        ax01 = p1.add_candles(ms.future.data.day1)
 
-        self.vlk = TVlkSystem(ms, self.drawer)
-        self.vlk.add_methods(Interval.day1, ax01)
-        self.vlk.main()
+class RobotSi(TRobot):
+    meta: MetaSi
 
-        self.vlk.draw()
-        self.drawer.show()
+    def main(self):
+        super().main()
+        self.meta = self.metas[0]
+        self.meta.tbank = self.connectors.append(TBankConnector())
+        self.meta.moex = self.connectors.append(MOEXConnector())
+
+        self.meta.main()  # todo пока так, --> TRobot (сделать всеболее абстрактным)
 
 
 if __name__ == "__main__":
 
-    robot = TRobot1(JZTrader(), TDrawer(), [TMetaSymbol('USD/RUB')])
+    m_si = MetaSi()
+    robot = RobotSi(JZTrader(), [m_si])
     robot.main()
+
+    drawer = TDrawer()
+    p1 = drawer.plots.append(TDrawerPlot(m_si.future.ticker))
+    ax01 = p1.add_candles(m_si.future.data.day1)
+
+    vlk = TVlkSystem(m_si, drawer)
+    vlk.add_methods(Interval.day1, ax01)
+    vlk.main()
+
+    vlk.draw()
+    drawer.show()
+
     robot.amain()  # start async part of app
 
 
