@@ -124,3 +124,9 @@ class TMetaSymbol:
         #
         # self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
 
+
+class TMetaSymbols(list[TMetaSymbol]):
+
+    def append(self, _ms: TMetaSymbol) -> TMetaSymbol:
+        super().append(_ms)
+        return _ms

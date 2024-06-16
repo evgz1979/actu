@@ -11,6 +11,7 @@
 import finplot as fp
 from pandas import DataFrame
 
+from candles import TCandlesData
 from settings import *
 
 

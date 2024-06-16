@@ -1,0 +1,3 @@
+class TDataFeeder:
+    pass
+

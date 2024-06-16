@@ -58,6 +58,20 @@ class TCryptoConnector(TConnector):
     pass
 
 
+class TConnectors(list[TConnector]):
+
+    def append(self, __object: TConnector) -> TConnector:
+        super().append(__object)
+        return __object
+
+    def find_connector(self, _id):
+        for c in self:
+            if c.id == _id: return c
+
+    def main(self):
+        for connector in self:
+            connector.main()
+
 # class TKUCoinConnector(TCryptoConnector):
 #     spot = kucoin
 #     futures = kucoinfutures

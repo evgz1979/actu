@@ -2,6 +2,7 @@ from PyQt5.uic.properties import QtCore
 import drawer
 from system import *
 from candles import *
+from system_flow import *
 
 
 class TInfoMethod(TAnalysisMethod):
@@ -74,14 +75,14 @@ class TMoneyMethod(TAnalysisMethod):
                 ci1 = self.candles[i + 1]
 
                 if (ci.bullish or ci.flat) and (ci1.bullish or ci1.flat) and (
-                not (ci.flat and ci1.flat)) and ci1.high > ci.high:
+                        not (ci.flat and ci1.flat)) and ci1.high > ci.high:
                     if ci1.open > ci.close:
                         self.candles.moneys.append(TMoney(ci, ci1, up=True, gap=True))
                     else:
                         self.candles.moneys.append(TMoney(ci, ci1, up=True, maker=True))
 
                 if (ci.bearish or ci.flat) and (ci1.bearish or ci1.flat) and (
-                not (ci.flat and ci1.flat)) and ci1.low < ci.low:
+                        not (ci.flat and ci1.flat)) and ci1.low < ci.low:
                     if ci1.open < ci.close:
                         self.candles.moneys.append(TMoney(ci, ci1, dn=True, gap=True))
                     # todo ??? elif ci1.high <= ci.high:
@@ -114,7 +115,7 @@ class TMoneyMethod(TAnalysisMethod):
 
                     elif money.gap:
                         drawer.fp.add_line((_ts, money.candle0.close),
-                                           (self.ts_max(_ts + delta_ts*2), money.candle0.close), color="F2F200",
+                                           (self.ts_max(_ts + delta_ts * 2), money.candle0.close), color="F2F200",
                                            width=1, ax=self.ax)
                         drawer.fp.add_rect((_ts, money.candle0.close),
                                            (_ts + delta_ts, money.candle1.open), color="FFFFBF", ax=self.ax)
@@ -135,13 +136,22 @@ class TMoneyMethod(TAnalysisMethod):
 
                     elif money.gap:
                         drawer.fp.add_line((_ts, money.candle0.close),
-                                           (self.ts_max(_ts + delta_ts*2), money.candle0.close), color="F2F200",
+                                           (self.ts_max(_ts + delta_ts * 2), money.candle0.close), color="F2F200",
                                            width=1, ax=self.ax)
                         drawer.fp.add_rect((_ts, money.candle0.close),
                                            (_ts + delta_ts, money.candle1.open), color="FFFFBF", ax=self.ax)
                     # elif money.maker: drawer.fp.add_line((_ts, money.candle0.close), (self.ts_max(_ts+delta_ts*3),
                     # money.candle0.close), color="D96C6C", width=1) drawer.fp.add_rect((_ts, money.candle0.close),
                     # (_ts+delta_ts, min(money.candle1.high, money.candle0.high)), color="FFD9D9")
+
+
+class TTemplateMethod(TAnalysisMethod):  # (SourceTrace)
+    description = ['паттерны', '']
+    citation = [' ... кто-то копит "шортистов"/"лонгистов" и с их подъсъема входим...']
+    interpretation = []  # объяснение метода в диалоге с пользователем
+    todo = ['на основании этого метода сделать мой метод пробой']
+    pass
+
 
 class TStreamMethod(TAnalysisMethod):
     id = 'STREAM'
@@ -154,17 +164,17 @@ class TStreamMethod(TAnalysisMethod):
     def level0(self, st: TStream):
         c = self.candles
         i = 0
-        while i < len(c)-1:
+        while i < len(c) - 1:
             st.append(TStreamItem(c[i].enter, c[i].exit, visible=False))
-            st.append(TStreamItem(c[i].exit, c[i+1].enter, visible=False))
+            st.append(TStreamItem(c[i].exit, c[i + 1].enter, visible=False))
             i += 1
 
     def level1(self, st: TStream):
         c = self.candles
         i = 0
-        while i < len(c)-1:
+        while i < len(c) - 1:
             if len(st) > 0 and self.is_correction(c[i], c[i + 1]):
-                st.append(TStreamItem(c[i].enter, c[i+1].enter, visible=False))
+                st.append(TStreamItem(c[i].enter, c[i + 1].enter, visible=False))
             # elif len(st) > 0 and self.is_merge_wicks(c[i], c[i + 1]):
             else:
                 # level0(st)
@@ -245,7 +255,6 @@ class TStreamMethod(TAnalysisMethod):
 
         i = 0
         while i < len(c) - 1:
-
             # if st[-1].is_stop2(c[i], c[i + 1]):
             #     st.append(TStreamItem(
             #         st[-1].exit,
@@ -254,7 +263,6 @@ class TStreamMethod(TAnalysisMethod):
             i += 1
 
     def calc(self):
-
         self.level0(self.candles.stream0)
         self.level1(self.candles.stream1)
         # self.normalize(self.candles.stream1)
@@ -291,8 +299,8 @@ class TTendencyMethod(TAnalysisMethod):
 
         def recurcy(ep):  # ep - even point
             i = st.index(ep.si) + 1
-            if i < len(st)-1:
-                while i < len(st)-1 and tc.between_last2p(st[i]):
+            if i < len(st) - 1:
+                while i < len(st) - 1 and tc.between_last2p(st[i]):
                     i += 1
 
                 if tc.begin().si.up:
@@ -334,21 +342,22 @@ class TTendencyMethod(TAnalysisMethod):
         tc = self.candles.tendency
 
         i = 0
-        while i < len(tc)-1:
-            drawer.fp.add_line(tc[i].coord(), tc[i+1].coord(), color="00FFF0", ax=self.ax)
-            drawer.fp.add_text(tc[i].coord(), self.title(tc[i]), self.color(tc.begin(i-1)), ax=self.ax)  # color="eee")
+        while i < len(tc) - 1:
+            drawer.fp.add_line(tc[i].coord(), tc[i + 1].coord(), color="00FFF0", ax=self.ax)
+            drawer.fp.add_text(tc[i].coord(), self.title(tc[i]), self.color(tc.begin(i - 1)),
+                               ax=self.ax)  # color="eee")
             if tc[i].enlarge and i > 0:
-                drawer.fp.add_line(tc[i-1].coord(), tc[i+1].coord(value=tc[i-1].si.enter[1]), color="ddd",
+                drawer.fp.add_line(tc[i - 1].coord(), tc[i + 1].coord(value=tc[i - 1].si.enter[1]), color="ddd",
                                    width=1, ax=self.ax)
             i += 1
 
 
-class TTemplateMethod(TAnalysisMethod):  # (SourceTrace)
-    description = ['паттерны', '']
-    citation = [' ... кто-то копит "шортистов"/"лонгистов" и с их подъсъема входим...']
-    interpretation = []  # объяснение метода в диалоге с пользователем
-    todo = ['на основании этого метода сделать мой метод пробой']
-    pass
+class TCorrectionMethod(TAnalysisMethod):
+    id = 'CORRECTION'
+
+
+class TVlkFlowMethods(TFlowDonwgradeMethod):
+    id = 'VLK-FLOW'  # все методы в одном, на основе Flow (Stream, Tendency, Correction)
 
 
 class TVlkSystem(TAnalysisSystem):
@@ -357,12 +366,11 @@ class TVlkSystem(TAnalysisSystem):
         logger.info(">> Vlk system init")
 
     def add_methods(self, interval: Interval, _ax):
+        # либо Vkl-Flow
         d = self.ms.future.candles.get(interval)
         self.methods.append(TInfoMethod(self.ms, d, _ax, visible=False))
         self.methods.append(TMoneyMethod(self.ms, d, _ax, visible=False))
-
         self.methods.append(TStreamMethod(self.ms, d, _ax, visible=True))
-
         self.methods.append(TTendencyMethod(self.ms, d, _ax, visible=True))
 
         # self.methods.append(TCorrectionMethod(self.ms))
