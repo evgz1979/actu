@@ -101,10 +101,10 @@ class TBankConnector(TConnector):
         with Client(self.token) as client:
             r1 = client.instruments.find_instrument(query=name)
 
-        spot = list(r1.instruments)
-        spot.sort(key=lambda item: item.name)
+        spots = list(r1.instruments)
+        spots.sort(key=lambda item: item.name)
 
-        return spot
+        return spots[0]
 
     def get_currency(self, name=''):
 

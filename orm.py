@@ -6,7 +6,7 @@ sqlite_url = f"sqlite:///db/01.db"
 engine = create_engine(sqlite_url, echo=False)
 
 
-class Symbol(SQLModel, table=True):
+class ORMSymbol(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     exchange_name: str
@@ -44,7 +44,7 @@ class Candle(SQLModel, table=True):
     volume: float
 
     symbol_id: Optional[int] = Field(default=None, foreign_key="symbol.id")
-    symbol: Optional[Symbol] = Relationship(back_populates="candles")
+    symbol: Optional[ORMSymbol] = Relationship(back_populates="candles")
 
 
 # print(">> orm init")

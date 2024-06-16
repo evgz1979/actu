@@ -45,6 +45,9 @@ class TConnector:
     def get_oi(self, symbol, from_date: datetime = None, to_date: datetime = None):
         pass
 
+    def get_info(self, ticker):
+        return ticker
+
 
 class YFinanceConnector(TConnector):
     pass

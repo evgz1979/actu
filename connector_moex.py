@@ -49,8 +49,7 @@ class MOEXConnector(TConnector):
     #
     #     return spot
 
-    @staticmethod
-    def get_info(ticker):
+    def get_info(self, ticker):
         r = requests.get(config.get('CONNECTOR: MOEX', 'url_securities') + '/' + ticker + '.json')
         return json.loads(r.content)
 

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import *
 
 from connector_moex import *
@@ -6,39 +7,55 @@ from candles import *
 from drawer import *
 
 
-class TSymbol:  # DO NOT REFACTOR to Symbol !!!
-    info: json
+@dataclass(eq=False, repr=True)
+class SymbolInfo:  # todo -- совместить позже с ORM
+    first_1min_candle_date: datetime
+    first_1day_candle_date: datetime
+    extra: json
+    is_future: bool
+    is_spot: bool
+
+
+class Symbol:  # DO NOT REFACTOR to Symbol !!!
+    info: SymbolInfo
     name = ''
     ticker = ''
     figi = ''
-
-    first_1min_candle_date: datetime
-    first_1day_candle_date: datetime
-
     quoted = False
-    is_future = False
-    is_spot = False
 
     connector: TConnector = None
-    _orm_symbol: Symbol
+    _orm_symbol: ORMSymbol
     _orm_candle: Candle
 
     data: TCandlesCollectionData  # so far so
     data_oi: TOICollectionData
     candles: TCandlesCollection  # so far so
 
-    def __init__(self, name, ticker, figi, **kwargs):
+    def __init__(self, name, ticker, figi, connector: TConnector, **kwargs):
+        self.info = SymbolInfo(
+            first_1min_candle_date=datetime(1979, 7, 28),
+            first_1day_candle_date=datetime(1979, 7, 28),
+            extra='',
+            is_future=False,
+            is_spot=False
+        )
+
         self.name = name
         self.ticker = ticker
         self.figi = figi
-        # self.connector = connector
-        self.is_future = kwargs.get('future', False)
-        self.is_spot = kwargs.get('spot', False)
+        self.connector = connector
+        self.info.is_future = kwargs.get('future', False)
+        self.info.is_spot = kwargs.get('spot', False)
         self.quoted = kwargs.get('quoted', False)
+
+        self.info.first_1min_candle_date = kwargs.get('first_1min_candle_date', False)
+        self.info.first_1day_candle_date = kwargs.get('first_1day_candle_date', False)
 
         self.data = TCandlesCollectionData()
         self.data_oi = TOICollectionData()
         self.candles = TCandlesCollection()
+
+        self.info.extra = self.connector.get_info(ticker)
 
     def refresh(self):
         # todo и обновлять открытый интерес --- вообще обновлять всю дату, которая есть
@@ -74,22 +91,32 @@ class TSymbol:  # DO NOT REFACTOR to Symbol !!!
         #     i = i + 1
 
 
+class TSymbols(list[Symbol]):
+
+    def append(self, __object: Symbol) -> Symbol:
+        super().append(__object)
+        return __object
+
+
 class MetaSymbol:
     name = ''
     alias = ''
 
-    symbols = []
+    symbols: TSymbols
 
-    spotT0: TSymbol = None
-    spotT1: TSymbol = None
-    future: TSymbol = None
-    oi: TSymbol = None
+    spotT0: Symbol = None
+    spotT1: Symbol = None
+    future: Symbol = None
+    oi: Symbol = None
 
     # future_infinity: TSymbol = None
     # sT2: TSymbol = None
 
     def cfg(self, option):
         return config.get('META: ' + self.alias, option)
+
+    def cfg_ticker(self, key):
+        return self.cfg(key).split(':')[1]
 
     @staticmethod
     def _from(s):
@@ -99,6 +126,7 @@ class MetaSymbol:
     def __init__(self, alias):
         self.alias = alias
         self.name = config.get('META: ' + alias, 'name')
+        self.symbols = TSymbols()
 
     def find_by_ticker(self, ticker):
         r = None
