@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import *
 
 from connector_moex import *
+from connector_tinkoff import TBankConnector
 from orm import *
 from candles import *
 from drawer import *
@@ -99,6 +100,10 @@ class TSymbols(list[Symbol]):
 
 
 class MetaSymbol:
+    connectors: TConnectors = None
+    moex: MOEXConnector
+    tbank: TBankConnector
+
     name = ''
     alias = ''
 
@@ -136,6 +141,39 @@ class MetaSymbol:
                 return r
 
     def main(self):
+
+        # todo --------- пока все для Si ------ унифицировать !!!!
+
+        self.moex = self.connectors.find_connector('MOEX')
+        self.tbank = self.connectors.find_connector('TINKOFF')
+
+        # spot T0
+        self.spotT0 = self.symbols.append(Symbol('', self.cfg_ticker('spot.T0'), '', self.moex, spot=True))
+        print('spot_T0 (TOD, today) = ' + self.spotT0.ticker)
+
+        # spot T1
+        spot = self.tbank.get_spot(self.cfg_ticker('spot.T1'))
+        self.spotT1 = self.symbols.append(
+            Symbol(spot.name, spot.ticker, spot.figi, self.tbank, spot=True, quoted=True,
+                   first_1min_candle_date=spot.first_1min_candle_date,
+                   first_1day_candle_date=spot.first_1day_candle_date))
+        print('spot_T1 (TOM, tomorow) = ' + self.spotT1.ticker)
+
+        # futures
+        futures = self.tbank.get_futures(self.alias)
+        for future in futures:
+            fut_s = self.symbols.append(Symbol(future.name, future.ticker, future.figi, self.tbank, future=True))
+            print(fut_s.ticker)
+
+        # current future
+        self.future = self.find_by_ticker(futures[0].ticker)
+        self.future.quoted = True
+        print('current future = ' + self.future.ticker)
+
+        # open interest
+        self.oi = oi = self.symbols.append(Symbol('', self.cfg_ticker('oi'), '', self.moex))
+        print('OI (open interest) = ' + self.oi.name)
+
         f1 = self._from(self.cfg('from,1d'))
         f2 = self._from('2024-01-01')
 
@@ -154,7 +192,17 @@ class MetaSymbol:
 
 
 class TMetaSymbols(list[MetaSymbol]):
+    connectors: TConnectors
+
+    def __init__(self, _connectors: TConnectors):
+        super().__init__()
+        self.connectors = _connectors
 
     def append(self, _ms: MetaSymbol) -> MetaSymbol:
         super().append(_ms)
+        _ms.connectors = self.connectors
         return _ms
+
+    def main(self):
+        for ms in self:
+            ms.main()

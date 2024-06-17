@@ -1,10 +1,16 @@
-from robot import *
 
 
 class Trader:
     pass
 
 
-class JZTrader(Trader):
+class MOEXTrader(Trader):
     pass
 
+
+class CryptoTrader(Trader):
+    pass
+
+
+class MultiTrader(Trader):
+    pass
