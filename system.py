@@ -3,14 +3,14 @@ from symbols import *
 
 
 class TAnalysisMethod:
-    ms: MetaSymbol
+    symbol: Symbol
     candles: TCandlesList = None
     drawer: TDrawer
     ax = None
     visible = False
 
-    def __init__(self, ms: MetaSymbol, candles: TCandlesList, _ax, visible=True):
-        self.ms = ms
+    def __init__(self, s: Symbol, candles: TCandlesList, _ax, visible=True):
+        self.symbol = s
         self.candles = candles
         self.ax = _ax
         self.visible = visible
@@ -38,12 +38,12 @@ class TAnalysisMethod:
 
 
 class TAnalysisSystem:
-    ms: MetaSymbol
+    symbol: Symbol
     methods = []
     drawer: TDrawer
 
-    def __init__(self, ms: MetaSymbol, drawer: TDrawer):
-        self.ms = ms
+    def __init__(self, s: Symbol, drawer: TDrawer):
+        self.symbol = s
         self.drawer = drawer
 
     def main(self):
@@ -54,6 +54,8 @@ class TAnalysisSystem:
         for m in self.methods:
             m.drawer = self.drawer
             m.draw()
+
+        self.drawer.show()
 
     async def amain(self):
         pass

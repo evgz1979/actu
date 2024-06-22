@@ -62,15 +62,15 @@ def create_df(candles: [HistoricCandle]):  # -> tink_connector.py
 
 class TBankConnector(TConnector):
     def __init__(self):
-        super().__init__('TINKOFF')
-        self.token = config.get('CONNECTOR: TINKOFF', 'token')
-        self.app_name = config.get('CONNECTOR: TINKOFF', 'app_name')
+        super().__init__('TBANK')
+        self.token = config.get('CONNECTOR: TBANK', 'token')
+        self.app_name = config.get('CONNECTOR: TBANK', 'app_name')
 
         with Client(self.token) as client:
             r = client.users.get_accounts()
             self.account_id = r.accounts[0].id
 
-        logger.info(">> Tinkoff connector init")
+        logger.info(">> T-Bank connector init")
 
     @staticmethod
     def convert_interval(interval):
@@ -84,6 +84,13 @@ class TBankConnector(TConnector):
             return CandleInterval.CANDLE_INTERVAL_WEEK
         elif interval == Interval.hour4:
             return CandleInterval.CANDLE_INTERVAL_4_HOUR
+
+    # def figi____(self):
+    #     https: // www.openfigi.com
+
+    def get_all_figi(self):
+        with Client(self.token) as client:
+            response = client.instruments.shares(instrument_status=0)
 
     def get_futures(self, alias):
 

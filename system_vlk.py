@@ -361,23 +361,28 @@ class TVlkFlowMethods(TFlowDonwgradeMethod):
 
 
 class TVlkSystem(TAnalysisSystem):
-    def __init__(self, ms: MetaSymbol, _drawer: TDrawer):
-        super().__init__(ms, _drawer)
+    def __init__(self, s: Symbol, _drawer: TDrawer):
+        super().__init__(s, _drawer)
         logger.info(">> Vlk system init")
 
-    def add_methods(self, interval: Interval, _ax):
-        # либо Vkl-Flow
-        d = self.ms.future.candles.get(interval)
-        self.methods.append(TInfoMethod(self.ms, d, _ax, visible=False))
-        self.methods.append(TMoneyMethod(self.ms, d, _ax, visible=False))
-        self.methods.append(TStreamMethod(self.ms, d, _ax, visible=True))
-        self.methods.append(TTendencyMethod(self.ms, d, _ax, visible=True))
+    def add_interval(self, interval: Interval):
+        ax = None
+        if len(self.drawer.plots) == 0:
+            p1 = self.drawer.plots.append(TDrawerPlot(self.symbol.ticker))
+            ax = p1.add_candles(self.symbol.data.day1)
+
+        d = self.symbol.candles.get(interval)
+
+        self.methods.append(TInfoMethod(self.symbol, d, ax, visible=False))
+        self.methods.append(TMoneyMethod(self.symbol, d, ax, visible=False))
+        self.methods.append(TStreamMethod(self.symbol, d, ax, visible=True))
+        self.methods.append(TTendencyMethod(self.symbol, d, ax, visible=True))
 
         # self.methods.append(TCorrectionMethod(self.ms))
 
     def main(self):
         # self.ms.spotT1.refresh()
-        self.ms.future.refresh()
+        self.symbol.refresh()
         super().main()
 
 # if len(st) > 0 and st[-1].is_smothing(c[i], c[i + 1]):  # smothing убрать?

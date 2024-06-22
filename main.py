@@ -10,21 +10,14 @@ from trader import MOEXTrader
 if __name__ == "__main__":
 
     si = MetaSymbol('USD/RUB')
-    # robot = RobotSi(MOEXTrader(), [MetaSymbol('USD/RUB')])
-    robot = Robot(MOEXTrader(), [si], [TBankConnector(), MOEXConnector()])
+    sber = MetaSymbol('SBER')
+    robot = Robot(MOEXTrader(), [si, sber], [TBankConnector(), MOEXConnector()])
     robot.main()
 
-    drawer = TDrawer()
-    p1 = drawer.plots.append(TDrawerPlot(si.future.ticker))
-    ax01 = p1.add_candles(si.future.data.day1)
-
-    vlk = TVlkSystem(si, drawer)
-    vlk.add_methods(Interval.day1, ax01)
+    vlk = TVlkSystem(sber.future, TDrawer())
+    vlk.add_interval(Interval.day1)
     vlk.main()
-
     vlk.draw()
-    drawer.show()
 
     robot.amain()  # start async part of app
-
 
