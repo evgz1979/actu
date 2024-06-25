@@ -15,6 +15,7 @@ class SymbolInfo:  # todo -- совместить позже с ORM
     extra: json
     is_future: bool
     is_spot: bool
+    from_1d: datetime
 
 
 class Symbol:  # DO NOT REFACTOR to Symbol !!!
@@ -38,7 +39,8 @@ class Symbol:  # DO NOT REFACTOR to Symbol !!!
             first_1day_candle_date=datetime(1979, 7, 28),
             extra='',
             is_future=False,
-            is_spot=False
+            is_spot=False,
+            from_1d=datetime(1979, 7, 28)
         )
 
         self.name = name
@@ -56,7 +58,27 @@ class Symbol:  # DO NOT REFACTOR to Symbol !!!
         self.data_oi = TOICollectionData()
         self.candles = TCandlesCollection()
 
-        self.info.extra = self.connector.get_info(ticker)
+        # self.info.extra = self.connector.get_info(ticker)
+
+    def get_from(self, interval: Interval):
+        if interval == Interval.day1:
+            return self.info.from_1d
+
+    def get_candles(self, interval: Interval):
+        # self.spotT0.data.day1 = self.spotT1.connector.get_candles(self.spotT0.figi, Interval.day1, f1, now())
+
+        # self.spotT1.data.day1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.day1, f1, now())
+        # self.spotT1.data.hour4 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour4, f2, now())
+        # self.spotT1.data.hour1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour1, f2, now())
+
+        self.data.day1 = self.connector.get_candles(self.figi, interval, self.get_from(interval), now())
+        self.refresh()
+        return self.candles.get(interval)
+
+        # self.future.data.hour1 = self.future.connector.get_candles(self.future.figi, Interval.hour1, f2, now())
+        # self.future.data.hour4 = self.future.connector.get_candles(self.future.figi, Interval.hour4, f2, now())
+        #
+        # self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
 
     def refresh(self):
         # todo и обновлять открытый интерес --- вообще обновлять всю дату, которая есть
@@ -92,7 +114,7 @@ class Symbol:  # DO NOT REFACTOR to Symbol !!!
         #     i = i + 1
 
 
-class TSymbols(list[Symbol]):
+class Symbols(list[Symbol]):
 
     def append(self, __object: Symbol) -> Symbol:
         super().append(__object)
@@ -105,12 +127,14 @@ class MetaSymbol:
     name = ''
     alias = ''
 
-    symbols: TSymbols
+    symbols: Symbols
 
     spotT0: Symbol = None
     spotT1: Symbol = None
     future: Symbol = None  # current future
     oi: Symbol = None
+
+    related: [Symbols]  # todo -- это коррелирующие и др связанные инструменты
 
     # future_infinity: TSymbol = None
     # sT2: TSymbol = None
@@ -135,7 +159,7 @@ class MetaSymbol:
     def __init__(self, alias):
         self.alias = alias
         self.name = config.get('META: ' + alias, 'name')
-        self.symbols = TSymbols()
+        self.symbols = Symbols()
 
     def find_by_ticker(self, ticker):
         r = None
@@ -146,54 +170,48 @@ class MetaSymbol:
 
     def main(self):
 
+        # get meta info for symbols
+        f1 = self._from(self.cfg('from.1d'))
+
         if self.cfg_has('spot.T0'):  # spot T0
             conn = self.connectors.find_connector(self.cfg1('spot.T0'))
-            self.spotT0 = self.symbols.append(Symbol('', self.cfg2('spot.T0'), '', conn, spot=True))
+            self.spotT0 = self.symbols.append(
+                Symbol(self.cfg2('spot.T0'), self.cfg2('spot.T0'), self.cfg2('spot.T0'), conn, spot=True))
+            self.spotT0.info.from_1d = f1
             print('spot_T0 (TOD, today) = ' + self.spotT0.ticker)
 
         if self.cfg_has('spot.T1'):  # spot T1
             conn = self.connectors.find_connector(self.cfg1('spot.T1'))
             spot = conn.get_spot(self.cfg2('spot.T1'))
             self.spotT1 = self.symbols.append(
-                Symbol(spot.name, spot.ticker, spot.figi, conn, spot=True, quoted=True,
-                       first_1min_candle_date=spot.first_1min_candle_date,
-                       first_1day_candle_date=spot.first_1day_candle_date))
+                Symbol(spot.name, spot.ticker, spot.figi, conn, spot=True))
             print('spot_T1 (TOM, tomorow) = ' + self.spotT1.ticker)
 
         if self.cfg_has('futures'):  # futures
             conn = self.connectors.find_connector(self.cfg1('futures'))
-            futures = conn.get_futures(self.alias)
-            if futures is None:
-                print('no one futures for', self.alias)
-            else:
-                for future in futures:
-                    fut_s = self.symbols.append(Symbol(future.name, future.ticker, future.figi, conn, future=True))
-                    print(fut_s.ticker)
 
+            if self.cfg2('futures') == '*':  # search
+                futures = conn.get_futures(self.alias)
+                if futures is None:
+                    print('no one futures for', self.alias)
+                else:
+                    for future in futures:
+                        fut_s = self.symbols.append(Symbol(future.name, future.ticker, future.figi, conn, future=True))
+                        print(fut_s.ticker)
+                    # current future
+                    self.future = self.find_by_ticker(futures[0].ticker)
+            else:
                 # current future
-                self.future = self.find_by_ticker(futures[0].ticker)
-                self.future.quoted = True
-                print('current future = ' + self.future.ticker)
+                self.future = self.cfg2('futures')
+
+            self.future.quoted = True
+            self.future.info.from_1d = f1
+            print('current future = ' + self.future.ticker)
 
         if self.cfg_has('oi'):  # open interest
             conn = self.connectors.find_connector(self.cfg1('oi'))
             self.oi = self.symbols.append(Symbol('', self.cfg2('oi'), '', conn))
             print('OI (open interest) = ' + self.oi.name)
-
-        f1 = self._from(self.cfg('from.1d'))
-
-        # self.spotT0.data.day1 = self.spotT1.connector.get_candles(self.spotT0.figi, Interval.day1, f1, now())
-
-        # self.spotT1.data.day1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.day1, f1, now())
-        # self.spotT1.data.hour4 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour4, f2, now())
-        # self.spotT1.data.hour1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour1, f2, now())
-        #
-        self.future.data.day1 = self.future.connector.get_candles(self.future.figi, Interval.day1, f1, now())
-
-        # self.future.data.hour1 = self.future.connector.get_candles(self.future.figi, Interval.hour1, f2, now())
-        # self.future.data.hour4 = self.future.connector.get_candles(self.future.figi, Interval.hour4, f2, now())
-        #
-        # self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
 
 
 class TMetaSymbols(list[MetaSymbol]):

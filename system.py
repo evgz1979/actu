@@ -38,12 +38,12 @@ class TAnalysisMethod:
 
 
 class TAnalysisSystem:
-    symbol: Symbol
+    meta: MetaSymbol
     methods = []
-    drawer: TDrawer
+    drawer: TDrawer = None
 
-    def __init__(self, s: Symbol, drawer: TDrawer):
-        self.symbol = s
+    def __init__(self, m: MetaSymbol, drawer: TDrawer):
+        self.meta = m
         self.drawer = drawer
 
     def main(self):
@@ -51,11 +51,12 @@ class TAnalysisSystem:
             m.calc()
 
     def draw(self):
-        for m in self.methods:
-            m.drawer = self.drawer
-            m.draw()
+        if self.drawer is not None:
+            for m in self.methods:
+                m.drawer = self.drawer
+                m.draw()
 
-        self.drawer.show()
+            self.drawer.show()
 
     async def amain(self):
         pass

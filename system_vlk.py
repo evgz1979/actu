@@ -361,29 +361,32 @@ class TVlkFlowMethods(TFlowDonwgradeMethod):
 
 
 class TVlkSystem(TAnalysisSystem):
-    def __init__(self, s: Symbol, _drawer: TDrawer):
-        super().__init__(s, _drawer)
+
+    def __init__(self, m: MetaSymbol, _drawer: TDrawer):
+        super().__init__(m, _drawer)
         logger.info(">> Vlk system init")
 
-    def add_interval(self, interval: Interval):
-        ax = None
-        if len(self.drawer.plots) == 0:
-            p1 = self.drawer.plots.append(TDrawerPlot(self.symbol.ticker))
-            ax = p1.add_candles(self.symbol.data.day1)
+    def add_methods(self, s: Symbol, candles: TCandlesList, ax):
+        self.methods.append(TInfoMethod(s, candles, ax, visible=False))
+        self.methods.append(TMoneyMethod(s, candles, ax, visible=False))
+        self.methods.append(TStreamMethod(s, candles, ax, visible=True))
+        self.methods.append(TTendencyMethod(s, candles, ax, visible=True))
 
-        d = self.symbol.candles.get(interval)
+    def add_interval(self, interval: Interval):  # todo -- проверять если фьючерс и нужно ли это
 
-        self.methods.append(TInfoMethod(self.symbol, d, ax, visible=False))
-        self.methods.append(TMoneyMethod(self.symbol, d, ax, visible=False))
-        self.methods.append(TStreamMethod(self.symbol, d, ax, visible=True))
-        self.methods.append(TTendencyMethod(self.symbol, d, ax, visible=True))
+        c1 = self.meta.spotT0.get_candles(interval)
+        c2 = self.meta.future.get_candles(interval)
 
-        # self.methods.append(TCorrectionMethod(self.ms))
+        ax1 = self.drawer.add_window(self.meta.name, [self.meta.spotT0.data.day1, self.meta.future.data.day1])
+
+        self.add_methods(self.meta.spotT0, c1, ax1[0])
+        self.add_methods(self.meta.future, c2, ax1[1])
 
     def main(self):
         # self.ms.spotT1.refresh()
-        self.symbol.refresh()
+        self.meta.spotT0.refresh()
         super().main()
+        self.draw()
 
 # if len(st) > 0 and st[-1].is_smothing(c[i], c[i + 1]):  # smothing убрать?
 #     st.append(TStreamItem(c[i].enter, c[i+1].enter))

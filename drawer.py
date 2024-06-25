@@ -18,12 +18,14 @@ from settings import *
 class TDrawerPlot:
     ax = []
     items = [fp.CandlestickItem]
+    rows = 1
 
     def __init__(self, title, rows=1):
         self.ax = fp.create_plot(title, maximize=False, rows=rows)
+        self.rows = rows
 
     def add_candles(self, df: DataFrame, row=0):
-        if row == 0:
+        if self.rows == 1:
             r = fp.candlestick_ochl(df[['open', 'close', 'high', 'low']], ax=self.ax)
             self.items.append(r)
             return self.ax
@@ -58,9 +60,27 @@ class TDrawer:
         # fp.autoviewrestore()  # todo ?
         fp.winw = 1000  # todo ????
         fp.winh = 1000
+
+        # fp.timer_callback(fplt_save, 0.5, single_shot=True)
         fp.show()
 
+    def add_window(self, title, data: [TCandlesData]):
 
+        p = self.plots.append(TDrawerPlot(title, len(data)))
+
+        i = 0
+        for d in data:
+            p.add_candles(d, i)
+            i += 1
+
+        return p.ax
+
+
+def fplt_save():
+    f = open('screenshots/01.png', 'w')
+    fp.screenshot(f)
+    f.close()
+    fp.close()
 
 # data = [(instrument, yf.download(instrument, '2020-10-01')) for instrument in ('AAPL','GOOG','TSLA')]
 #
