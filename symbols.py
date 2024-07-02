@@ -65,20 +65,16 @@ class Symbol:  # DO NOT REFACTOR to Symbol !!!
             return self.info.from_1d
 
     def get_candles(self, interval: Interval):
-        # self.spotT0.data.day1 = self.spotT1.connector.get_candles(self.spotT0.figi, Interval.day1, f1, now())
+        data = self.connector.get_candles(self.figi, interval, self.get_from(interval), now())
 
-        # self.spotT1.data.day1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.day1, f1, now())
-        # self.spotT1.data.hour4 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour4, f2, now())
-        # self.spotT1.data.hour1 = self.spotT1.connector.get_candles(self.spotT1.figi, Interval.hour1, f2, now())
+        if interval == Interval.day1: self.data.day1 = data
+        elif interval == Interval.week1: self.data.week1 = data
 
-        self.data.day1 = self.connector.get_candles(self.figi, interval, self.get_from(interval), now())
         self.refresh()
         return self.candles.get(interval)
 
-        # self.future.data.hour1 = self.future.connector.get_candles(self.future.figi, Interval.hour1, f2, now())
-        # self.future.data.hour4 = self.future.connector.get_candles(self.future.figi, Interval.hour4, f2, now())
-        #
         # self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
+        # todo пернести OI
 
     def refresh(self):
         # todo и обновлять открытый интерес --- вообще обновлять всю дату, которая есть
