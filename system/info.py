@@ -1,7 +1,7 @@
 from system.abstract import *
 
 
-class InfoMethod(TAnalysisMethod):
+class InfoMethod(AnalysisMethod):
     id = 'BASEINFO'
     description = ['Candles Info Method',
                    'UpTake/PushDown candles',

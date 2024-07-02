@@ -2,7 +2,7 @@ from drawer import *
 from symbols import *
 
 
-class TAnalysisMethod:
+class AnalysisMethod:
     symbol: Symbol
     candles: TCandlesList = None
     drawer: TDrawer
@@ -37,7 +37,7 @@ class TAnalysisMethod:
         return self.candles[1].ts - self.candles[0].ts
 
 
-class TAnalysisSystem:
+class AnalysisSystem:
     meta: MetaSymbol
     methods = []
     drawer: TDrawer = None

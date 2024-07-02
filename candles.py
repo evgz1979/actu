@@ -336,6 +336,10 @@ class TStream(list[TStreamItem]):
     #     return (self[1].ts - self[0].ts) / (self[1].index - self[0].index)
 
 
+class TFlow(TStream):
+    pass
+
+
 class TTendencyPoint:
     si: TStreamItem = None
     enlarge = False
@@ -437,6 +441,7 @@ class TCandlesList(list[TCandle]):
     stream0: TStream
     stream1: TStream
     stream2: TStream
+    flow: TFlow
     tendency: TTendency
 
     max_all_high: float
@@ -450,6 +455,7 @@ class TCandlesList(list[TCandle]):
         self.stream0 = TStream()
         self.stream1 = TStream()
         self.stream2 = TStream()
+        self.flow = TFlow()
         self.tendency = TTendency()
 
     def _calc_dts(self):
