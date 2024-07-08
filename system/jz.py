@@ -12,16 +12,15 @@ class JZSystem(AnalysisSystem):
         self.methods.append(FlowMethod(s, candles, ax, visible=True))
         # self.methods.append(TendencyMethod(s, candles, ax, visible=True))
 
-    def add_interval(self, interval: Interval):  # todo -- проверять если фьючерс и нужно ли это
-        self.add_methods(self.meta.spotT0,
-                         self.meta.spotT0.get_candles(interval),
-                         self.drawer.add_window('1 DAY, spot: ' + self.meta.name, [self.meta.spotT0.data.day1]))
+    def add_symbol(self, s: Symbol, interval: Interval):
+        self.add_methods(s, s.get_candles(interval),
+                         self.drawer.add_window(
+                             Interval.get_title(interval) + ', ' + s.get_title() + ': ' + '[МЕТА: ' + self.meta.name + ']',
+                             [s.data.get(interval)]))
 
-        # self.add_methods(self.meta.future,
-        #                  self.meta.future.get_candles(interval),
-        #                  self.drawer.add_window(
-        #                      '1 DAY, future: ' + self.meta.name + ' (' + self.meta.future.ticker + ')',
-        #                      [self.meta.future.data.day1]))
+    def add_interval(self, interval: Interval):
+        self.add_symbol(self.meta.spotT0, interval)
+        self.add_symbol(self.meta.future, interval)
 
     def main(self):
         super().main()

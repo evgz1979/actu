@@ -15,12 +15,16 @@ class SymbolInfo:  # todo -- совместить позже с ORM
     extra: json
     is_future: bool
     is_spot: bool
-    from_1d: datetime
-    to_1d: datetime
+    # from_1d: datetime
+    # to_1d: datetime
     ignore_candles_count: int
 
+# @dataclass(eq=False, repr=True)
+# class DTFromToInfo:
+#     dtfrom: dict[datetime]
 
-class Symbol:  # DO NOT REFACTOR to Symbol !!!
+
+class Symbol:
     info: SymbolInfo
     name = ''
     ticker = ''
@@ -35,6 +39,17 @@ class Symbol:  # DO NOT REFACTOR to Symbol !!!
     data_oi: TOICollectionData
     candles: TCandlesCollection  # so far so
 
+    dtfrom: {Interval}
+    dtto: {Interval}
+
+    def get_title(self):
+        if self.info.is_future:
+            return 'FUTURE: ' + self.ticker
+        if self.info.is_spot:
+            return 'SPOT: ' + self.ticker
+        else:
+            return self.ticker
+
     def __init__(self, name, ticker, figi, connector: TConnector, **kwargs):
         self.info = SymbolInfo(
             first_1min_candle_date=datetime(1979, 7, 28),
@@ -42,10 +57,13 @@ class Symbol:  # DO NOT REFACTOR to Symbol !!!
             extra='',
             is_future=False,
             is_spot=False,
-            from_1d=datetime(1979, 7, 28),
-            to_1d=datetime(1979, 7, 28),
+            # from_1d=datetime(1979, 7, 28),
+            # to_1d=datetime(1979, 7, 28),
             ignore_candles_count=0
         )
+
+        self.dtfrom = dict()
+        self.dtto = dict()
 
         self.name = name
         self.ticker = ticker
@@ -64,47 +82,57 @@ class Symbol:  # DO NOT REFACTOR to Symbol !!!
 
         # self.info.extra = self.connector.get_info(ticker)
 
-    def get_from(self, interval: Interval):
-        if interval == Interval.day1:
-            return self.info.from_1d
-
-    def get_to(self, interval: Interval):
-        if interval == Interval.day1:
-            return self.info.to_1d
-
     def get(self, interval: Interval):
         if interval == Interval.day1:
             return self.data.day1
+        elif interval == Interval.week1:
+            return self.data.week1
+
+    # def get_from(self, interval: Interval):
+    #     if interval == Interval.day1:
+    #         # return self.info.from_1d
+    #         return self.get(interval).dtfrom
+    #
+    # def get_to(self, interval: Interval):
+    #     if interval == Interval.day1:
+    #         # return self.info.to_1d
+    #         return self.get(interval).dtto
 
     def get_candles(self, interval: Interval):
-        data = self.connector.get_candles(self.figi, interval, self.get_from(interval), self.get_to(interval))
+        print('=======', interval)
+        data = self.connector.get_candles(self.figi, interval, self.dtfrom[interval], self.dtto[interval])
 
         if interval == Interval.day1:
             self.data.day1 = data
         elif interval == Interval.week1:
             self.data.week1 = data
 
-        self.refresh()
+        self.refresh(interval)
         return self.candles.get(interval)
 
         # self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
         # todo пернести OI
 
-    def refresh(self, ignore_candles_count=0, interval=Interval.all):
+    def refresh_inside(self, candles_list: TCandlesList, candles_df: TCandlesDataFrame):
+        candles_list.clear()
+        i = 0
+        while i < candles_df.shape[0]:
+            d = candles_df.iloc[i]
+            c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
+            candles_list.append(c)
+            i = i + 1
+        self.candles.max_all_high = candles_df['high'].max()
+        self.candles.min_all_low = candles_df['low'].min()
+
+    def refresh(self, interval, ignore_candles_count=0):  # interval=Interval.all - по умолчанию: обновить все интервалы
         # todo и обновлять открытый интерес --- вообще обновлять всю дату, которая есть
+        print('refresh_____', interval)
+        if interval == Interval.day1:
+            self.refresh_inside(self.candles.day1, self.data.day1)
+        elif interval == Interval.week1:
+            self.refresh_inside(self.candles.week1, self.data.week1)
 
-        if interval == Interval.day1 or interval == Interval.all:  # todo -- пока так
-            self.candles.day1.clear()
-            i = 0
-            while i < self.data.day1.shape[0]:
-                d = self.data.day1.iloc[i]
-                c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
-                self.candles.day1.append(c)
-                i = i + 1
-
-            self.candles.max_all_high = self.data.day1['high'].max()
-            self.candles.min_all_low = self.data.day1['low'].min()
-            self.info.ignore_candles_count = ignore_candles_count
+        self.info.ignore_candles_count = ignore_candles_count
 
 
 class Symbols(list[Symbol]):
@@ -187,56 +215,128 @@ class MetaSymbol:
 
             b.refresh(delta)
 
-    def main(self):
+    def main_do(self, i: Interval):
 
-        _from = self._from(self.cfg('from.1d'))
+        _from = self._from(self.cfg('from.'+Interval.cfgt(i)))
 
-        if self.cfg_has('to.1d'):
-            _to = self._from(self.cfg('to.1d'))
+        if self.cfg_has('to.'+Interval.cfgt(i)):
+            _to = self._from(self.cfg('to.'+Interval.cfgt(i)))
         else: _to = now()
 
-        if self.cfg_has('spot.T0'):  # spot T0
+        # SPOT T0
+        if self.cfg_has('spot.T0'):
             conn = self.connectors.find_connector(self.cfg1('spot.T0'))
             self.spotT0 = self.symbols.append(
                 Symbol(self.cfg2('spot.T0'), self.cfg2('spot.T0'), self.cfg2('spot.T0'), conn, spot=True))
-            self.spotT0.info.from_1d = _from
-            self.spotT0.info.to_1d = _to
+
+            self.spotT0.dtfrom[i] = _from
+            self.spotT0.dtto[i] = _to
+
             print('spot_T0 (TOD, today) = ' + self.spotT0.ticker)
 
-        if self.cfg_has('spot.T1'):  # spot T1
-            conn = self.connectors.find_connector(self.cfg1('spot.T1'))
-            spot = conn.get_spot(self.cfg2('spot.T1'))
-            self.spotT1 = self.symbols.append(
-                Symbol(spot.name, spot.ticker, spot.figi, conn, spot=True))
-            print('spot_T1 (TOM, tomorow) = ' + self.spotT1.ticker)
+            # SPOT T1
+            if self.cfg_has('spot.T1'):
+                conn = self.connectors.find_connector(self.cfg1('spot.T1'))
+                spot = conn.get_spot(self.cfg2('spot.T1'))
+                self.spotT1 = self.symbols.append(
+                    Symbol(spot.name, spot.ticker, spot.figi, conn, spot=True))
+                print('spot_T1 (TOM, tomorow) = ' + self.spotT1.ticker)
 
-        if self.cfg_has('futures'):  # futures
-            conn = self.connectors.find_connector(self.cfg1('futures'))
+            # FUTURES
+            if self.cfg_has('futures'):
+                conn = self.connectors.find_connector(self.cfg1('futures'))
 
-            if self.cfg2('futures') == '*':  # search
-                futures = conn.get_futures(self.alias)
-                if futures is None:
-                    print('no one futures for', self.alias)
+                if self.cfg2('futures') == '*':  # search
+                    futures = conn.get_futures(self.alias)
+                    if futures is None:
+                        print('no one futures for', self.alias)
+                    else:
+                        for future in futures:
+                            fut_s = self.symbols.append(
+                                Symbol(future.name, future.ticker, future.figi, conn, future=True))
+                            print(fut_s.ticker)
+                        # current future
+                        self.future = self.find_by_ticker(futures[0].ticker)
                 else:
-                    for future in futures:
-                        fut_s = self.symbols.append(Symbol(future.name, future.ticker, future.figi, conn, future=True))
-                        print(fut_s.ticker)
                     # current future
-                    self.future = self.find_by_ticker(futures[0].ticker)
-            else:
-                # current future
-                self.future = self.cfg2('futures')
+                    self.future = self.cfg2('futures')
 
-            self.future.quoted = True
-            self.future.info.from_1d = _from
-            self.future.info.to_1d = _to
-            print('current future = ' + self.future.ticker)
+                self.future.quoted = True
 
-        if self.cfg_has('oi'):  # open interest
-            conn = self.connectors.find_connector(self.cfg1('oi'))
-            self.oi = self.symbols.append(Symbol('', self.cfg2('oi'), '', conn))
-            print('OI (open interest) = ' + self.oi.name)
+                self.future.dtfrom[i] = _from
+                self.future.dtto[i] = _to
 
+                print('current future = ' + self.future.ticker)
+
+            # open interest
+            if self.cfg_has('oi'):
+                conn = self.connectors.find_connector(self.cfg1('oi'))
+                self.oi = self.symbols.append(Symbol('', self.cfg2('oi'), '', conn))
+                print('OI (open interest) = ' + self.oi.name)
+
+    def main(self):
+
+        self.main_do(Interval.day1)
+        # self.main_do(Interval.week1)
+
+
+
+
+
+
+
+
+
+
+
+
+        # _from = self._from(self.cfg('from.1d'))
+        #
+        # if self.cfg_has('to.1d'):
+        #     _to = self._from(self.cfg('to.1d'))
+        # else: _to = now()
+        #
+        # if self.cfg_has('spot.T0'):  # spot T0
+        #     conn = self.connectors.find_connector(self.cfg1('spot.T0'))
+        #     self.spotT0 = self.symbols.append(
+        #         Symbol(self.cfg2('spot.T0'), self.cfg2('spot.T0'), self.cfg2('spot.T0'), conn, spot=True))
+        #     self.spotT0.info.from_1d = _from
+        #     self.spotT0.info.to_1d = _to
+        #     print('spot_T0 (TOD, today) = ' + self.spotT0.ticker)
+        #
+        # if self.cfg_has('spot.T1'):  # spot T1
+        #     conn = self.connectors.find_connector(self.cfg1('spot.T1'))
+        #     spot = conn.get_spot(self.cfg2('spot.T1'))
+        #     self.spotT1 = self.symbols.append(
+        #         Symbol(spot.name, spot.ticker, spot.figi, conn, spot=True))
+        #     print('spot_T1 (TOM, tomorow) = ' + self.spotT1.ticker)
+        #
+        # if self.cfg_has('futures'):  # futures
+        #     conn = self.connectors.find_connector(self.cfg1('futures'))
+        #
+        #     if self.cfg2('futures') == '*':  # search
+        #         futures = conn.get_futures(self.alias)
+        #         if futures is None:
+        #             print('no one futures for', self.alias)
+        #         else:
+        #             for future in futures:
+        #                 fut_s = self.symbols.append(Symbol(future.name, future.ticker, future.figi, conn, future=True))
+        #                 print(fut_s.ticker)
+        #             # current future
+        #             self.future = self.find_by_ticker(futures[0].ticker)
+        #     else:
+        #         # current future
+        #         self.future = self.cfg2('futures')
+        #
+        #     self.future.quoted = True
+        #     self.future.info.from_1d = _from
+        #     self.future.info.to_1d = _to
+        #     print('current future = ' + self.future.ticker)
+        #
+        # if self.cfg_has('oi'):  # open interest
+        #     conn = self.connectors.find_connector(self.cfg1('oi'))
+        #     self.oi = self.symbols.append(Symbol('', self.cfg2('oi'), '', conn))
+        #     print('OI (open interest) = ' + self.oi.name)
 
 class TMetaSymbols(list[MetaSymbol]):
     connectors: TConnectors

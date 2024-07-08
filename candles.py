@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from pandas import DataFrame
 from settings import *
@@ -11,6 +12,16 @@ class Interval:
     hour1 = 10
     hour4 = 14
     min5 = 100
+
+    @staticmethod
+    def get_title(interval):
+        if interval == Interval.day1: return '1 day'
+        if interval == Interval.week1: return '1 week'
+
+    @staticmethod
+    def cfgt(interval):
+        if interval == Interval.day1: return '1d'
+        if interval == Interval.week1: return '1w'
 
 
 class TCandle:
@@ -130,7 +141,11 @@ class TMoneys(list[TMoney]):
 
 
 class TCandlesDataFrame(DataFrame):
-    pass
+    dtfrom: datetime
+    dtto: datetime
+    #
+    # def __init__(self):
+    #
 
 
 class TOIData(DataFrame):
@@ -497,6 +512,10 @@ class TCandlesCollectionData:
 
     interval = {}  # other intervals and links to std-intervals
 
+    def get(self, interval: Interval):
+        if interval == Interval.day1: return self.day1
+        elif interval == Interval.week1: return self.week1
+
 
 class TCandlesCollection:
     week1 = TCandlesList
@@ -508,6 +527,7 @@ class TCandlesCollection:
 
     def __init__(self):
         self.day1 = TCandlesList()
+        self.week1 = TCandlesList()
         self.hour1 = TCandlesList()
         self.hour4 = TCandlesList()
         self.min5 = TCandlesList()
@@ -521,6 +541,8 @@ class TCandlesCollection:
             return self.hour4
         elif interval == Interval.min5:
             return self.min5
+        elif interval == Interval.week1:
+            return self.week1
 
 
 

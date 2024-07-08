@@ -11,8 +11,9 @@
 import finplot as fp
 from pandas import DataFrame
 
-from candles import TCandlesDataFrame
+from candles import TCandlesDataFrame, Interval
 from settings import *
+from symbols import Symbol, MetaSymbol
 
 
 class TDrawerPlot:
@@ -74,6 +75,11 @@ class TDrawer:
             i += 1
 
         return p.ax
+
+    def add_window_interval(self, s: Symbol, meta: MetaSymbol, interval: Interval):
+        self.add_window(
+            Interval.get_title(interval) + ', ' + s.get_title() + ': ' + '[МЕТА: ' + meta.name + ']',
+            [s.data.get(interval)])
 
 
 def fplt_save():
