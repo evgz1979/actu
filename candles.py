@@ -4,6 +4,7 @@ from settings import *
 
 
 class Interval:
+    all = 0
     day1 = 1
     week1 = 2
     month1 = 3
@@ -128,7 +129,7 @@ class TMoneys(list[TMoney]):
     pass
 
 
-class TCandlesData(DataFrame):
+class TCandlesDataFrame(DataFrame):
     pass
 
 
@@ -241,6 +242,10 @@ class TStreamItem:
     def move_exit(self, ci, ci1: TCandle):
         if self.up and ci1.high > self.exit[1]: self.exit = ci1.ts, ci1.high  # and not ci.bullish
         if not self.up and ci1.low < self.exit[1]: self.exit = ci1.ts, ci1.low  # and not ci.bearish
+        if self.up:
+            return ci1.ts, ci1.low
+        else:
+            return ci1.ts, ci1.high
 
         # if self.up and ci1.low > ci.low: self.exit = ci1.ts, ci1.high
         # if not self.up and ci1.high < ci.high: self.exit = ci1.ts, ci1.low
@@ -255,7 +260,7 @@ class TStreamItem:
         else:
             return ci1.low < ci.low
 
-    def get_exit(self, c: TCandle):
+    def get_exit(self, c: TCandle):  # ПЕРЕНЕС в move_exit
         if self.up:
             return c.ts, c.low
         else:
@@ -484,11 +489,11 @@ class TOICollectionData:
 
 
 class TCandlesCollectionData:
-    week1: TCandlesData
-    day1: TCandlesData
-    hour1: TCandlesData
-    hour4: TCandlesData
-    min5: TCandlesData
+    week1: TCandlesDataFrame
+    day1: TCandlesDataFrame
+    hour1: TCandlesDataFrame
+    hour4: TCandlesDataFrame
+    min5: TCandlesDataFrame
 
     interval = {}  # other intervals and links to std-intervals
 

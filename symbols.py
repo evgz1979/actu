@@ -16,6 +16,8 @@ class SymbolInfo:  # todo -- совместить позже с ORM
     is_future: bool
     is_spot: bool
     from_1d: datetime
+    to_1d: datetime
+    ignore_candles_count: int
 
 
 class Symbol:  # DO NOT REFACTOR to Symbol !!!
@@ -40,7 +42,9 @@ class Symbol:  # DO NOT REFACTOR to Symbol !!!
             extra='',
             is_future=False,
             is_spot=False,
-            from_1d=datetime(1979, 7, 28)
+            from_1d=datetime(1979, 7, 28),
+            to_1d=datetime(1979, 7, 28),
+            ignore_candles_count=0
         )
 
         self.name = name
@@ -64,11 +68,21 @@ class Symbol:  # DO NOT REFACTOR to Symbol !!!
         if interval == Interval.day1:
             return self.info.from_1d
 
-    def get_candles(self, interval: Interval):
-        data = self.connector.get_candles(self.figi, interval, self.get_from(interval), now())
+    def get_to(self, interval: Interval):
+        if interval == Interval.day1:
+            return self.info.to_1d
 
-        if interval == Interval.day1: self.data.day1 = data
-        elif interval == Interval.week1: self.data.week1 = data
+    def get(self, interval: Interval):
+        if interval == Interval.day1:
+            return self.data.day1
+
+    def get_candles(self, interval: Interval):
+        data = self.connector.get_candles(self.figi, interval, self.get_from(interval), self.get_to(interval))
+
+        if interval == Interval.day1:
+            self.data.day1 = data
+        elif interval == Interval.week1:
+            self.data.week1 = data
 
         self.refresh()
         return self.candles.get(interval)
@@ -76,38 +90,21 @@ class Symbol:  # DO NOT REFACTOR to Symbol !!!
         # self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
         # todo пернести OI
 
-    def refresh(self):
+    def refresh(self, ignore_candles_count=0, interval=Interval.all):
         # todo и обновлять открытый интерес --- вообще обновлять всю дату, которая есть
 
-        # for day1 interval
-        self.candles.day1.clear()
-        i = 0
-        while i < self.data.day1.shape[0]:
-            d = self.data.day1.iloc[i]
-            c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
-            self.candles.day1.append(c)
-            i = i + 1
+        if interval == Interval.day1 or interval == Interval.all:  # todo -- пока так
+            self.candles.day1.clear()
+            i = 0
+            while i < self.data.day1.shape[0]:
+                d = self.data.day1.iloc[i]
+                c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
+                self.candles.day1.append(c)
+                i = i + 1
 
-        self.candles.max_all_high = self.data.day1['high'].max()
-        self.candles.min_all_low = self.data.day1['low'].min()
-
-        # # for hour1 interval
-        # self.candles.hour1.clear()
-        # i = 0
-        # while i < self.data.hour1.shape[0]:
-        #     d = self.data.hour1.iloc[i]
-        #     c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
-        #     self.candles.hour1.append(c)
-        #     i = i + 1
-        #
-        # # for hour4 interval
-        # self.candles.hour4.clear()
-        # i = 0
-        # while i < self.data.hour4.shape[0]:
-        #     d = self.data.hour4.iloc[i]
-        #     c = TCandle(d['ts'], d['dt'], d['open'], d['high'], d['low'], d['close'], d['volume'], True)
-        #     self.candles.hour4.append(c)
-        #     i = i + 1
+            self.candles.max_all_high = self.data.day1['high'].max()
+            self.candles.min_all_low = self.data.day1['low'].min()
+            self.info.ignore_candles_count = ignore_candles_count
 
 
 class Symbols(list[Symbol]):
@@ -164,16 +161,46 @@ class MetaSymbol:
                 r = s
                 return r
 
+    @staticmethod
+    def sync(a, b: Symbol, interval: Interval):  # не используется -- 2графика в 1 окне не синхронизируются как нужно
+        da = a.get(interval)
+        db = b.get(interval)
+        delta = len(da) - len(db)
+        print('delta', delta)
+        low = db.iloc[0]['low']
+
+        if delta > 0:  # если у фуча меньше свечей, то:
+            dd = da.head(delta-1)
+            dd['open'] = low
+            dd['close'] = low
+            dd['low'] = low
+            dd['high'] = low
+            dd['volume'] = 0
+
+            if interval == Interval.day1:
+                b.data.day1 = pd.concat([dd, db])
+                b.data.day1.reindex()  # todo need?
+                print(da.head(8))
+                print(db.head(8))
+                print(dd)
+                print(b.data.day1.head(8))
+
+            b.refresh(delta)
+
     def main(self):
 
-        # get meta info for symbols
-        f1 = self._from(self.cfg('from.1d'))
+        _from = self._from(self.cfg('from.1d'))
+
+        if self.cfg_has('to.1d'):
+            _to = self._from(self.cfg('to.1d'))
+        else: _to = now()
 
         if self.cfg_has('spot.T0'):  # spot T0
             conn = self.connectors.find_connector(self.cfg1('spot.T0'))
             self.spotT0 = self.symbols.append(
                 Symbol(self.cfg2('spot.T0'), self.cfg2('spot.T0'), self.cfg2('spot.T0'), conn, spot=True))
-            self.spotT0.info.from_1d = f1
+            self.spotT0.info.from_1d = _from
+            self.spotT0.info.to_1d = _to
             print('spot_T0 (TOD, today) = ' + self.spotT0.ticker)
 
         if self.cfg_has('spot.T1'):  # spot T1
@@ -201,7 +228,8 @@ class MetaSymbol:
                 self.future = self.cfg2('futures')
 
             self.future.quoted = True
-            self.future.info.from_1d = f1
+            self.future.info.from_1d = _from
+            self.future.info.to_1d = _to
             print('current future = ' + self.future.ticker)
 
         if self.cfg_has('oi'):  # open interest

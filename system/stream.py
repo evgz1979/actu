@@ -86,16 +86,20 @@ class StreamMethod(AnalysisMethod):
 
     def level_base_0_8(self, st: TStream):  # ver 0.8
         c = self.candles
-        st.append(TStreamItem(c[0].enter, c[0].exit, c[0].enter))
+        ign = self.symbol.info.ignore_candles_count  # =0 -- пока не использую ign
 
-        i = 0
+        # todo -- if ign > 0: ???? перенести ??? неправильно считает?
+        # print('ign candle dt', c[ign].dt, c[ign].high)
+        # print('ign candle enter', c[ign].enter, datetime.fromtimestamp(c[ign].enter[0]))
+
+        st.append(TStreamItem(c[ign].enter, c[ign].exit, c[ign].enter))
+        # print('symbol.info.ignore_candles_count', ign)
+
+        i = ign
         while i < len(c) - 1:
-            st[-1].move_exit(c[i], c[i + 1])
-            ex = st[-1].get_exit(c[i + 1])
-
+            ex = st[-1].move_exit(c[i], c[i + 1])  # ex = st[-1].get_exit(c[i + 1])  -- перенес в move_exit
             if st[-1].is_stop2(c[i], c[i + 1]):
                 st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i])))
-
             i += 1
 
     def level2(self, st: TStream):
@@ -113,11 +117,11 @@ class StreamMethod(AnalysisMethod):
             i += 1
 
     def calc(self):
-        self.level0(self.candles.stream0)
-        self.level1(self.candles.stream1)
+        # self.level0(self.candles.stream0)
+        # self.level1(self.candles.stream1)
         # self.normalize(self.candles.stream1)
         self.level_base_0_8(self.candles.stream)
-        self.level2(self.candles.stream2)
+        # self.level2(self.candles.stream2)
 
     def draw_stream(self, c: TCandlesList, st: TStream, stop_visible=False, colored=False, width=1):
         for si in st:
@@ -129,8 +133,6 @@ class StreamMethod(AnalysisMethod):
                 drawer.fp.add_line(c.dts(si.stop, -0.5), c.dts(si.stop, 0.5))
 
     def draw(self):
-        if not self.visible: return
-
         self.draw_stream(self.candles, self.candles.stream, True, True, 1)
         # self.draw_stream(self.candles, self.candles.stream0, width=1)
         # self.draw_stream(self.candles, self.candles.stream1, width=2)

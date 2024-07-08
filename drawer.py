@@ -11,7 +11,7 @@
 import finplot as fp
 from pandas import DataFrame
 
-from candles import TCandlesData
+from candles import TCandlesDataFrame
 from settings import *
 
 
@@ -64,7 +64,7 @@ class TDrawer:
         # fp.timer_callback(fplt_save, 0.5, single_shot=True)
         fp.show()
 
-    def add_window(self, title, data: [TCandlesData]):
+    def add_window(self, title, data: [TCandlesDataFrame]):
 
         p = self.plots.append(TDrawerPlot(title, len(data)))
 

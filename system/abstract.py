@@ -3,7 +3,7 @@ from symbols import *
 
 
 class AnalysisMethod:
-    symbol: Symbol
+    # symbol: Symbol
     candles: TCandlesList = None
     drawer: TDrawer
     ax = None
@@ -54,7 +54,7 @@ class AnalysisSystem:
         if self.drawer is not None:
             for m in self.methods:
                 m.drawer = self.drawer
-                m.draw()
+                if m.visible: m.draw()
 
             self.drawer.show()
 

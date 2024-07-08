@@ -158,6 +158,7 @@ class TBankConnector(TConnector):
                         } for c in cache.get_all_candles(
                             figi=figi,
                             from_=from2,
+                            to=to2,
                             interval=self.convert_interval(interval))
                     ]
                 )

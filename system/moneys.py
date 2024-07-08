@@ -29,9 +29,6 @@ class MoneyMethod(AnalysisMethod):
                 i += 1  # ! while
 
     def draw(self):
-
-        if not self.visible: return
-
         delta_ts = self.candles[1].ts - self.candles[0].ts
 
         if len(self.candles.moneys) > 1:

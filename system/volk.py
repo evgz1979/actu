@@ -60,7 +60,6 @@ class TendencyMethod(AnalysisMethod):
         #     return str(p.index)  # + "'" + str(p.range)
 
     def draw(self):  # todo debug-mode -- ? отображение надписей, в обыном режиме - рисовать
-        if not self.visible: return
         tc = self.candles.tendency
 
         i = 0

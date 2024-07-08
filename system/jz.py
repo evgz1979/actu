@@ -1,5 +1,6 @@
 from system.abstract import *
 from system.flow import FlowMethod
+from system.volk import TendencyMethod
 
 
 class JZSystem(AnalysisSystem):
@@ -9,29 +10,22 @@ class JZSystem(AnalysisSystem):
 
     def add_methods(self, s: Symbol, candles: TCandlesList, ax):
         self.methods.append(FlowMethod(s, candles, ax, visible=True))
+        # self.methods.append(TendencyMethod(s, candles, ax, visible=True))
 
     def add_interval(self, interval: Interval):  # todo -- проверять если фьючерс и нужно ли это
-        c1 = self.meta.spotT0.get_candles(interval)
-        c2 = self.meta.future.get_candles(interval)
+        self.add_methods(self.meta.spotT0,
+                         self.meta.spotT0.get_candles(interval),
+                         self.drawer.add_window('1 DAY, spot: ' + self.meta.name, [self.meta.spotT0.data.day1]))
 
-        ax1 = self.drawer.add_window(self.meta.name, [self.meta.spotT0.data.day1, self.meta.future.data.day1])
-
-        self.add_methods(self.meta.spotT0, c1, ax1[0])
-        self.add_methods(self.meta.future, c2, ax1[1])
+        # self.add_methods(self.meta.future,
+        #                  self.meta.future.get_candles(interval),
+        #                  self.drawer.add_window(
+        #                      '1 DAY, future: ' + self.meta.name + ' (' + self.meta.future.ticker + ')',
+        #                      [self.meta.future.data.day1]))
 
     def main(self):
         super().main()
         self.draw()
-
-
-
-
-
-
-
-
-
-
 
 # class TJZMethod(AnalysisMethod):
 #     pass
