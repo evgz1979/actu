@@ -199,7 +199,12 @@ class MetaSymbol:
                 r = s
                 return r
 
-    def add_spot(self, name: str, i: Interval):
+    def add_interval(self, s: Symbol, i: Interval):  # todo ---> Symbol
+        c = s.candles.get(i)
+        c.dtfrom = self.get_from(i)
+        c.dtto = self.get_to(i)
+
+    def add_spot(self, name: str):
         if self.cfg_has(name):
             conn = self.connectors.find_connector(self.cfg1(name))
             spot = conn.get_spot(self.cfg2(name))[0]  # пока первый найденный [0]
@@ -207,13 +212,14 @@ class MetaSymbol:
 
             s = self.symbols.append(Symbol(spot.name, spot.ticker, spot.figi, conn, spot=True))
             s.quoted = True
-            c = s.candles.get(i)
-            c.dtfrom = self.get_from(i)
-            c.dtto = self.get_to(i)
+
+            # пока так, потом искать в конфиге
+            self.add_interval(s, Interval.day1)
+            self.add_interval(s, Interval.week1)
 
             return s
 
-    def add_futures(self, name: str, i: Interval):
+    def add_futures(self, name: str):
         if self.cfg_has(name):
             conn = self.connectors.find_connector(self.cfg1(name))
 
@@ -228,10 +234,12 @@ class MetaSymbol:
                         print(fut_s.ticker)
                     # current future
                     f = self.find_by_ticker(futures[0].ticker)
-                    c = f.candles.get(i)
-                    c.dtfrom = self.get_from(i)
-                    c.dtto = self.get_to(i)
                     f.quoted = True
+
+                    # пока так, потом искать в конфиге
+                    self.add_interval(f, Interval.day1)
+                    self.add_interval(f, Interval.week1)
+
                     print('current future = ' + f.ticker, f.figi)
                     return f
             else:
@@ -239,23 +247,29 @@ class MetaSymbol:
                 # self.future = self.cfg2('futures') -- это неправильно, пока только через поиск
                 pass
 
-    def add_open_interest(self, name: str, i: Interval):
+    def add_open_interest(self, name: str):
         if self.cfg_has(name):
             conn = self.connectors.find_connector(self.cfg1('oi'))
             s = self.symbols.append(Symbol('', self.cfg2('oi'), '', conn))
             print('OI (open interest) = ' + s.name)
             return s
 
-    def add_interval(self, i: Interval):
-        self.spotT0 = self.add_spot('spot.T0', i)
-        self.spotT1 = self.add_spot('spot.T1', i)
-        self.future = self.add_futures('futures', i)
-        self.oi = self.add_open_interest('oi', i)
+    # def add_interval(self, i: Interval):
+    #     self.spotT0 = self.add_spot('spot.T0', i)
+    #     self.spotT1 = self.add_spot('spot.T1', i)
+    #     self.future = self.add_futures('futures', i)
+    #     self.oi = self.add_open_interest('oi', i)
 
     def main(self):
+        # не так, система должна добавлять интервалы, а здесь проверять что она добавила и добавлять
 
-        self.add_interval(Interval.day1)
-        # self.main_do(Interval.week1)  # todo не работает одновременно2 и более интервалов - переработать все!!!
+        # self.add_interval(Interval.day1)
+        # self.add_interval(Interval.week1)
+
+        self.spotT0 = self.add_spot('spot.T0')
+        self.spotT1 = self.add_spot('spot.T1')
+        self.future = self.add_futures('futures')
+        self.oi = self.add_open_interest('oi')
 
 
 class TMetaSymbols(list[MetaSymbol]):

@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     jz = JZSystem(sber, TDrawer())
     jz.add_interval(Interval.day1)
-    # jz.add_interval(Interval.week1)
+    jz.add_interval(Interval.week1)
     jz.main()
 
     robot.amain()  # start async part of app
