@@ -11,7 +11,7 @@ if __name__ == "__main__":
     si = MetaSymbol('USD/RUB')
     sber = MetaSymbol('SBER')
 
-    robot = Robot(MOEXTrader(), [si, sber], [TBankConnector(), MOEXConnector()])  # [si, sber]
+    robot = Robot(MOEXTrader(), [sber], [TBankConnector(), MOEXConnector()])  # [si, sber]
     robot.main()
 
     # volk = VolkSystem(sber, TDrawer())

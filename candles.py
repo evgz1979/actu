@@ -467,6 +467,9 @@ class TCandlesList(list[TCandle]):
     max_all_high: float
     min_all_low: float
 
+    dtfrom: datetime
+    dtto: datetime
+
     def __init__(self):
         super().__init__()
         self.limits = TLimits()
