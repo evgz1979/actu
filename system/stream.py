@@ -129,8 +129,8 @@ class StreamMethod(AnalysisMethod):
                 drawer.fp.add_line(si.enter, si.exit, color=si.color, width=width, ax=self.ax)
             else:
                 drawer.fp.add_line(si.enter, si.exit, color=cStream, width=width, ax=self.ax)
-            if stop_visible:
-                drawer.fp.add_line(c.dts(si.stop, -0.5), c.dts(si.stop, 0.5))
+            # if stop_visible:  # --- ------ ошибка отрисовки
+            #     drawer.fp.add_line(c.dts(si.stop, -0.5), c.dts(si.stop, 0.5))
 
     def draw(self):
         self.draw_stream(self.candles, self.candles.stream, True, True, 1)

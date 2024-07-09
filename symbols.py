@@ -103,6 +103,8 @@ class Symbol:
         c = self.candles.get(interval)
         data = self.connector.get_candles(self.figi, interval, c.dtfrom, c.dtto)
 
+        # self.get(interval) = data
+
         if interval == Interval.day1:
             self.data.day1 = data
         elif interval == Interval.week1:

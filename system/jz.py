@@ -9,7 +9,7 @@ class JZSystem(AnalysisSystem):
         logger.info(">> JZ system init")
 
     def add_methods(self, s: Symbol, candles: TCandlesList, ax):
-        self.methods.append(FlowMethod(s, candles, ax, visible=False))
+        self.methods.append(FlowMethod(s, candles, ax, visible=True))
         # self.methods.append(TendencyMethod(s, candles, ax, visible=True))
 
     def add_symbol(self, s: Symbol, interval: Interval):
