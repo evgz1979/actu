@@ -9,7 +9,7 @@ class FlowMethod(StreamMethod):
     def calc(self):
         # self.level0(self.candles.stream0)
         self.level_base_0_8(self.candles.flow)
-        self.level_base_0_8(self.candles.stream)
+        # self.level_base_0_8(self.candles.stream)
 
     def draw(self):
         self.draw_stream(self.candles, self.candles.flow, stop_visible=True, colored=True, width=2)

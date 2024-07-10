@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 from datetime import *
-
 from connector_moex import *
-from connector_tinkoff import TBankConnector
 from orm import *
 from candles import *
 from drawer import *
+from settings import *
 
 
 @dataclass(eq=False, repr=True)
@@ -15,13 +14,7 @@ class SymbolInfo:  # todo -- совместить позже с ORM
     extra: json
     is_future: bool
     is_spot: bool
-    # from_1d: datetime
-    # to_1d: datetime
     ignore_candles_count: int
-
-# @dataclass(eq=False, repr=True)
-# class DTFromToInfo:
-#     dtfrom: dict[datetime]
 
 
 class Symbol:
@@ -39,9 +32,6 @@ class Symbol:
     data_oi: TOICollectionData
     candles: TCandlesCollection  # so far so
 
-    dtfrom: {Interval}
-    dtto: {Interval}
-
     def get_title(self):
         if self.info.is_future:
             return 'FUTURE: ' + self.ticker + '/' + self.figi
@@ -57,8 +47,6 @@ class Symbol:
             extra='',
             is_future=False,
             is_spot=False,
-            # from_1d=datetime(1979, 7, 28),
-            # to_1d=datetime(1979, 7, 28),
             ignore_candles_count=0
         )
 
@@ -80,43 +68,27 @@ class Symbol:
         self.data_oi = TOICollectionData()
         self.candles = TCandlesCollection()
 
-        # self.info.extra = self.connector.get_info(ticker)
-
     def get(self, interval: Interval):
-        if interval == Interval.day1:
-            return self.data.day1
-        elif interval == Interval.week1:
-            return self.data.week1
+        if interval == Interval.min5: return self.data.min5
+        if interval == Interval.hour1: return self.data.hour1
+        if interval == Interval.day1: return self.data.day1
+        if interval == Interval.week1: return self.data.week1
 
-    # def get_from(self, interval: Interval):
-    #     if interval == Interval.day1:
-    #         # return self.info.from_1d
-    #         return self.get(interval).dtfrom
-    #
-    # def get_to(self, interval: Interval):
-    #     if interval == Interval.day1:
-    #         # return self.info.to_1d
-    #         return self.get(interval).dtto
-
-    def get_candles(self, interval: Interval):
-        print('=======', interval)
+    def load_candles(self, interval: Interval):
         c = self.candles.get(interval)
+
         data = self.connector.get_candles(self.figi, interval, c.dtfrom, c.dtto)
 
-        # self.get(interval) = data
-
-        if interval == Interval.day1:
-            self.data.day1 = data
-        elif interval == Interval.week1:
-            self.data.week1 = data
+        # self.get(interval) = data --- так не работает
+        if interval == Interval.day1: self.data.day1 = data
+        elif interval == Interval.week1: self.data.week1 = data
+        elif interval == Interval.hour1: self.data.hour1 = data
+        elif interval == Interval.min5: self.data.min5 = data
 
         self.refresh(interval)
         return self.candles.get(interval)
 
-        # self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
-        # todo пернести OI
-
-    def refresh_inside(self, candles_list: TCandlesList, candles_df: TCandlesDataFrame):
+    def refresh_candles(self, candles_list: TCandlesList, candles_df: TCandlesDataFrame):
         candles_list.clear()
         i = 0
         while i < candles_df.shape[0]:
@@ -127,14 +99,12 @@ class Symbol:
         self.candles.max_all_high = candles_df['high'].max()
         self.candles.min_all_low = candles_df['low'].min()
 
-    def refresh(self, interval, ignore_candles_count=0):  # interval=Interval.all - по умолчанию: обновить все интервалы
-        # todo и обновлять открытый интерес --- вообще обновлять всю дату, которая есть
-        print('refresh_____', interval)
-        if interval == Interval.day1:
-            self.refresh_inside(self.candles.day1, self.data.day1)
-        elif interval == Interval.week1:
-            self.refresh_inside(self.candles.week1, self.data.week1)
+    def refresh(self, interval, ignore_candles_count=0):
+        # interval=Interval.all - по умолчанию: обновить все интервалы
+        # и обновлять открытый интерес --- вообще обновлять всю дату, которая есть
+        # self.oi.data_oi.day1 = self.oi.connector.get_oi(self.oi.name)  # oi 5 min !!!! not 1 day!!!
 
+        self.refresh_candles(self.candles.get(interval), self.data.get(interval))
         self.info.ignore_candles_count = ignore_candles_count
 
 
@@ -158,8 +128,7 @@ class MetaSymbol:
     future: Symbol = None  # current future
     oi: Symbol = None
 
-    related: [Symbols]  # todo -- это коррелирующие и др связанные инструменты
-
+    # related: [Symbols]  # это коррелирующие и др связанные инструменты
     # future_infinity: TSymbol = None
     # sT2: TSymbol = None
 
@@ -175,17 +144,12 @@ class MetaSymbol:
     def cfg2(self, key):
         return self.cfg(key).split(':')[1]
 
-    @staticmethod
-    def _from(s):
-        moscow = timezone(timedelta(hours=3), "Moscow")
-        return datetime.strptime(s, '%Y-%m-%d').astimezone(datetime.now(moscow).tzinfo)
-
     def get_from(self, interval: Interval):  # тоже надо анализировать если нет записи в конфиге
-        return self._from(self.cfg('from.'+Interval.cfgt(interval)))
+        return realdt(self.cfg('from.'+Interval.cfgt(interval)))
 
     def get_to(self, interval: Interval):
         if self.cfg_has('to.' + Interval.cfgt(interval)):
-            return self._from(self.cfg('to.' + Interval.cfgt(interval)))
+            return realdt(self.cfg('to.' + Interval.cfgt(interval)))
         else:
             return now()
 
@@ -206,6 +170,13 @@ class MetaSymbol:
         c.dtfrom = self.get_from(i)
         c.dtto = self.get_to(i)
 
+    def add_intervals(self, s: Symbol):
+        # пока так, потом искать в конфиге
+        self.add_interval(s, Interval.min5)
+        self.add_interval(s, Interval.hour1)
+        self.add_interval(s, Interval.day1)
+        self.add_interval(s, Interval.week1)
+
     def add_spot(self, name: str):
         if self.cfg_has(name):
             conn = self.connectors.find_connector(self.cfg1(name))
@@ -215,9 +186,7 @@ class MetaSymbol:
             s = self.symbols.append(Symbol(spot.name, spot.ticker, spot.figi, conn, spot=True))
             s.quoted = True
 
-            # пока так, потом искать в конфиге
-            self.add_interval(s, Interval.day1)
-            self.add_interval(s, Interval.week1)
+            self.add_intervals(s)
 
             return s
 
@@ -238,9 +207,7 @@ class MetaSymbol:
                     f = self.find_by_ticker(futures[0].ticker)
                     f.quoted = True
 
-                    # пока так, потом искать в конфиге
-                    self.add_interval(f, Interval.day1)
-                    self.add_interval(f, Interval.week1)
+                    self.add_intervals(f)
 
                     print('current future = ' + f.ticker, f.figi)
                     return f
@@ -256,18 +223,7 @@ class MetaSymbol:
             print('OI (open interest) = ' + s.name)
             return s
 
-    # def add_interval(self, i: Interval):
-    #     self.spotT0 = self.add_spot('spot.T0', i)
-    #     self.spotT1 = self.add_spot('spot.T1', i)
-    #     self.future = self.add_futures('futures', i)
-    #     self.oi = self.add_open_interest('oi', i)
-
     def main(self):
-        # не так, система должна добавлять интервалы, а здесь проверять что она добавила и добавлять
-
-        # self.add_interval(Interval.day1)
-        # self.add_interval(Interval.week1)
-
         self.spotT0 = self.add_spot('spot.T0')
         self.spotT1 = self.add_spot('spot.T1')
         self.future = self.add_futures('futures')

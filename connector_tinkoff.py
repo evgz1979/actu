@@ -131,15 +131,7 @@ class TBankConnector(TConnector):
     def get_candles(self, figi, interval, from2, to2):
 
         try:
-            print("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "...")
-            print(from2)
-            # print("convert interval="+str(self.convert_interval(interval)))
-
-            # if interval == Interval.day1:  # for Interval.day1 need absolutely all candles
-            #     from_2 = now() - timedelta(days=100)
-            #     from_2 = self.config.get()
-            # else:
-            #     from_2 = now() - timedelta(days=10)  # по каждому интервалу индивидуально
+            print("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "..., from", from2)
 
             with Client(self.token) as client:
                 settings = MarketDataCacheSettings(base_cache_dir=Path("cache"))
@@ -163,7 +155,8 @@ class TBankConnector(TConnector):
                             interval=self.convert_interval(interval))
                     ]
                 )
-
+            # print(from2, to2)
+            # print(df)
             print(figi + ", Interval=" + str(interval) + "...success")
             return df.set_index('index')
 
@@ -173,7 +166,7 @@ class TBankConnector(TConnector):
     def _get_candles_old(self, symbol_name, interval):
         try:
             with Client(self.token) as client:
-                r = client.market_data.get_candles(
+                r = client.market_data.load_candles(
                     figi=symbol_name,
                     from_=datetime.utcnow() - timedelta(days=7),
                     to=datetime.utcnow(),

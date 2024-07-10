@@ -90,8 +90,8 @@ class VolkSystem(AnalysisSystem):
         self.methods.append(TendencyMethod(s, candles, ax, visible=True))
 
     def add_interval(self, interval: Interval):  # todo -- проверять если фьючерс и нужно ли это
-        c1 = self.meta.spotT0.get_candles(interval)
-        c2 = self.meta.future.get_candles(interval)
+        c1 = self.meta.spotT0.load_candles(interval)
+        c2 = self.meta.future.load_candles(interval)
 
         ax1 = self.drawer.add_window(self.meta.name, [self.meta.spotT0.data.day1, self.meta.future.data.day1])
 

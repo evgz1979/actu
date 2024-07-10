@@ -13,14 +13,14 @@ class JZSystem(AnalysisSystem):
         # self.methods.append(TendencyMethod(s, candles, ax, visible=True))
 
     def add_symbol(self, s: Symbol, interval: Interval):
-        self.add_methods(s, s.get_candles(interval),
+        self.add_methods(s, s.load_candles(interval),
                          self.drawer.add_window(
                              Interval.get_title(interval) + ', ' + s.get_title() + ': ' + '[МЕТА: ' + self.meta.name + ']',
                              [s.data.get(interval)]))
 
     def add_interval(self, interval: Interval):
         self.add_symbol(self.meta.spotT0, interval)
-        self.add_symbol(self.meta.future, interval)
+        # self.add_symbol(self.meta.future, interval)
 
     def main(self):
         super().main()

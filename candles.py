@@ -15,11 +15,15 @@ class Interval:
 
     @staticmethod
     def get_title(interval):
+        if interval == Interval.min5: return '5 min'
+        if interval == Interval.hour1: return '1 hour'
         if interval == Interval.day1: return '1 day'
         if interval == Interval.week1: return '1 week'
 
     @staticmethod
     def cfgt(interval):
+        if interval == Interval.min5: return '5m'
+        if interval == Interval.hour1: return '1h'
         if interval == Interval.day1: return '1d'
         if interval == Interval.week1: return '1w'
 
@@ -143,9 +147,6 @@ class TMoneys(list[TMoney]):
 class TCandlesDataFrame(DataFrame):
     dtfrom: datetime
     dtto: datetime
-    #
-    # def __init__(self):
-    #
 
 
 class TOIData(DataFrame):
@@ -516,8 +517,10 @@ class TCandlesCollectionData:
     interval = {}  # other intervals and links to std-intervals
 
     def get(self, interval: Interval):
+        if interval == Interval.min5: return self.min5
+        if interval == Interval.hour1: return self.hour1
         if interval == Interval.day1: return self.day1
-        elif interval == Interval.week1: return self.week1
+        if interval == Interval.week1: return self.week1
 
 
 class TCandlesCollection:
@@ -536,16 +539,11 @@ class TCandlesCollection:
         self.min5 = TCandlesList()
 
     def get(self, interval: Interval):
-        if interval == Interval.day1:
-            return self.day1
-        elif interval == Interval.hour1:
-            return self.hour1
-        elif interval == Interval.hour4:
-            return self.hour4
-        elif interval == Interval.min5:
-            return self.min5
-        elif interval == Interval.week1:
-            return self.week1
+        if interval == Interval.min5: return self.min5
+        if interval == Interval.hour1: return self.hour1
+        if interval == Interval.hour4: return self.hour4
+        if interval == Interval.day1: return self.day1
+        if interval == Interval.week1: return self.week1
 
 
 
