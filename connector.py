@@ -30,7 +30,7 @@ class TConnector:
         self.id = _id
         pass
 
-    def get_candles(self, symbol_name, interval, from2, to2):
+    def get_candles(self, symbol_name, interval, dtload):
         pass
 
     def get_by_asset(self, alias):

@@ -128,10 +128,10 @@ class TBankConnector(TConnector):
     def show_settings(self):
         logger.info("account id = " + self.account_id)
 
-    def get_candles(self, figi, interval, from2, to2):
+    def get_candles(self, figi, interval, dtload):
 
         try:
-            print("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "..., from", from2)
+            print("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "..., from", dtload[0])
 
             with Client(self.token) as client:
                 settings = MarketDataCacheSettings(base_cache_dir=Path("cache"))
@@ -150,8 +150,8 @@ class TBankConnector(TConnector):
                             'dt': c.time
                         } for c in cache.get_all_candles(
                             figi=figi,
-                            from_=from2,
-                            to=to2,
+                            from_=dtload[0],
+                            to=dtload[1],
                             interval=self.convert_interval(interval))
                     ]
                 )

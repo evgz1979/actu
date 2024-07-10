@@ -1,3 +1,4 @@
+import drawer
 from system.abstract import *
 
 
@@ -49,7 +50,7 @@ class InfoMethod(AnalysisMethod):
     def draw(self):
         for limit in self.candles.limits:
             drawer.fp.add_line((limit.candle0.ts, limit.value),
-                                (limit.candle1.ts, limit.value), color='#FF00FF', width=4, ax=self.ax)
+                                (limit.candle1.ts, limit.value), color=cLimit, width=4, ax=self.ax)
 
             # for candle in self.candles:
             #     if candle.uptake:

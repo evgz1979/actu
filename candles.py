@@ -147,6 +147,7 @@ class TMoneys(list[TMoney]):
 class TCandlesDataFrame(DataFrame):
     dtfrom: datetime
     dtto: datetime
+    # pass
 
 
 class TOIData(DataFrame):
@@ -468,8 +469,11 @@ class TCandlesList(list[TCandle]):
     max_all_high: float
     min_all_low: float
 
-    dtfrom: datetime
-    dtto: datetime
+    dtload: (datetime, datetime)  # (from, to)
+    dtcalc: (datetime, datetime)  # (from, to)
+
+    # dtfrom: datetime
+    # dtto: datetime
 
     def __init__(self):
         super().__init__()

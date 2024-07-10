@@ -36,6 +36,13 @@ class AnalysisMethod:
     def ts_delta(self):
         return self.candles[1].ts - self.candles[0].ts
 
+    def skip_i(self):
+        c = self.candles
+        i = 0
+        while i < len(c) and c[i].dt < c.dtcalc[0]:  # пропустить, до свечи, с которой начать расчет
+            i += 1
+        return i
+
 
 class AnalysisSystem:
     meta: MetaSymbol

@@ -19,8 +19,8 @@ if __name__ == "__main__":
     # volk.main()
 
     jz = JZSystem(sber, TDrawer())
-    jz.add_interval(Interval.min5)
-    jz.add_interval(Interval.hour1)
+    # jz.add_interval(Interval.min5)
+    # jz.add_interval(Interval.hour1)
     jz.add_interval(Interval.day1)
     jz.add_interval(Interval.week1)
     jz.main()

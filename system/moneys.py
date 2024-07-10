@@ -1,3 +1,4 @@
+import drawer
 from system.abstract import *
 
 
@@ -38,10 +39,11 @@ class MoneyMethod(AnalysisMethod):
 
                 if money.up:
                     if money.limit or money.maker:
-                        # drawer.fp.add_line((_ts+delta_ts, money.candle1.open),
+                        # old---drawer.fp.add_line((_ts+delta_ts, money.candle1.open),
                         #                    (_ts+delta_ts*3, money.candle1.open), color="CCFFCC", width=3)
+
                         drawer.fp.add_line((_ts, money.candle0.close),
-                                           (self.ts_max(_ts + delta_ts * 3), money.candle0.close), color="59B359",
+                                           (self.ts_max(_ts + delta_ts * 2), money.candle0.close), color="59B359",
                                            width=1, ax=self.ax)
                         drawer.fp.add_rect((_ts, money.candle0.close),
                                            (_ts + delta_ts, max(money.candle1.low, money.candle0.low)),
@@ -59,13 +61,14 @@ class MoneyMethod(AnalysisMethod):
 
                 else:  # dn
                     if money.limit or money.maker:
-                        # drawer.fp.add_line((_ts+delta_ts, money.candle1.open),
+                        # old---drawer.fp.add_line((_ts+delta_ts, money.candle1.open),
                         #                    (_ts+delta_ts*3, money.candle1.open), color="FFBFBF", width=3)
+
                         drawer.fp.add_line((_ts, money.candle0.close),
-                                           (self.ts_max(_ts + delta_ts * 3), money.candle0.close), color="D96C6C",
+                                           (self.ts_max(_ts + delta_ts * 2), money.candle0.close), color="D96C6C",
                                            width=1, ax=self.ax)
                         drawer.fp.add_rect((_ts, money.candle0.close),
-                                           (_ts + delta_ts, min(money.candle1.high, money.candle0.high)),
+                                           (self.ts_max(_ts + delta_ts), min(money.candle1.high, money.candle0.high)),
                                            color="FFD9D9", ax=self.ax)
 
                     elif money.gap:
@@ -73,7 +76,7 @@ class MoneyMethod(AnalysisMethod):
                                            (self.ts_max(_ts + delta_ts * 2), money.candle0.close), color="F2F200",
                                            width=1, ax=self.ax)
                         drawer.fp.add_rect((_ts, money.candle0.close),
-                                           (_ts + delta_ts, money.candle1.open), color="FFFFBF", ax=self.ax)
+                                           (self.ts_max(_ts + delta_ts), money.candle1.open), color="FFFFBF", ax=self.ax)
                     # elif money.maker: drawer.fp.add_line((_ts, money.candle0.close), (self.ts_max(_ts+delta_ts*3),
                     # money.candle0.close), color="D96C6C", width=1) drawer.fp.add_rect((_ts, money.candle0.close),
                     # (_ts+delta_ts, min(money.candle1.high, money.candle0.high)), color="FFD9D9")

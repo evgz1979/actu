@@ -86,16 +86,16 @@ class StreamMethod(AnalysisMethod):
 
     def level_base_0_8(self, st: TStream):  # ver 0.8
         c = self.candles
-        ign = self.symbol.info.ignore_candles_count  # =0 -- пока не использую ign
+        # ign = self.symbol.info.ignore_candles_count  # =0 -- пока не использую ign
 
         # todo -- if ign > 0: ???? перенести ??? неправильно считает?
         # print('ign candle dt', c[ign].dt, c[ign].high)
         # print('ign candle enter', c[ign].enter, datetime.fromtimestamp(c[ign].enter[0]))
-
-        st.append(TStreamItem(c[ign].enter, c[ign].exit, c[ign].enter))
         # print('symbol.info.ignore_candles_count', ign)
 
-        i = ign
+        i = self.skip_i()
+        st.append(TStreamItem(c[i].enter, c[i].exit, c[i].enter))
+
         while i < len(c) - 1:
             ex = st[-1].move_exit(c[i], c[i + 1])  # ex = st[-1].get_exit(c[i + 1])  -- перенес в move_exit
             if st[-1].is_stop2(c[i], c[i + 1]):

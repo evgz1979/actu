@@ -21,8 +21,8 @@ class TDrawerPlot:
     items = [fp.CandlestickItem]
     rows = 1
 
-    def __init__(self, title, rows=1):
-        self.ax = fp.create_plot(title, maximize=False, rows=rows)
+    def __init__(self, title, rows=1, maximize=False):
+        self.ax = fp.create_plot(title, maximize=maximize, rows=rows)
         self.rows = rows
 
     def add_candles(self, df: DataFrame, row=0):
@@ -65,9 +65,9 @@ class TDrawer:
         # fp.timer_callback(fplt_save, 0.5, single_shot=True)
         fp.show()
 
-    def add_window(self, title, data: [TCandlesDataFrame]):
+    def add_window(self, title, data: [TCandlesDataFrame], maximize=False):
 
-        p = self.plots.append(TDrawerPlot(title, len(data)))
+        p = self.plots.append(TDrawerPlot(title, len(data), maximize))
 
         i = 0
         for d in data:

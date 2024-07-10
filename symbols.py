@@ -50,9 +50,6 @@ class Symbol:
             ignore_candles_count=0
         )
 
-        self.dtfrom = dict()
-        self.dtto = dict()
-
         self.name = name
         self.ticker = ticker
         self.figi = figi
@@ -77,7 +74,8 @@ class Symbol:
     def load_candles(self, interval: Interval):
         c = self.candles.get(interval)
 
-        data = self.connector.get_candles(self.figi, interval, c.dtfrom, c.dtto)
+        # data = self.connector.get_candles(self.figi, interval, c.dtfrom, c.dtto)
+        data = self.connector.get_candles(self.figi, interval, c.dtload)
 
         # self.get(interval) = data --- так не работает
         if interval == Interval.day1: self.data.day1 = data
@@ -153,6 +151,17 @@ class MetaSymbol:
         else:
             return now()
 
+    def get_dt(self, s, interval: Interval, dt_else=()):
+        if self.cfg_has(s + '.' + Interval.cfgt(interval)):
+            a: str = self.cfg(s + '.' + Interval.cfgt(interval))
+            b = a.split('/')
+            b0 = realdt(b[0])
+            if b[1] == 'now': b1 = now()
+            else: b1 = realdt(b[1])
+            # print(b0, b1)
+            return b0, b1
+        else: return dt_else
+
     def __init__(self, alias):
         self.alias = alias
         self.name = config.get('META: ' + alias, 'name')
@@ -165,10 +174,14 @@ class MetaSymbol:
                 r = s
                 return r
 
-    def add_interval(self, s: Symbol, i: Interval):  # todo ---> Symbol
+    def add_interval(self, s: Symbol, i: Interval):
         c = s.candles.get(i)
-        c.dtfrom = self.get_from(i)
-        c.dtto = self.get_to(i)
+        c.dtload = self.get_dt('load', i)
+        c.dtcalc = self.get_dt('calc', i, c.dtload)
+
+        # c.dtload = (self.get_from(i), self.get_to(i))
+        # c.dtfrom = self.get_from(i)
+        # c.dtto = self.get_to(i)
 
     def add_intervals(self, s: Symbol):
         # пока так, потом искать в конфиге
