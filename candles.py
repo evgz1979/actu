@@ -21,7 +21,7 @@ class Interval:
         if interval == Interval.week1: return '1 week'
 
     @staticmethod
-    def cfgt(interval):
+    def cfgt(interval):  # config_title
         if interval == Interval.min5: return '5m'
         if interval == Interval.hour1: return '1h'
         if interval == Interval.day1: return '1d'
@@ -368,7 +368,7 @@ class TTendencyPoint:
     index: int = 0
     range: int = 0
     breakp: int = 0
-    prev: 'TTendencyPoint'  # break point
+    # prev: 'TTendencyPoint'  # break point
 
     def __init__(self, stream_item: TStreamItem, index, _range=0, prev=None):
         self.si = stream_item
@@ -383,6 +383,13 @@ class TTendencyPoint:
         else:
             v = self.si.enter[1]
         return self.si.enter[0] + delta, v
+
+    def title(self):
+        return '' if self.index == 1 else str(self.index)
+        # if p.enlarge:
+        #     return str(p.index)  # + "'" + str(p.range) + ", 1'" + str(p.range + 1)
+        # else:
+        #     return str(p.index)  # + "'" + str(p.range)
 
 
 class TTendency(list[TTendencyPoint]):
@@ -430,30 +437,34 @@ class TTendency(list[TTendencyPoint]):
                (not p_2.up and p_1.enter[1] <= si.enter[1] <= p_2.enter[1])
 
 
-class TCorrectionPoint:
-    stream_item: TStreamItem = None
-    # parent: 'TTendencyNode' = None
-    # inside: 'TTendencyNode' = None
-
-    def __init__(self, parent, stream_item: TStreamItem):
-        # self.parent = parent
-        self.stream_item = stream_item
+class TCorrectionPoint(TTendencyPoint):
+    pass
 
 
 class TCorrection(list[TCorrectionPoint]):
+    pass
 
-    inside: 'TCorrection'
-    parent: 'TCorrection'
-
-    def between(self, si: TStreamItem):
-        # if len(self) > 1:
-
-        return (self[-2].stream_item.up and
-                self[-2].stream_item.value <= si.value <= self[-1].stream_item.value) or \
-               (not self[-2].stream_item.up and self[-1].stream_item.value <= si.value <= self[-2].stream_item.value)
-
-
-# class TMetaFlow()  todo ?
+# class TCorrectionPoint:
+#     stream_item: TStreamItem = None
+#     # parent: 'TTendencyNode' = None
+#     # inside: 'TTendencyNode' = None
+#
+#     def __init__(self, parent, stream_item: TStreamItem):
+#         # self.parent = parent
+#         self.stream_item = stream_item
+#
+#
+# class TCorrection(list[TCorrectionPoint]):
+#
+#     inside: 'TCorrection'
+#     parent: 'TCorrection'
+#
+#     def between(self, si: TStreamItem):
+#         # if len(self) > 1:
+#
+#         return (self[-2].stream_item.up and
+#                 self[-2].stream_item.value <= si.value <= self[-1].stream_item.value) or \
+#                (not self[-2].stream_item.up and self[-1].stream_item.value <= si.value <= self[-2].stream_item.value)
 
 
 class TCandlesList(list[TCandle]):

@@ -2,7 +2,7 @@ from system.abstract import *
 from system.flow import FlowMethod
 from system.info import InfoMethod
 from system.moneys import MoneyMethod
-from system.volk import TendencyMethod
+from system.tendency import TendencyMethod
 
 
 class JZSystem(AnalysisSystem):
@@ -14,7 +14,7 @@ class JZSystem(AnalysisSystem):
         if interval != Interval.min5: self.methods.append(InfoMethod(s, candles, ax, visible=True))
         if interval != Interval.min5: self.methods.append(MoneyMethod(s, candles, ax, visible=True))
         self.methods.append(FlowMethod(s, candles, ax, visible=True))
-        # self.methods.append(TendencyMethod(s, candles, ax, visible=True))
+        self.methods.append(TendencyMethod(s, candles, ax, visible=True))
 
     def add_symbol(self, meta: MetaSymbol, s: Symbol, interval: Interval):
         self.add_methods(interval, s, s.load_candles(interval),
@@ -24,7 +24,7 @@ class JZSystem(AnalysisSystem):
 
     def add_interval(self, meta: MetaSymbol, interval: Interval):
         self.add_symbol(meta, meta.spotT0, interval)
-        self.add_symbol(meta, meta.future, interval)
+        # self.add_symbol(meta, meta.future, interval)
 
     def main(self):
         super().main()

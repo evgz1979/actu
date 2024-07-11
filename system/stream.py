@@ -98,8 +98,17 @@ class StreamMethod(AnalysisMethod):
 
         while i < len(c) - 1:
             ex = st[-1].move_exit(c[i], c[i + 1])  # ex = st[-1].get_exit(c[i + 1])  -- перенес в move_exit
-            if st[-1].is_stop2(c[i], c[i + 1]):
-                st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i])))
+            if st[-1].is_stop2(c[i], c[i + 1]): st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i])))
+            i += 1
+
+    def level_base_0_9(self, st: TStream):  # ver 0.8
+        c = self.candles
+        i = self.skip_i()
+        st.append(TStreamItem(c[i].enter, c[i].exit, c[i].enter))
+
+        while i < len(c) - 1:
+            ex = st[-1].move_exit(c[i], c[i + 1])
+            if st[-1].is_stop2(c[i], c[i + 1]): st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i])))
             i += 1
 
     def level2(self, st: TStream):

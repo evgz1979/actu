@@ -14,7 +14,6 @@ class SymbolInfo:  # todo -- совместить позже с ORM
     extra: json
     is_future: bool
     is_spot: bool
-    ignore_candles_count: int
 
 
 class Symbol:
@@ -46,8 +45,7 @@ class Symbol:
             first_1day_candle_date=datetime(1979, 7, 28),
             extra='',
             is_future=False,
-            is_spot=False,
-            ignore_candles_count=0
+            is_spot=False
         )
 
         self.name = name

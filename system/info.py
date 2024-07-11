@@ -13,7 +13,8 @@ class InfoMethod(AnalysisMethod):
         # limits, so far, only 2 point
         # todo: сделать распознавание лимиток дальше чем 2 ближ свечи (позже)
         if len(self.candles) > 2:
-            i = 1
+            i = self.skip_i()
+            # i = 1
             while i < len(self.candles):
                 # todo проверить свечи итерирую от а=первой к последней, а когда писал код,
                 # todo было чувство как в пайн-скрипт, короче проверить

@@ -16,10 +16,7 @@ if __name__ == "__main__":
     robot = Robot(jz, MOEXTrader(), [TBankConnector(), MOEXConnector()], [sber, cny])
     robot.main()
 
-    # jz.add_interval(Interval.min5)
-    # jz.add_interval(Interval.hour1)
-    jz.add_interval(sber, Interval.day1)
-    jz.add_interval(cny, Interval.week1)
+    jz.add_interval(sber, Interval.week1)
 
     jz.main()
 

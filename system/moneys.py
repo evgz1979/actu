@@ -8,7 +8,8 @@ class MoneyMethod(AnalysisMethod):
 
     def calc(self):
         if len(self.candles) > 2:
-            i = 0
+            i = self.skip_i()
+            # i = 0
             while i < len(self.candles) - 1:
                 ci = self.candles[i]
                 ci1 = self.candles[i + 1]
