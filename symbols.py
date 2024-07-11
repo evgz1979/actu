@@ -193,7 +193,12 @@ class MetaSymbol:
     def add_spot(self, name: str):
         if self.cfg_has(name):
             conn = self.connectors.find_connector(self.cfg1(name))
-            spot = conn.get_spot(self.cfg2(name))[0]  # пока первый найденный [0]
+
+            if self.cfg2(name) == '*':
+                spot = conn.get_spot(self.cfg1('ticker'))[0]
+            else:
+                spot = conn.get_spot(self.cfg2(name))[0]  # пока первый найденный [0]
+
             print(name, ':', spot.ticker, spot.figi)
 
             s = self.symbols.append(Symbol(spot.name, spot.ticker, spot.figi, conn, spot=True))
@@ -243,7 +248,7 @@ class MetaSymbol:
         self.oi = self.add_open_interest('oi')
 
 
-class TMetaSymbols(list[MetaSymbol]):
+class MetaSymbols(list[MetaSymbol]):
     connectors: TConnectors
 
     def __init__(self, _connectors: TConnectors):

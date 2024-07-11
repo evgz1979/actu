@@ -45,12 +45,12 @@ class AnalysisMethod:
 
 
 class AnalysisSystem:
-    meta: MetaSymbol
+    metas: MetaSymbols
     methods = []
     drawer: TDrawer = None
 
-    def __init__(self, m: MetaSymbol, drawer: TDrawer):
-        self.meta = m
+    def __init__(self, drawer: TDrawer):
+        # self.meta = m
         self.drawer = drawer
 
     def main(self):

@@ -9,20 +9,18 @@ from trader import MOEXTrader
 if __name__ == "__main__":
 
     si = MetaSymbol('USD/RUB')
+    cny = MetaSymbol('CNY/RUB')
     sber = MetaSymbol('SBER')
 
-    robot = Robot(MOEXTrader(), [sber], [TBankConnector(), MOEXConnector()])  # [si, sber]
+    jz = JZSystem(TDrawer())
+    robot = Robot(jz, MOEXTrader(), [TBankConnector(), MOEXConnector()], [sber, cny])
     robot.main()
 
-    # volk = VolkSystem(sber, TDrawer())
-    # volk.add_interval(Interval.day1)
-    # volk.main()
-
-    jz = JZSystem(sber, TDrawer())
     # jz.add_interval(Interval.min5)
     # jz.add_interval(Interval.hour1)
-    jz.add_interval(Interval.day1)
-    jz.add_interval(Interval.week1)
+    jz.add_interval(sber, Interval.day1)
+    jz.add_interval(cny, Interval.week1)
+
     jz.main()
 
     robot.amain()  # start async part of app
