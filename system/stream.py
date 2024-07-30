@@ -11,25 +11,25 @@ class StreamMethod(AnalysisMethod):
         return (ci.enter[1] <= ci1.low <= ci.exit[1] < ci1.high) or (
                 ci.enter[1] >= ci1.high >= ci.exit[1] > ci1.low)
 
-    def level0(self, st: TStream):
+    def level0(self, st: Stream):
         c = self.candles
         i = 0
         while i < len(c) - 1:
-            st.append(TStreamItem(c[i].enter, c[i].exit, visible=False))
-            st.append(TStreamItem(c[i].exit, c[i + 1].enter, visible=False))
+            st.append(StreamItem(c[i].enter, c[i].exit, visible=False))
+            st.append(StreamItem(c[i].exit, c[i + 1].enter, visible=False))
             i += 1
 
-    def level1(self, st: TStream):
+    def level1(self, st: Stream):
         c = self.candles
         i = 0
         while i < len(c) - 1:
             if len(st) > 0 and self.is_correction(c[i], c[i + 1]):
-                st.append(TStreamItem(c[i].enter, c[i + 1].enter, visible=False))
+                st.append(StreamItem(c[i].enter, c[i + 1].enter, visible=False))
             # elif len(st) > 0 and self.is_merge_wicks(c[i], c[i + 1]):
             else:
                 # level0(st)
-                st.append(TStreamItem(c[i].enter, c[i].exit, visible=False))
-                st.append(TStreamItem(c[i].exit, c[i + 1].enter, visible=False))
+                st.append(StreamItem(c[i].enter, c[i].exit, visible=False))
+                st.append(StreamItem(c[i].exit, c[i + 1].enter, visible=False))
             i += 1
 
     # def level_base_0_7(self, st: TStream):  # ver 0.7
@@ -104,23 +104,23 @@ class StreamMethod(AnalysisMethod):
     #
     #         i += 1
 
-    def level_base_0_9(self, st: TStream):  # ver 0.8
+    def level_base_0_9(self, st: Stream):  # ver 0.8
         c = self.candles
         i = self.skip_i()
-        st.append(TStreamItem(c[i].enter, c[i].exit, c[i].enter, index=i - self.skip_i() + 1))
+        st.append(StreamItem(c[i].enter, c[i].exit, c[i].enter, index=i - self.skip_i() + 1))
 
         while i < len(c) - 1:
             ex = st[-1].move_exit(c[i], c[i + 1])  # переносим выход, пока ...
 
             if st[-1].is_stop2(c[i], c[i + 1]):  # переносим выход, пока ...
-                st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i]),
-                                      index=i - self.skip_i() + 1))
+                st.append(StreamItem(st[-1].exit, ex, st[-1].get_stop(c[i]),
+                                     index=i - self.skip_i() + 1))
             i += 1
 
-    def level2(self, st: TStream):
+    def level2(self, st: Stream):
         c = self.candles
         st1 = self.candles.stream1
-        st.append(TStreamItem(st1[0].enter, st1[0].enter, st1[0].enter))
+        st.append(StreamItem(st1[0].enter, st1[0].enter, st1[0].enter))
 
         i = 0
         while i < len(c) - 1:
@@ -138,7 +138,7 @@ class StreamMethod(AnalysisMethod):
         self.level_base_0_9(self.candles.stream)
         # self.level2(self.candles.stream2)
 
-    def draw_stream(self, c: TCandlesList, st: TStream, stop_visible=False, colored=False, width=1):
+    def draw_stream(self, c: TCandlesList, st: Stream, stop_visible=False, colored=False, width=1):
         for si in st:
             if colored:
                 drawer.fp.add_line(si.enter, si.exit, color=si.color, width=width, ax=self.ax)

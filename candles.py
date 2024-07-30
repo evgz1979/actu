@@ -154,7 +154,7 @@ class TOIData(DataFrame):
     pass
 
 
-class TStreamItem:
+class StreamItem:
     up: bool = False
     index: int
     enter: (int, float)  # ts, value
@@ -285,9 +285,9 @@ class TStreamItem:
             return c.ts, c.high
 
 
-class TStream(list[TStreamItem]):
+class Stream(list[StreamItem]):
 
-    def get_exit(self, si: TStreamItem, ci, ci1: TCandle):
+    def get_exit(self, si: StreamItem, ci, ci1: TCandle):
         pass
         # if si.up:
         #     return c.ts, c.low
@@ -300,7 +300,7 @@ class TStream(list[TStreamItem]):
         # while i < len(self):
         #     pass
 
-    def append(self, __object: TStreamItem) -> TStreamItem:
+    def append(self, __object: StreamItem) -> StreamItem:
         super().append(__object)
         return __object
 
@@ -333,7 +333,7 @@ class TStream(list[TStreamItem]):
         return (self[ii].up and self[ii].value <= self[i].value <= self[ii1].value) or \
                (not self[ii].up and self[ii1].value <= self[i].value <= self[ii].value)
 
-    def find_min(self, si, si1: TStreamItem):
+    def find_min(self, si, si1: StreamItem):
         i = self.index(si)
         i1 = self.index(si1)
         r = si
@@ -342,7 +342,7 @@ class TStream(list[TStreamItem]):
             i += 1
         return r
 
-    def find_max(self, si, si1: TStreamItem):
+    def find_max(self, si, si1: StreamItem):
         i = self.index(si)
         i1 = self.index(si1)
         r = si
@@ -360,16 +360,16 @@ class TStream(list[TStreamItem]):
 
 
 class FlowPoint:
-    si: TStreamItem = None
+    si: StreamItem = None
     index: int = 0
 
 
-class TFlow:
+class Flow:
     pass
 
 
-class TTendencyPoint:  # (FlowPoint) -- по готовности наследовать от FlowPoint
-    si: TStreamItem = None
+class TendencyPoint:  # (FlowPoint) -- по готовности наследовать от FlowPoint
+    si: StreamItem = None
     enlarge = False
     index: int = 0
     up: bool
@@ -377,7 +377,7 @@ class TTendencyPoint:  # (FlowPoint) -- по готовности наследо
     # breakp: int = 0
     # prev: 'TTendencyPoint'  # break point
 
-    def __init__(self, stream_item: TStreamItem, index, _range=0, prev=None, enlarge=False, up=True):
+    def __init__(self, stream_item: StreamItem, index, _range=0, prev=None, enlarge=False, up=True):
         self.si = stream_item
         self.index = index
         self.prev = prev
@@ -400,13 +400,14 @@ class TTendencyPoint:  # (FlowPoint) -- по готовности наследо
         #     return str(p.index)  # + "'" + str(p.range)
 
 
-class TTendency(list[TTendencyPoint]):
+class SimpleTendency(list[TendencyPoint]):
+    next: 'SimpleTendency'
     range_index: int = 0
 
     # frsi: int = 0  # first result stream index
     # lrsi: int = 0  # last result stream index
 
-    def append(self, __object: TTendencyPoint) -> TTendencyPoint:
+    def append(self, __object: TendencyPoint) -> TendencyPoint:
         super().append(__object)
         return __object
 
@@ -430,13 +431,13 @@ class TTendency(list[TTendencyPoint]):
         # return self.append(TTendencyPoint(si, 2, enlarge=True))
         # return self.append(TTendencyPoint(si, 3))
 
-    def start2p(self, si0, si1: TStreamItem):  # start 2 point
-        self.append(TTendencyPoint(si0, 1))
-        return self.append(TTendencyPoint(si1, 2))
+    def start2p(self, si0, si1: StreamItem):  # start 2 point
+        self.append(TendencyPoint(si0, 1))
+        return self.append(TendencyPoint(si1, 2))
 
-    def add2p(self, si0, si1: TStreamItem, index):  # add 2 point
-        self.append(TTendencyPoint(si0, index + 1))
-        return self.append(TTendencyPoint(si1, index + 2))
+    def add2p(self, si0, si1: StreamItem, index):  # add 2 point
+        self.append(TendencyPoint(si0, index + 1))
+        return self.append(TendencyPoint(si1, index + 2))
 
     def begin(self, start=0):  # ищет начало текущей ветки, с конца
         if start == 0: i = len(self) - 1
@@ -449,7 +450,7 @@ class TTendency(list[TTendencyPoint]):
                 # break
             i -= 1
 
-    def between_last2p(self, si: TStreamItem):
+    def between_last2p(self, si: StreamItem):
         # p_1 = self[-1].si  # last
         # p_2 = self[-2].si  # pre last
         # p_2 = self.begin().si   # self[-2].si  # pre last
@@ -465,32 +466,36 @@ class TTendency(list[TTendencyPoint]):
             return p2.si.enter[1] <= si.enter[1] <= p1.si.enter[1]
 
 
-class TTendencyList(list[TTendency]):
+class TendencyRanges(list[SimpleTendency]):
 
-    def append(self, __object: TTendency) -> TTendency:
+    def append(self, __object: SimpleTendency) -> SimpleTendency:
         super().append(__object)
         return __object
 
 
-class TTendencyRanges:
-    ranges: TTendencyList
-    stream: TStream
+class TendencyTree:
+    point: SimpleTendency
 
-    def __init__(self, stream: TStream):
+
+class Tendency:
+    ranges: TendencyRanges
+    stream: Stream
+
+    def __init__(self, stream: Stream):
         self.stream = stream
-        self.ranges = TTendencyList()
+        self.ranges = TendencyRanges()
 
     def current(self):
         return self.ranges[-1]
 
-    def start(self, si0, si1: TStreamItem, range_index=1):
-        self.ranges.append(TTendency(range_index))
+    def start(self, si0, si1: StreamItem, range_index=1):
+        self.ranges.append(SimpleTendency(range_index))
         return self.current().start2p(si0, si1)
 
-    def enlarge(self, ep: TTendencyPoint, si: TStreamItem):
+    def union(self, ep: TendencyPoint, si: StreamItem):
         ep.enlarge = True
         self.start(self.current().begin().si, ep.si, range_index=self.current().range_index + 1)
-        return self.current().append(TTendencyPoint(si, 3, up=not ep.up))
+        return self.current().append(TendencyPoint(si, 3, up=not ep.up))
 
 
 # class TCorrectionPoint(TTendencyPoint):
@@ -532,12 +537,12 @@ class TTendencyRanges:
 class TCandlesList(list[TCandle]):
     limits: TLimits
     moneys: TMoneys
-    stream: TStream
-    stream0: TStream
-    stream1: TStream
-    stream2: TStream
-    flow: TFlow
-    tendency: TTendencyRanges
+    stream: Stream
+    stream0: Stream
+    stream1: Stream
+    stream2: Stream
+    flow: Flow
+    tendency: Tendency
     # correction: TCorrection
 
     max_all_high: float
@@ -553,12 +558,12 @@ class TCandlesList(list[TCandle]):
         super().__init__()
         self.limits = TLimits()
         self.moneys = TMoneys()
-        self.stream = TStream()
-        self.stream0 = TStream()
-        self.stream1 = TStream()
-        self.stream2 = TStream()
-        self.flow = TFlow()
-        self.tendency = TTendencyRanges(self.stream)
+        self.stream = Stream()
+        self.stream0 = Stream()
+        self.stream1 = Stream()
+        self.stream2 = Stream()
+        self.flow = Flow()
+        self.tendency = Tendency(self.stream)
         # self.correction = TCorrection()
 
     def _calc_dts(self):

@@ -13,7 +13,7 @@ class TendencyMethod(AnalysisMethod):
         st = self.candles.stream
         tc = self.candles.tendency
 
-        def recurcy(ep: TTendencyPoint):  # ep - even point
+        def recurcy(ep: TendencyPoint):  # ep - even point
             i = st.index(ep.si) + 1  # i = ep.si.index - так не работает, почему?
             if i < len(st) - 1:
                 while tc.current().between_last2p(st[i]):  # todo - здесь коррекция
@@ -23,10 +23,10 @@ class TendencyMethod(AnalysisMethod):
                         if st[i].enter[1] > ep.si.enter[1]:
                             recurcy(tc.current().add2p(st.find_min(ep.si, st[i]), st[i], ep.index))
                         else:
-                            recurcy(tc.enlarge(ep, st[i]))
+                            recurcy(tc.union(ep, st[i]))
                     else:  # dn
                         if st[i].enter[1] > ep.si.enter[1]:
-                            recurcy(tc.enlarge(ep, st[i]))
+                            recurcy(tc.union(ep, st[i]))
                         else:
                             recurcy(tc.current().add2p(st.find_max(ep.si, st[i]), st[i], ep.index))
 
@@ -37,7 +37,7 @@ class TendencyMethod(AnalysisMethod):
         #     tc.current()[-1].si = tc.current()[-2].si
 
     @staticmethod
-    def color(p: TTendencyPoint):  # todo --> TTendencyPoint ???как если None???
+    def color(p: TendencyPoint):  # todo --> TTendencyPoint ???как если None???
         return "59B359" if p.up else "D96C6C"
 
     def draw(self):  # todo debug-mode -- ? отображение надписей, в обыном режиме - рисовать
