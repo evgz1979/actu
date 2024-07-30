@@ -156,7 +156,7 @@ class TOIData(DataFrame):
 
 class TStreamItem:
     up: bool = False
-
+    index: int
     enter: (int, float)  # ts, value
     exit: (int, float)
     # extr: (int, float)
@@ -179,7 +179,8 @@ class TStreamItem:
         if self.up: return cUp
         else: return cDn
 
-    def __init__(self, enter, _exit, stop=(0, 0), visible=False):
+    def __init__(self, enter, _exit, stop=(0, 0), visible=False, index=0):
+        self.index = index
         self.enter = enter
         self.exit = _exit
         self.stop = stop
@@ -358,24 +359,31 @@ class TStream(list[TStreamItem]):
     #     return (self[1].ts - self[0].ts) / (self[1].index - self[0].index)
 
 
-class TFlow(TStream):
+class FlowPoint:
+    si: TStreamItem = None
+    index: int = 0
+
+
+class TFlow:
     pass
 
 
-class TTendencyPoint:
+class TTendencyPoint:  # (FlowPoint) -- по готовности наследовать от FlowPoint
     si: TStreamItem = None
     enlarge = False
     index: int = 0
-    range: int = 0
-    breakp: int = 0
+    up: bool
+    # range: int = 0
+    # breakp: int = 0
     # prev: 'TTendencyPoint'  # break point
 
-    def __init__(self, stream_item: TStreamItem, index, _range=0, prev=None):
+    def __init__(self, stream_item: TStreamItem, index, _range=0, prev=None, enlarge=False, up=True):
         self.si = stream_item
-        self.enlarge = False
         self.index = index
         self.prev = prev
         self.range = _range
+        self.enlarge = enlarge
+        self.up = up
 
     def coord(self, delta=0, value=0):
         if value != 0:
@@ -393,56 +401,110 @@ class TTendencyPoint:
 
 
 class TTendency(list[TTendencyPoint]):
+    range_index: int = 0
+
     # frsi: int = 0  # first result stream index
     # lrsi: int = 0  # last result stream index
 
-    def enlarge(self, ep: TTendencyPoint, si: TStreamItem, bp):
-        ep.enlarge = True
-        # ep.index = 1
-        p = TTendencyPoint(si, 2, prev=ep.prev)
-        self.append(p)
-        return p
+    def append(self, __object: TTendencyPoint) -> TTendencyPoint:
+        super().append(__object)
+        return __object
+
+    def __init__(self, range_index=1):
+        super().__init__()
+        self.range_index = range_index
+
+    # def enlarge(self, ep: TTendencyPoint, si: TStreamItem):
+    #
+    #     print('in enlarge, ep=', ep.index, 'begin=', self.begin().index)
+    #
+    #     i = ep.index - 1
+    #     while i > self.begin().index:
+    #         print('del=', i)
+    #         self.pop(i-1)
+    #         i -= 1
+    #
+    #     ep.enlarge = True
+    #     return self.append(TTendencyPoint(si, 3))
+
+        # return self.append(TTendencyPoint(si, 2, enlarge=True))
+        # return self.append(TTendencyPoint(si, 3))
 
     def start2p(self, si0, si1: TStreamItem):  # start 2 point
-        p1 = TTendencyPoint(si0, 1)
-        p1.enlarge = True
-        self.append(p1)
-        p2 = TTendencyPoint(si1, 2, prev=p1)
-        self.append(p2)
-        return p2
+        self.append(TTendencyPoint(si0, 1))
+        return self.append(TTendencyPoint(si1, 2))
 
-    def add2p(self, ep, si, si1: TStreamItem):  # add 2 point
-        ind = 1 if ep.enlarge else ep.index
-        self.append(TTendencyPoint(si, ind + 1))
-        p2 = TTendencyPoint(si1, ind + 2)
-        self.append(p2)
-        return p2
+    def add2p(self, si0, si1: TStreamItem, index):  # add 2 point
+        self.append(TTendencyPoint(si0, index + 1))
+        return self.append(TTendencyPoint(si1, index + 2))
 
-    def begin(self, start=0):
+    def begin(self, start=0):  # ищет начало текущей ветки, с конца
         if start == 0: i = len(self) - 1
         else: i = start
 
         while i >= 0:
             if self[i].enlarge:
+                # print('begin si.index=', self[i].si.index)
                 return self[i]
                 # break
             i -= 1
 
     def between_last2p(self, si: TStreamItem):
-        p_1 = self[-1].si  # last
-        p_2 = self[-2].si  # pre last
+        # p_1 = self[-1].si  # last
+        # p_2 = self[-2].si  # pre last
         # p_2 = self.begin().si   # self[-2].si  # pre last
 
-        return (p_2.up and p_2.enter[1] <= si.enter[1] <= p_1.enter[1]) or \
-               (not p_2.up and p_1.enter[1] <= si.enter[1] <= p_2.enter[1])
+        # p1 = self[-1]
+        # p2 = self[-2]
+        p2 = self[-1]
+        p1 = self[-2]
+
+        if p1.up:
+            return p2.si.enter[1] >= si.enter[1] >= p1.si.enter[1]
+        else:  # dn
+            return p2.si.enter[1] <= si.enter[1] <= p1.si.enter[1]
 
 
-class TCorrectionPoint(TTendencyPoint):
-    pass
+class TTendencyList(list[TTendency]):
+
+    def append(self, __object: TTendency) -> TTendency:
+        super().append(__object)
+        return __object
 
 
-class TCorrection(list[TCorrectionPoint]):
-    pass
+class TTendencyRanges:
+    ranges: TTendencyList
+    stream: TStream
+
+    def __init__(self, stream: TStream):
+        self.stream = stream
+        self.ranges = TTendencyList()
+
+    def current(self):
+        return self.ranges[-1]
+
+    def start(self, si0, si1: TStreamItem, range_index=1):
+        self.ranges.append(TTendency(range_index))
+        return self.current().start2p(si0, si1)
+
+    def enlarge(self, ep: TTendencyPoint, si: TStreamItem):
+        ep.enlarge = True
+        self.start(self.current().begin().si, ep.si, range_index=self.current().range_index + 1)
+        return self.current().append(TTendencyPoint(si, 3, up=not ep.up))
+
+
+# class TCorrectionPoint(TTendencyPoint):
+#     pass
+#
+#
+# class TCorrection(list[TCorrectionPoint]):
+#     def start2p(self, si0, si1: TStreamItem):  # start 2 point
+#         p1 = TCorrectionPoint(si0, 1)
+#         p1.enlarge = True
+#         self.append(p1)
+#         p2 = TCorrectionPoint(si1, 2, prev=p1)
+#         self.append(p2)
+#         return p2
 
 # class TCorrectionPoint:
 #     stream_item: TStreamItem = None
@@ -475,7 +537,8 @@ class TCandlesList(list[TCandle]):
     stream1: TStream
     stream2: TStream
     flow: TFlow
-    tendency: TTendency
+    tendency: TTendencyRanges
+    # correction: TCorrection
 
     max_all_high: float
     min_all_low: float
@@ -495,7 +558,8 @@ class TCandlesList(list[TCandle]):
         self.stream1 = TStream()
         self.stream2 = TStream()
         self.flow = TFlow()
-        self.tendency = TTendency()
+        self.tendency = TTendencyRanges(self.stream)
+        # self.correction = TCorrection()
 
     def _calc_dts(self):
         r = self[1].ts - self[0].ts

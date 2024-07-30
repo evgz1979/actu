@@ -1,7 +1,9 @@
 from system.abstract import *
-from system.flow import FlowMethod
+from system.correction import CorrectionMethod
+from system.flow import MetaFlowMethod
 from system.info import InfoMethod
 from system.moneys import MoneyMethod
+from system.stream import StreamMethod
 from system.tendency import TendencyMethod
 
 
@@ -11,16 +13,18 @@ class JZSystem(AnalysisSystem):
         logger.info(">> JZ system init")
 
     def add_methods(self, interval: Interval, s: Symbol, candles: TCandlesList, ax):
-        if interval != Interval.min5: self.methods.append(InfoMethod(s, candles, ax, visible=True))
-        if interval != Interval.min5: self.methods.append(MoneyMethod(s, candles, ax, visible=True))
-        self.methods.append(FlowMethod(s, candles, ax, visible=True))
+        # if interval != Interval.min5: self.methods.append(InfoMethod(s, candles, ax, visible=True))
+        # if interval != Interval.min5: self.methods.append(MoneyMethod(s, candles, ax, visible=True))
+        # self.methods.append(MetaFlowMethod(s, candles, ax, visible=True))
+        self.methods.append(StreamMethod(s, candles, ax, visible=True))
         self.methods.append(TendencyMethod(s, candles, ax, visible=True))
+        # self.methods.append(CorrectionMethod(s, candles, ax, visible=True))
 
     def add_symbol(self, meta: MetaSymbol, s: Symbol, interval: Interval):
         self.add_methods(interval, s, s.load_candles(interval),
                          self.drawer.add_window(
                              Interval.get_title(interval) + ', ' + s.get_title() + ': ' + '[МЕТА: ' + meta.name + ']',
-                             [s.data.get(interval)], maximize=False))
+                             [s.data.get(interval)], maximize=True))
 
     def add_interval(self, meta: MetaSymbol, interval: Interval):
         self.add_symbol(meta, meta.spotT0, interval)

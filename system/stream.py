@@ -32,83 +32,89 @@ class StreamMethod(AnalysisMethod):
                 st.append(TStreamItem(c[i].exit, c[i + 1].enter, visible=False))
             i += 1
 
-    def level_base_0_7(self, st: TStream):  # ver 0.7
-        c = self.candles
-        st.append(TStreamItem(c[0].enter, c[0].exit, c[0].enter))
+    # def level_base_0_7(self, st: TStream):  # ver 0.7
+    #     c = self.candles
+    #     st.append(TStreamItem(c[0].enter, c[0].exit, c[0].enter))
+    #
+    #     p = False  # pass
+    #     i = 0
+    #     while i < len(c) - 1:
+    #
+    #         if st[-1].is_stop2(c[i], c[i + 1]):
+    #
+    #             ex = st[-1].get_exit(c[i + 1])
+    #
+    #             if st[-1].up:
+    #                 if c[i + 1].high > st[-1].exit[1]:
+    #                     if c[i + 1].bearish:
+    #                         st[-1].exit = c[i + 1].enter
+    #
+    #                     else:  # c[i+1].bullish:
+    #                         st.append(TStreamItem(st[-1].exit, c[i + 1].enter))
+    #                         st.append(TStreamItem(c[i + 1].enter, c[i + 1].exit))
+    #                         ex = c[i + 1].exit
+    #                 else:  # c[i+1].high <= st[-1].exit[1]:   # todo error !!! on candle 2024-01-04
+    #                     if c[i + 1].bearish and st[-1].exit[0] < c[i].ts:
+    #                         st.append(TStreamItem(st[-1].exit, c[i].enter))
+    #                         st.append(TStreamItem(c[i].enter, c[i + 1].enter))
+    #                         ex = c[i + 1].exit
+    #                     # else:
+    #                     #     p = True
+    #
+    #             else:  # dn
+    #                 if c[i + 1].low < st[-1].exit[1]:
+    #                     if c[i + 1].bullish:
+    #                         st[-1].exit = c[i + 1].enter
+    #
+    #                     # else:   # c[i + 1].bearish
+    #
+    #             # if st[-1].exit[1] == ex[1]:
+    #             #     pass
+    #             # else:
+    #
+    #             # if p:
+    #             #     p = False
+    #             # else:
+    #             st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i])))
+    #
+    #         else:
+    #             st[-1].move_exit(c[i], c[i + 1])
+    #
+    #         i += 1
+    #
+    #         # self.candles.stream.normalize()  todo ???
 
-        p = False  # pass
-        i = 0
-        while i < len(c) - 1:
-
-            if st[-1].is_stop2(c[i], c[i + 1]):
-
-                ex = st[-1].get_exit(c[i + 1])
-
-                if st[-1].up:
-                    if c[i + 1].high > st[-1].exit[1]:
-                        if c[i + 1].bearish:
-                            st[-1].exit = c[i + 1].enter
-
-                        else:  # c[i+1].bullish:
-                            st.append(TStreamItem(st[-1].exit, c[i + 1].enter))
-                            st.append(TStreamItem(c[i + 1].enter, c[i + 1].exit))
-                            ex = c[i + 1].exit
-                    else:  # c[i+1].high <= st[-1].exit[1]:   # todo error !!! on candle 2024-01-04
-                        if c[i + 1].bearish and st[-1].exit[0] < c[i].ts:
-                            st.append(TStreamItem(st[-1].exit, c[i].enter))
-                            st.append(TStreamItem(c[i].enter, c[i + 1].enter))
-                            ex = c[i + 1].exit
-                        # else:
-                        #     p = True
-
-                else:  # dn
-                    if c[i + 1].low < st[-1].exit[1]:
-                        if c[i + 1].bullish:
-                            st[-1].exit = c[i + 1].enter
-
-                        # else:   # c[i + 1].bearish
-
-                # if st[-1].exit[1] == ex[1]:
-                #     pass
-                # else:
-
-                # if p:
-                #     p = False
-                # else:
-                st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i])))
-
-            else:
-                st[-1].move_exit(c[i], c[i + 1])
-
-            i += 1
-
-            # self.candles.stream.normalize()  todo ???
-
-    def level_base_0_8(self, st: TStream):  # ver 0.8
-        c = self.candles
-        # ign = self.symbol.info.ignore_candles_count  # =0 -- пока не использую ign
-
-        # todo -- if ign > 0: ???? перенести ??? неправильно считает?
-        # print('ign candle dt', c[ign].dt, c[ign].high)
-        # print('ign candle enter', c[ign].enter, datetime.fromtimestamp(c[ign].enter[0]))
-        # print('symbol.info.ignore_candles_count', ign)
-
-        i = self.skip_i()
-        st.append(TStreamItem(c[i].enter, c[i].exit, c[i].enter))
-
-        while i < len(c) - 1:
-            ex = st[-1].move_exit(c[i], c[i + 1])  # ex = st[-1].get_exit(c[i + 1])  -- перенес в move_exit
-            if st[-1].is_stop2(c[i], c[i + 1]): st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i])))
-            i += 1
+    # def level_base_0_8(self, st: TStream):  # ver 0.8
+    #     c = self.candles
+    #     # ign = self.symbol.info.ignore_candles_count  # =0 -- пока не использую ign
+    #
+    #     # todo -- if ign > 0: ???? перенести ??? неправильно считает?
+    #     # print('ign candle dt', c[ign].dt, c[ign].high)
+    #     # print('ign candle enter', c[ign].enter, datetime.fromtimestamp(c[ign].enter[0]))
+    #     # print('symbol.info.ignore_candles_count', ign)
+    #
+    #     i = self.skip_i()
+    #     st.append(TStreamItem(c[i].enter, c[i].exit, c[i].enter))
+    #
+    #     while i < len(c) - 1:
+    #         ex = st[-1].move_exit(c[i], c[i + 1])
+    #
+    #         if st[-1].is_stop2(c[i], c[i + 1]):
+    #             st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i])))
+    #
+    #         i += 1
 
     def level_base_0_9(self, st: TStream):  # ver 0.8
         c = self.candles
         i = self.skip_i()
-        st.append(TStreamItem(c[i].enter, c[i].exit, c[i].enter))
+        st.append(TStreamItem(c[i].enter, c[i].exit, c[i].enter, index=i - self.skip_i() + 1))
 
         while i < len(c) - 1:
-            ex = st[-1].move_exit(c[i], c[i + 1])
-            if st[-1].is_stop2(c[i], c[i + 1]): st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i])))
+            ex = st[-1].move_exit(c[i], c[i + 1])  # переносим выход, пока ...
+
+            if st[-1].is_stop2(c[i], c[i + 1]):  # переносим выход, пока ...
+                st.append(TStreamItem(st[-1].exit, ex, st[-1].get_stop(c[i]),
+                                      index=i - self.skip_i() + 1))
             i += 1
 
     def level2(self, st: TStream):
@@ -129,7 +135,7 @@ class StreamMethod(AnalysisMethod):
         # self.level0(self.candles.stream0)
         # self.level1(self.candles.stream1)
         # self.normalize(self.candles.stream1)
-        self.level_base_0_8(self.candles.stream)
+        self.level_base_0_9(self.candles.stream)
         # self.level2(self.candles.stream2)
 
     def draw_stream(self, c: TCandlesList, st: TStream, stop_visible=False, colored=False, width=1):
