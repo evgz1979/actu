@@ -17,7 +17,7 @@ class JZSystem(AnalysisSystem):
         # if interval != Interval.min5: self.methods.append(MoneyMethod(s, candles, ax, visible=True))
         # self.methods.append(MetaFlowMethod(s, candles, ax, visible=True))
         self.methods.append(StreamMethod(s, candles, ax, visible=True))
-        self.methods.append(TendencyMethod(s, candles, ax, visible=True))
+        # self.methods.append(TendencyMethod(s, candles, ax, visible=True))
         # self.methods.append(CorrectionMethod(s, candles, ax, visible=True))
 
     def add_symbol(self, meta: MetaSymbol, s: Symbol, interval: Interval):
