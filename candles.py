@@ -161,6 +161,7 @@ class StreamItem:
     exit: (int, float)
     # extr: (int, float)
     stop: (int, float)
+    value: (int, float)
 
     visible: bool
 
@@ -387,7 +388,10 @@ class FlowPoint:
         return self.si.enter[0] + delta, v
 
     def title(self):
-        return '' if self.index == 1 else str(self.index)
+        return str(self.index)
+        # return '' if self.index == 1 else str(self.index)
+
+
         # if p.enlarge:
         #     return str(p.index)  # + "'" + str(p.range) + ", 1'" + str(p.range + 1)
         # else:
@@ -395,7 +399,7 @@ class FlowPoint:
 
 
 class SimpleFlow(list[FlowPoint]):
-    frsi: FlowPoint  # first result stream index
+    frsi: FlowPoint = None  # first result stream index
     enter: FlowPoint
     exit: FlowPoint
     index: int
@@ -419,8 +423,8 @@ class SimpleFlow(list[FlowPoint]):
         return self.exit
 
     def add2p(self, si0, si1: StreamItem, index=0):  # add 2 point
-        self.append(FlowPoint(si0, index + 1))
-        self.exit = self.append(FlowPoint(si1, index + 2))
+        self.frsi = self.append(FlowPoint(si0, index))
+        self.exit = self.append(FlowPoint(si1, index + 1))
         return self.exit
 
     def between_last2p(self, si: StreamItem):
@@ -451,15 +455,10 @@ class Flow:
         self.ranges.append(SimpleFlow())
 
     def union(self, ep: FlowPoint, si: StreamItem):
-
-        _frsi = self.range[-2]
-        p1 = self.range[0]
+        p1 = self.range[0]  # begin
         self.ranges.append(SimpleFlow(self.range.index+1))
-        self.range.frsi = _frsi
-
         self.range.start(p1.si, ep.si)
-
-        return self.range.add1p(si, 3)
+        return self.range.add1p(si, 1)
 
 
 class Tendency(Flow):

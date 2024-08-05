@@ -9,6 +9,8 @@ cUp = '#59B359'
 cDn = '#D96C6C'
 cStream = "#B9A6FF"
 cLimit = "FF00FF"
+cLtGray = "eeeeee"
+cGray = "bbbbbb"
 
 
 def realdt(s):
