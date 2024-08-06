@@ -157,11 +157,12 @@ class TOIData(DataFrame):
 class StreamItem:
     up: bool = False
     index: int
+    candle_index: int
     enter: (int, float)  # ts, value
     exit: (int, float)
     # extr: (int, float)
     stop: (int, float)
-    value: (int, float)
+    # value: (int, float)
 
     visible: bool
 
@@ -177,11 +178,11 @@ class StreamItem:
 
     @property
     def color(self):
-        if self.up: return cUp
-        else: return cDn
+        return cUp if self.up else cDn
 
-    def __init__(self, enter, _exit, stop=(0, 0), visible=False, index=0):
+    def __init__(self, enter, _exit, stop=(0, 0), visible=False, candle_index=0, index=0):
         self.index = index
+        self.candle_index = candle_index
         self.enter = enter
         self.exit = _exit
         self.stop = stop
@@ -378,7 +379,7 @@ class FlowPoint:
         self.prev = prev
         self.range = _range
         self.enlarge = enlarge
-        self.up = up
+        self.up = stream_item.up
 
     def coord(self, delta=0, value=0):
         if value != 0:
@@ -423,8 +424,8 @@ class SimpleFlow(list[FlowPoint]):
         return self.exit
 
     def add2p(self, si0, si1: StreamItem, index=0):  # add 2 point
-        self.frsi = self.append(FlowPoint(si0, index))
-        self.exit = self.append(FlowPoint(si1, index + 1))
+        self.frsi = self.append(FlowPoint(si0, index + 1))
+        self.exit = self.append(FlowPoint(si1, index + 2))
         return self.exit
 
     def between_last2p(self, si: StreamItem):

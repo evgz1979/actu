@@ -121,28 +121,17 @@ class StreamMethod(AnalysisMethod):
     #                                  index=i - self.skip_i() + 1))
     #         i += 1
 
-    # def level_base_0_91(self, st: Stream):
-    #     c = self.candles
-    #     i = self.skip_i()
-    #     st.append(StreamItem(c[i].enter, c[i].exit, c[i].enter, index=i - self.skip_i() + 1))
-    #
-    #     while i < len(c) - 1:
-    #         ex = st[-1].move_exit(c[i], c[i + 1])  # переносим выход, пока ...
-    #
-    #         if st[-1].is_stop2(c[i], c[i + 1]):
-    #             st.append(StreamItem(st[-1].exit, ex, st[-1].get_stop(c[i]), index=i - self.skip_i() + 1))
-    #         i += 1
-
-    def level_base_0_92(self, st: Stream):
+    def level_base_0_91(self, st: Stream):
         c = self.candles
         i = self.skip_i()
-        st.append(StreamItem(c[i].enter, c[i].exit, c[i].enter, index=i - self.skip_i() + 1))
+        st.append(StreamItem(c[i].enter, c[i].exit, c[i].enter, candle_index=i - self.skip_i(), index=1))
 
         while i < len(c) - 1:
             ex = st[-1].move_exit(c[i], c[i + 1])  # переносим выход, пока ...
 
             if st[-1].is_stop2(c[i], c[i + 1]):
-                st.append(StreamItem(st[-1].exit, ex, st[-1].get_stop(c[i]), index=i - self.skip_i() + 1))
+                st.append(StreamItem(st[-1].exit, ex, st[-1].get_stop(c[i]), candle_index=i - self.skip_i(),
+                                     index=len(st)+1))
             i += 1
 
     def level2(self, st: Stream):
@@ -163,7 +152,7 @@ class StreamMethod(AnalysisMethod):
         # self.level0(self.candles.stream0)
         # self.level1(self.candles.stream1)
         # self.normalize(self.candles.stream1)
-        self.level_base_0_92(self.candles.stream)
+        self.level_base_0_91(self.candles.stream)
         # self.level2(self.candles.stream2)
 
     def draw_stream(self, c: TCandlesList, st: Stream, stop_visible=False, colored=False, width=1):

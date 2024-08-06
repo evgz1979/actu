@@ -71,45 +71,40 @@ class TendencyMethod(AnalysisMethod):
         tc = self.candles.tendency
 
         def recurcy(ep: FlowPoint):  # ep - even point   -------->>>>> Flow !!!
+            print(ep.si.index)
+            if ep.si.index > len(st): return
+            i = ep.si.index+1
 
-            print('enter i=', ep.si.index)
-
-            if ep.si.index > len(st):
-                print('exit')
-                return
-
-            i = ep.si.index
-            while tc.range.between_last2p(st[i]) and i < len(st) - 1:
+            while tc.range.between_last2p(st[i-1]) and i < len(st):  # correction
                 i += 1
 
-            print('i=', i, 'ep.index=', ep.index)
+            print('i=', i, 'ep.si.index=', ep.si.index)
 
-            # if i - ep.index - 1 == 1:  # объединение
-            #     print('union')
-            #     recurcy(tc.union(ep, st[i]))
-
-            if i - ep.si.index == 2:  # след точка тенденции
+            # ниже условия независимо от up/dn, только на основе разницы индексов анализировать!
+            if i - ep.si.index == 1:  # нечётная, объединение
+                print('union')
+                recurcy(tc.union(ep, st[i-1]))
+            if i - ep.si.index == 2:  # чётная, след точка тенденции
                 print('add2p')
-                recurcy(tc.range.add2p(st[i - 2], st[i - 1], ep.index))
+                p = tc.range.add2p(st[i - 2], st[i - 1], ep.index)
+                print('p', ep.si.index, p.si.index)
+                recurcy(p)
 
         recurcy(tc.range.start(st[0], st[1]))
 
-    @staticmethod
-    def color(p: FlowPoint):  # todo --> TTendencyPoint ???как если None???
-        return "D96C6C" if p.si.up else "59B359"
-
     def draw(self):  # todo debug-mode -- ? отображение надписей, в обыном режиме - рисовать
+        # return
+
         # delta_ts = self.candles[1].ts - self.candles[0].ts  # todo --> Candles
         tc = self.candles.tendency
 
         tc._current_range_index = 1
 
-        drawer.fp.add_text(tc.range[0].coord(), tc.range[0].title(), self.color(tc.range[0]), ax=self.ax)
+        drawer.fp.add_text(tc.range[0].coord(), tc.range[0].title(), tc.range[0].si.color, ax=self.ax)
         i = 1
         while i < len(tc.range):
-            drawer.fp.add_line(tc.range[i - 1].coord(), tc.range[i].coord(), self.color(tc.range[i]), ax=self.ax,
-                               width=3)
-            drawer.fp.add_text(tc.range[i].coord(), tc.range[i].title(), self.color(tc.range[i]), ax=self.ax)
+            drawer.fp.add_line(tc.range[i - 1].coord(), tc.range[i].coord(), tc.range[0].si.color, ax=self.ax, width=3)
+            drawer.fp.add_text(tc.range[i].coord(), tc.range[i].title(), tc.range[0].si.color, ax=self.ax)
 
             if tc.range.frsi is not None:
                 drawer.fp.add_line(tc.range.frsi.coord(), tc.range.frsi.coord(self.ts_delta() * 5), color=cGray,
