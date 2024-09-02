@@ -6,6 +6,10 @@ from system.moneys import MoneyMethod
 from system.stream import StreamMethod
 from system.tendency import TendencyMethod
 
+# Structured
+# Volumed
+# Candles(структура основанная на свечах)
+
 
 class JZSystem(AnalysisSystem):
     def __init__(self, _drawer: TDrawer):

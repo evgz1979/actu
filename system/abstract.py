@@ -2,6 +2,14 @@ from drawer import *
 from symbols import *
 
 
+class AnalysisRule:  # ?
+    pass
+
+
+class AnalysisRules:  # ? for Methods????
+    pass
+
+
 class AnalysisMethod:
     # symbol: Symbol
     candles: TCandlesList = None
