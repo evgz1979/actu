@@ -1,8 +1,6 @@
-from dataclasses import dataclass
-from datetime import *
 from connector_moex import *
 from orm import *
-from candles import *
+from temp.candles import *
 from drawer import *
 from settings import *
 

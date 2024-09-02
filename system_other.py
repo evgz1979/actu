@@ -1,7 +1,3 @@
-from system import *
-from candles import *
-
-
 class TOraculMethod(TAnalysisMethod):
     pass
 

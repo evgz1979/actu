@@ -11,7 +11,7 @@
 import finplot as fp
 from pandas import DataFrame
 
-from candles import TCandlesDataFrame, Interval
+from base.candles import *
 from settings import *
 from symbols import Symbol, MetaSymbol
 

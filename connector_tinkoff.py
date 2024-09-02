@@ -1,17 +1,12 @@
-from tinkoff.invest.services import *
-
-from candles import Interval
+from base.candles import Interval
 from connector import *
 import asyncio
-from datetime import timedelta
 from pathlib import Path
 from tinkoff.invest.caching.market_data_cache.cache import MarketDataCache
 from tinkoff.invest.caching.market_data_cache.cache_settings import MarketDataCacheSettings
 from pandas import DataFrame
 from funcs import *
-import pandas as pd
 from tinkoff.invest import CandleInterval, Client, HistoricCandle, AsyncClient
-from tinkoff.invest.utils import now
 from settings import *
 from orm import *
 from tinkoff.invest.utils import now

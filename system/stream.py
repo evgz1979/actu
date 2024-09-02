@@ -1,6 +1,6 @@
 import drawer
 from system.abstract import AnalysisMethod
-from candles import *
+from base.candles import *
 
 # todo ----- find_frsi
 # frsi: int = 0  # first result stream index

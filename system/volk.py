@@ -1,11 +1,6 @@
-from system.abstract import *
-from system.flow import *
 from system.info import *
 from system.moneys import *
-from PyQt5.uic.properties import QtCore
-import drawer
-from system import *
-from candles import *
+from temp.candles import *
 from system.stream import StreamMethod
 
 

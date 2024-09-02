@@ -1,8 +1,4 @@
 from system.abstract import *
-from system.correction import CorrectionMethod
-from system.flow import MetaFlowMethod
-from system.info import InfoMethod
-from system.moneys import MoneyMethod
 from system.stream import StreamMethod
 from system.tendency import TendencyMethod
 
@@ -19,7 +15,7 @@ class JZSystem(AnalysisSystem):
     def add_methods(self, interval: Interval, s: Symbol, candles: TCandlesList, ax):
         # if interval != Interval.min5: self.methods.append(InfoMethod(s, candles, ax, visible=True))
         # if interval != Interval.min5: self.methods.append(MoneyMethod(s, candles, ax, visible=True))
-        # self.methods.append(MetaFlowMethod(s, candles, ax, visible=True))
+
         self.methods.append(StreamMethod(s, candles, ax, visible=True))
         self.methods.append(TendencyMethod(s, candles, ax, visible=True))
         # self.methods.append(CorrectionMethod(s, candles, ax, visible=True))

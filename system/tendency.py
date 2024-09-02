@@ -1,6 +1,6 @@
 from system.moneys import *
 import drawer
-from candles import *
+from temp.candles import *
 
 
 class TendencyMethod(AnalysisMethod):
@@ -257,6 +257,39 @@ class TendencyMethod(AnalysisMethod):
     #     recurcy(tc.start(st[0], st[1]))
     #     print('-------tendency-ranges=', len(tc.ranges))
 
+    # def calc(self):  # ------------------- its FLOW !!!! ----
+    #     st = self.candles.stream
+    #     tc = self.candles.tendency
+    #
+    #     def recurcy(ep: FlowPoint):  # ep - even point   -------->>>>> Flow !!! --------------- LAST WORKED----
+    #         if tc.range.index > 3: return  # debug
+    #         if ep.si.index > len(st): return
+    #         i = ep.si.index + 1
+    #
+    #         # while tc.range.between_last2p(st[i - 1]) and i < len(st):  i += 1  # correction
+    #         while tc.between(st[i - 1]) and i < len(st):  i += 1
+    #
+    #         if ep.up:
+    #             if st[i - 1].value > ep.si.value:
+    #                 recurcy(tc.range.add2p(st.find_min(ep.si, st[i - 1]), st[i - 1], ep.index))
+    #             else:
+    #                 print('union')
+    #                 recurcy(tc.union(ep, st[i - 1]))
+    #         else:  # dn
+    #             if st[i - 1].value > tc.range.frsi.value:
+    #                 print('break')
+    #                 recurcy(tc.range.add2p(st.find_min(ep.si, st[i - 1]), st[i - 1], ep.index))
+    #             # elif st[i - 1].value > ep.si.value:
+    #             #     print('1')
+    #             #     recurcy(tc.union(ep, st[i - 1]))
+    #             else:
+    #                 print('2')
+    #                 recurcy(tc.range.add2p(st.find_max(ep.si, st[i - 1]), st[i - 1], ep.index))
+    #
+    #     recurcy(tc.start(st[0], st[1]))
+    #     print('-------tendency-ranges=', len(tc.ranges))
+
+
     def calc(self):  # ------------------- its FLOW !!!! ----
         st = self.candles.stream
         tc = self.candles.tendency
@@ -266,29 +299,11 @@ class TendencyMethod(AnalysisMethod):
             if ep.si.index > len(st): return
             i = ep.si.index + 1
 
-            # while tc.range.between_last2p(st[i - 1]) and i < len(st):  i += 1  # correction
-            while tc.between(st[i - 1]) and i < len(st):  i += 1
 
-            if ep.up:
-                if st[i - 1].value > ep.si.value:
-                    recurcy(tc.range.add2p(st.find_min(ep.si, st[i - 1]), st[i - 1], ep.index))
-                else:
-                    print('union')
-                    recurcy(tc.union(ep, st[i - 1]))
-            else:  # dn
-                if st[i - 1].value > tc.range.frsi.value:
-                    print('break')
-                    recurcy(tc.range.add2p(st.find_min(ep.si, st[i - 1]), st[i - 1], ep.index))
-                # elif st[i - 1].value > ep.si.value:
-                #     print('1')
-                #     recurcy(tc.union(ep, st[i - 1]))
-                else:
-                    print('2')
-                    recurcy(tc.range.add2p(st.find_max(ep.si, st[i - 1]), st[i - 1], ep.index))
 
         recurcy(tc.start(st[0], st[1]))
-        print('-------tendency-ranges=', len(tc.ranges))
 
+        print('-------tendency-ranges=', len(tc.ranges))
 
     def draw(self):  # todo debug-mode -- ? отображение надписей, в обыном режиме - рисовать
         # return
@@ -296,14 +311,14 @@ class TendencyMethod(AnalysisMethod):
         # delta_ts = self.candles[1].ts - self.candles[0].ts  # todo --> Candles
         tc = self.candles.tendency
 
-        tc._current_range_index = 2
+        tc.current_index = 1
 
         drawer.fp.add_text(tc.range[0].coord(), tc.range[0].title(), tc.range[0].si.color, ax=self.ax)
         i = 1
 
         while i < len(tc.range):
             drawer.fp.add_line(tc.range[i - 1].coord(), tc.range[i].coord(), tc.range[i-1].color, ax=self.ax, width=3)
-            if i == len(tc.range) - 1: s1 = ' (range=' + str(tc.current_range_index) + ')'
+            if i == len(tc.range) - 1: s1 = ' (range=' + str(tc.current_index) + ')'
             else: s1 = ''
             s2 = ', up='+str(tc.range[i].up) + ' ,enl=' + str(tc.range[i].enlarge)
             drawer.fp.add_text(tc.range[i].coord(), tc.range[i].title() + s1 +s2, tc.range[i].color, ax=self.ax)
@@ -314,7 +329,7 @@ class TendencyMethod(AnalysisMethod):
             # print(tc.range.frsi.coord(), tc.range.frsi.coord(delta=1))
             i += 1
 
-        tc._current_range_index = 0
+        tc.current_index = 0
 
     # def draw(self):  # todo debug-mode -- ? отображение надписей, в обыном режиме - рисовать
     #
