@@ -39,30 +39,42 @@ class FlowPoint:
         return cUp if self.up else cDn
 
 
-class FlowPoints(list[FlowPoint]):
-    pass
+# class FlowPoints(list[FlowPoint]):
+#     pass
 
 
-class SimpleFlow(FlowPoints):
+class SimpleFlow(list[FlowPoint]):
     breakp: FlowPoint = None  # break point
     frsi: FlowPoint = None  # first result stream index
     enter: FlowPoint
     exit: FlowPoint
     index: int
+    up: bool = None
 
-    def __init__(self, range_index=1):
+    flow: 'Flow' = None
+
+    stream: Stream
+
+    def __init__(self, stream: Stream, range_index=1):
         super().__init__()
+        self.stream = stream
         self.index = range_index
 
     def append(self, __object: FlowPoint) -> FlowPoint:
         super().append(__object)
         return __object
 
+    # def start_old(self, si0, si1: StreamItem):  # start 2 point
+    #     self.breakp = self.frsi = self.enter = self.append(FlowPoint(si0, 1))
+    #     self.exit = self.append(FlowPoint(si1, 2))
+    #     self.exit.up = si0.up
+    #     return self.exit
+
     def start(self, si0, si1: StreamItem):  # start 2 point
         self.breakp = self.frsi = self.enter = self.append(FlowPoint(si0, 1))
         self.exit = self.append(FlowPoint(si1, 2))
-        self.exit.up = si0.up
-        return self.exit
+        self.up = self.enter.up = self.exit.up = si0.up
+        return self  # возвращает поток! с началом и концом
 
     def add1p(self, si: StreamItem, index=0):  # add 1 point
         self.exit = self.append(FlowPoint(si, index + 1))
@@ -73,6 +85,13 @@ class SimpleFlow(FlowPoints):
         self.exit = self.append(FlowPoint(si1, index + 2))
         self.exit.up = si0.up
         return self.exit
+
+    def add2p_2(self, si0, si1: StreamItem):  # add 2 point
+        i = self.exit.index
+        self.frsi = self.append(FlowPoint(si0, i + 1))
+        self.exit = self.append(FlowPoint(si1, i + 2))
+        self.exit.up = si1.up
+        return self
 
     @property
     def current(self):
@@ -92,14 +111,18 @@ class SimpleFlow(FlowPoints):
 
 
 class SimpleFlowList(list[SimpleFlow]):
-    def append(self, __object: SimpleFlow) -> SimpleFlow:
-        super().append(__object)
-        return __object
+    stream: Stream
+
+    def __init__(self, stream: Stream):
+        super().__init__()
+        self.stream = stream
 
 
 class FlowRanges(SimpleFlowList):
 
-    flow: 'Flow' = None
+    @property
+    def first(self):
+        return self[0]
 
     @property
     def current(self):
@@ -109,10 +132,15 @@ class FlowRanges(SimpleFlowList):
     def prev(self):
         return self[-2]
 
+    def append(self, __object: SimpleFlow) -> SimpleFlow:
+        super().append(__object)
+        return __object
+
 
 class Flow:
     current_index: int = 0
 
+    stream: Stream
     ranges: FlowRanges = None
 
     @property
@@ -124,19 +152,21 @@ class Flow:
     def begin(self):
         return self.range[0]
 
-    def __init__(self):
-        self.ranges = FlowRanges()
+    def __init__(self, stream: Stream):
+        self.stream = stream
+        self.ranges = FlowRanges(stream)
 
-    def start(self, si0, si1: StreamItem):  # start - конкретно для тенденции (а не для Flow)
-        self.ranges.append(SimpleFlow())
-        return self.range.start(si0, si1)
+    # def start_old(self, si0, si1: StreamItem):  # start - конкретно для тенденции (а не для Flow)
+    #     self.ranges.append(SimpleFlow(self.stream))
+    #     return self.range.start(si0, si1)
 
-
-class Tendency(Flow):
+    def start(self):  # start - конкретно для тенденции (а не для Flow)
+        self.ranges.append(SimpleFlow(self.stream))
+        return self.range.start(self.stream[0], self.stream[1])
 
     def union(self, ep: FlowPoint, si: StreamItem):
         p1 = self.begin  # p1 присовить до self.ranges.append() !!!
-        self.ranges.append(SimpleFlow(self.range.index+1))
+        self.ranges.append(SimpleFlow(self.stream, self.range.index+1))
         # return self.range.add1p(si, 2)  # ---- недобавлять 3ю точку!!! union() только объединяет
         # ep.up = not self.begin.up
         p2 = self.range.start(p1.si, ep.si)  # это p2
@@ -144,6 +174,27 @@ class Tendency(Flow):
         p2.enlarge = True
         self.range.frsi = p2
         return p2
+
+    def calc(self):
+
+        def recurcy(sf: SimpleFlow):  # ep - even point   -------->>>>> Flow !!! --------------- LAST WORKED----
+            if self.range.index > 3: return  # debug
+            if sf.exit.si.index > len(self.stream): return
+
+            if sf.between_last2p(sf.exit.si.next) and not sf.between_last2p(sf.exit.si.next.next):
+                self.range.add2p_2(sf.exit.si.next, sf.exit.si.next.next)
+
+        recurcy(self.start())
+
+
+class Correction(Flow):
+    pass
+
+
+class Tendency(Flow):
+
+    def calc(self):
+        super().calc()
 
     def between(self, si: StreamItem):
         if len(self.ranges) == 1:

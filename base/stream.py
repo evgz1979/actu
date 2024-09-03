@@ -3,6 +3,9 @@ from base.info import *
 
 
 class StreamItem:
+
+    stream: 'Stream'
+
     up: bool = False
     index: int
     candle_index: int
@@ -114,6 +117,11 @@ class StreamItem:
         else:
             return c.ts, c.high
 
+    @property
+    def next(self):
+        return self.stream[self.index+1-1]  #???  следующий +1, но -1 для списка !!!! пиздец (те здесь всё правильно!!!)
+                                            # +1-1 --- написано просто для понимания
+
 
 class Stream(list[StreamItem]):
 
@@ -132,6 +140,7 @@ class Stream(list[StreamItem]):
 
     def append(self, __object: StreamItem) -> StreamItem:
         super().append(__object)
+        __object.stream = self
         return __object
 
     def get_df(self):
@@ -184,4 +193,7 @@ class Stream(list[StreamItem]):
     def find(self, f):
         for si in self:
             if si.enter[0] == f[0] or si.exit[0] == f[0]: return si
+
+    def next(self):
+        pass
 

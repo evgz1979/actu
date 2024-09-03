@@ -43,7 +43,7 @@ class TCandlesList(list[TCandle]):
         self.stream1 = Stream()
         self.stream2 = Stream()
         # self.flow = Flow()
-        self.tendency = Tendency()
+        self.tendency = Tendency(self.stream)
         # self.correction = TCorrection()
 
     def _calc_dts(self):

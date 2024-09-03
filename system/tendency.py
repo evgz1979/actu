@@ -289,26 +289,14 @@ class TendencyMethod(AnalysisMethod):
     #     recurcy(tc.start(st[0], st[1]))
     #     print('-------tendency-ranges=', len(tc.ranges))
 
+    def calc(self):
 
-    def calc(self):  # ------------------- its FLOW !!!! ----
-        st = self.candles.stream
-        tc = self.candles.tendency
+        self.candles.tendency.calc()
 
-        def recurcy(ep: FlowPoint):  # ep - even point   -------->>>>> Flow !!! --------------- LAST WORKED----
-            if tc.range.index > 3: return  # debug
-            if ep.si.index > len(st): return
-            i = ep.si.index + 1
-
-
-
-        recurcy(tc.start(st[0], st[1]))
-
-        print('-------tendency-ranges=', len(tc.ranges))
+        print('-------tendency-ranges=', len(self.candles.tendency.ranges))
 
     def draw(self):  # todo debug-mode -- ? отображение надписей, в обыном режиме - рисовать
-        # return
 
-        # delta_ts = self.candles[1].ts - self.candles[0].ts  # todo --> Candles
         tc = self.candles.tendency
 
         tc.current_index = 1
@@ -321,7 +309,7 @@ class TendencyMethod(AnalysisMethod):
             if i == len(tc.range) - 1: s1 = ' (range=' + str(tc.current_index) + ')'
             else: s1 = ''
             s2 = ', up='+str(tc.range[i].up) + ' ,enl=' + str(tc.range[i].enlarge)
-            drawer.fp.add_text(tc.range[i].coord(), tc.range[i].title() + s1 +s2, tc.range[i].color, ax=self.ax)
+            drawer.fp.add_text(tc.range[i].coord(), tc.range[i].title() + s1 + s2, tc.range[i].color, ax=self.ax)
 
             if tc.range.frsi is not None:
                 drawer.fp.add_line(tc.range.frsi.coord(), tc.range.frsi.coord(self.ts_delta() * 5), color=cGray,
