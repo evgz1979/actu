@@ -1,6 +1,5 @@
-from connector_moex import *
+from connector.moex import *
 from orm import *
-from temp.candles import *
 from drawer import *
 from settings import *
 
@@ -82,7 +81,7 @@ class Symbol:
         self.refresh(interval)
         return self.candles.get(interval)
 
-    def refresh_candles(self, candles_list: TCandlesList, candles_df: TCandlesDataFrame):
+    def refresh_candles(self, candles_list: Candles, candles_df: TCandlesDataFrame):
         candles_list.clear()
         i = 0
         while i < candles_df.shape[0]:
@@ -152,8 +151,11 @@ class MetaSymbol:
             a: str = self.cfg(s + '.' + Interval.cfgt(interval))
             b = a.split('/')
             b0 = realdt(b[0])
-            if b[1] == 'now': b1 = now()
-            else: b1 = realdt(b[1])
+            if len(b) > 1:
+                if b[1] == 'now': b1 = now()
+                else: b1 = realdt(b[1])
+            else:
+                b1 = now()
             # print(b0, b1)
             return b0, b1
         else: return dt_else

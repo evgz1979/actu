@@ -12,12 +12,12 @@ class AnalysisRules:  # ? for Methods????
 
 class AnalysisMethod:
     # symbol: Symbol
-    candles: TCandlesList = None
+    candles: Candles = None
     drawer: TDrawer
     ax = None
     visible = False
 
-    def __init__(self, s: Symbol, candles: TCandlesList, _ax, visible=True):
+    def __init__(self, s: Symbol, candles: Candles, _ax, visible=True):
         self.symbol = s
         self.candles = candles
         self.ax = _ax

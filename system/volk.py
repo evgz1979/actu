@@ -10,7 +10,7 @@ class VolkSystem(AnalysisSystem):
         super().__init__(m, _drawer)
         logger.info(">> Volk system init")
 
-    def add_methods(self, s: Symbol, candles: TCandlesList, ax):
+    def add_methods(self, s: Symbol, candles: Candles, ax):
         self.methods.append(InfoMethod(s, candles, ax, visible=False))
         self.methods.append(MoneyMethod(s, candles, ax, visible=False))
         self.methods.append(StreamMethod(s, candles, ax, visible=True))

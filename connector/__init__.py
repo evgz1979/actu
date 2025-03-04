@@ -23,8 +23,14 @@ import configparser
 # symbol_name_ku = 'BTC/USDT'  # {'spot': 'BTC/USDT', 'futures': 'BTC/USDT:USDT'}
 
 
+class Trader:
+    pass
+
+
 class TConnector:
     id = ''
+
+    trader: Trader = None
 
     def __init__(self, _id):
         self.id = _id

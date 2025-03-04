@@ -1,49 +1,29 @@
 from pandas import DataFrame
-from base.stream import *
+from base.data import *
+from base.streams import *
 from base.info import *
 from base.flow import *
 
 
-class TCandlesDataFrame(DataFrame):
-    dtfrom: datetime
-    dtto: datetime
-    # pass
-
-
-class TOIData(DataFrame):
-    pass
-
-
-class TCandlesList(list[TCandle]):
+class Candles(CandlesList):
     limits: TLimits
     moneys: TMoneys
-    stream: Stream
-    stream0: Stream
-    stream1: Stream
-    stream2: Stream
-    # flow: Flow
+    streams: Streams
+    flow: Flow
     tendency: Tendency
     # correction: TCorrection
 
     max_all_high: float
     min_all_low: float
 
-    dtload: (datetime, datetime)  # (from, to)
-    dtcalc: (datetime, datetime)  # (from, to)
-
-    # dtfrom: datetime
-    # dtto: datetime
-
     def __init__(self):
         super().__init__()
         self.limits = TLimits()
         self.moneys = TMoneys()
-        self.stream = Stream()
-        self.stream0 = Stream()
-        self.stream1 = Stream()
-        self.stream2 = Stream()
-        # self.flow = Flow()
-        self.tendency = Tendency(self.stream)
+        self.streams = Streams(self)
+
+        self.flow = Flow(self.streams)
+        # self.tendency = Tendency(self.stream)
         # self.correction = TCorrection()
 
     def _calc_dts(self):
@@ -88,19 +68,19 @@ class TCandlesCollectionData:
 
 
 class TCandlesCollection:
-    week1 = TCandlesList
-    day1 = TCandlesList
-    hour1 = TCandlesList
-    min5 = TCandlesList
+    week1 = Candles
+    day1 = Candles
+    hour1 = Candles
+    min5 = Candles
 
     interval = {}  # other intervals and links to std-intervals
 
     def __init__(self):
-        self.day1 = TCandlesList()
-        self.week1 = TCandlesList()
-        self.hour1 = TCandlesList()
-        self.hour4 = TCandlesList()
-        self.min5 = TCandlesList()
+        self.day1 = Candles()
+        self.week1 = Candles()
+        self.hour1 = Candles()
+        self.hour4 = Candles()
+        self.min5 = Candles()
 
     def get(self, interval: Interval):
         if interval == Interval.min5: return self.min5

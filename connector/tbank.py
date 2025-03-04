@@ -129,7 +129,7 @@ class TBankConnector(TConnector):
             print("start getting candles, symbol=" + figi + ", Interval=" + str(interval) + "..., from", dtload[0])
 
             with Client(self.token) as client:
-                settings = MarketDataCacheSettings(base_cache_dir=Path("cache"))
+                settings = MarketDataCacheSettings(base_cache_dir=Path("../cache"))
                 cache = MarketDataCache(settings=settings, services=client)
 
                 df = DataFrame(

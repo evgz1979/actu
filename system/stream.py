@@ -2,39 +2,62 @@ import drawer
 from system.abstract import AnalysisMethod
 from base.candles import *
 
-# todo ----- find_frsi
-# frsi: int = 0  # first result stream index
-# lrsi: int = 0  # last result stream index
-
 
 class StreamMethod(AnalysisMethod):
     id = 'STREAM'
 
-    @staticmethod
-    def is_correction(ci, ci1: TCandle):
-        return (ci.enter[1] <= ci1.low <= ci.exit[1] < ci1.high) or (
-                ci.enter[1] >= ci1.high >= ci.exit[1] > ci1.low)
+    def calc(self):
+        self.candles.streams.calc(self.skip_i())
 
-    def level0(self, st: Stream):
-        c = self.candles
-        i = 0
-        while i < len(c) - 1:
-            st.append(StreamItem(c[i].enter, c[i].exit, visible=False))
-            st.append(StreamItem(c[i].exit, c[i + 1].enter, visible=False))
-            i += 1
-
-    def level1(self, st: Stream):
-        c = self.candles
-        i = 0
-        while i < len(c) - 1:
-            if len(st) > 0 and self.is_correction(c[i], c[i + 1]):
-                st.append(StreamItem(c[i].enter, c[i + 1].enter, visible=False))
-            # elif len(st) > 0 and self.is_merge_wicks(c[i], c[i + 1]):
+    def draw_stream(self, st: SimpleStream, stop_visible=False, colored=False, width=1):
+        for si in st:
+            if colored:
+                drawer.fp.add_line(si.enter, si.exit, color=si.color, width=width, ax=self.ax)
             else:
-                # level0(st)
-                st.append(StreamItem(c[i].enter, c[i].exit, visible=False))
-                st.append(StreamItem(c[i].exit, c[i + 1].enter, visible=False))
-            i += 1
+                drawer.fp.add_line(si.enter, si.exit, color=cStream, width=width, ax=self.ax)
+
+            # if stop_visible:  # --- ------ возникает ошибка отрисовки, почему?
+            #     drawer.fp.add_line(c.dts(si.stop, -0.5), c.dts(si.stop, 0.5))
+
+    def draw(self):
+        self.draw_stream(self.candles.streams.base, True, True, 1)
+        # self.draw_stream(self.candles.stream0, True, True, 1)
+        # self.draw_stream(self.candles.stream1, True, True, 1)
+
+
+
+# -------------------
+#
+# class StreamMethod(AnalysisMethod):
+#     id = 'STREAM'
+#
+#
+#
+#     def calc(self):
+#
+#         # self.level0(self.candles.stream0)
+#         # self.level1(self.candles.stream1)
+#         # self.normalize(self.candles.stream1)
+#
+#         self.candles.calc_stream(self.candles.stream, self.skip_i())
+#
+#         # self.level2(self.candles.stream2)
+#
+#     def draw_stream(self, st: Stream, stop_visible=False, colored=False, width=1):
+#         for si in st:
+#             if colored:
+#                 drawer.fp.add_line(si.enter, si.exit, color=si.color, width=width, ax=self.ax)
+#             else:
+#                 drawer.fp.add_line(si.enter, si.exit, color=cStream, width=width, ax=self.ax)
+#
+#             # if stop_visible:  # --- ------ возникает ошибка отрисовки, почему?
+#             #     drawer.fp.add_line(c.dts(si.stop, -0.5), c.dts(si.stop, 0.5))
+#
+#     def draw(self):
+#         self.draw_stream(self.candles.stream, True, True, 1)
+#         # self.draw_stream(self.candles, self.candles.stream0, width=1)
+#         # self.draw_stream(self.candles, self.candles.stream1, width=2)
+#         # self.draw_stream(self.candles, self.candles.stream2, width=5)
 
     # def level_base_0_7(self, st: TStream):  # ver 0.7
     #     c = self.candles
@@ -121,51 +144,58 @@ class StreamMethod(AnalysisMethod):
     #                                  index=i - self.skip_i() + 1))
     #         i += 1
 
-    def level_base_0_91(self, st: Stream):
-        c = self.candles
-        i = self.skip_i()
-        st.append(StreamItem(c[i].enter, c[i].exit, c[i].enter, candle_index=i - self.skip_i(), index=1))
 
-        while i < len(c) - 1:
-            ex = st[-1].move_exit(c[i], c[i + 1])  # переносим выход, пока ...
+###===-----  worked!!!
 
-            if st[-1].is_stop2(c[i], c[i + 1]):
-                st.append(StreamItem(st[-1].exit, ex, st[-1].get_stop(c[i]), candle_index=i - self.skip_i(),
-                                     index=len(st)+1))
-            i += 1
+    # @staticmethod
+    # def is_correction(ci, ci1: TCandle):
+    #     return (ci.enter[1] <= ci1.low <= ci.exit[1] < ci1.high) or (
+    #             ci.enter[1] >= ci1.high >= ci.exit[1] > ci1.low)
 
-    def level2(self, st: Stream):
-        c = self.candles
-        st1 = self.candles.stream1
-        st.append(StreamItem(st1[0].enter, st1[0].enter, st1[0].enter))
-
-        i = 0
-        while i < len(c) - 1:
-            # if st[-1].is_stop2(c[i], c[i + 1]):
-            #     st.append(TStreamItem(
-            #         st[-1].exit,
-            #         st1.get_exit(st[-1], c[i], c[i + 1]),
-            #         st[-1].get_stop(c[i])))
-            i += 1
-
-    def calc(self):
-        # self.level0(self.candles.stream0)
-        # self.level1(self.candles.stream1)
-        # self.normalize(self.candles.stream1)
-        self.level_base_0_91(self.candles.stream)
-        # self.level2(self.candles.stream2)
-
-    def draw_stream(self, c: TCandlesList, st: Stream, stop_visible=False, colored=False, width=1):
-        for si in st:
-            if colored:
-                drawer.fp.add_line(si.enter, si.exit, color=si.color, width=width, ax=self.ax)
-            else:
-                drawer.fp.add_line(si.enter, si.exit, color=cStream, width=width, ax=self.ax)
-            # if stop_visible:  # --- ------ ошибка отрисовки
-            #     drawer.fp.add_line(c.dts(si.stop, -0.5), c.dts(si.stop, 0.5))
-
-    def draw(self):
-        self.draw_stream(self.candles, self.candles.stream, True, True, 1)
-        # self.draw_stream(self.candles, self.candles.stream0, width=1)
-        # self.draw_stream(self.candles, self.candles.stream1, width=2)
-        # self.draw_stream(self.candles, self.candles.stream2, width=5)
+    # def level0(self, st: Stream):
+    #     c = self.candles
+    #     i = 0
+    #     while i < len(c) - 1:
+    #         st.append(StreamItem(c[i].enter, c[i].exit, visible=False))
+    #         st.append(StreamItem(c[i].exit, c[i + 1].enter, visible=False))
+    #         i += 1
+    #
+    # def level1(self, st: Stream):
+    #     c = self.candles
+    #     i = 0
+    #     while i < len(c) - 1:
+    #         if len(st) > 0 and self.is_correction(c[i], c[i + 1]):
+    #             st.append(StreamItem(c[i].enter, c[i + 1].enter, visible=False))
+    #         # elif len(st) > 0 and self.is_merge_wicks(c[i], c[i + 1]):
+    #         else:
+    #             # level0(st)
+    #             st.append(StreamItem(c[i].enter, c[i].exit, visible=False))
+    #             st.append(StreamItem(c[i].exit, c[i + 1].enter, visible=False))
+    #         i += 1
+    #
+    # def level_base_0_91(self, st: Stream):
+    #     c = self.candles
+    #     i = self.skip_i()
+    #     st.append(StreamItem(c[i].enter, c[i].exit, c[i].enter, candle_index=i - self.skip_i(), index=1))
+    #
+    #     while i < len(c) - 1:
+    #         ex = st[-1].move_exit(c[i], c[i + 1])  # переносим выход, пока ...
+    #
+    #         if st[-1].is_stop2(c[i], c[i + 1]):
+    #             st.append(StreamItem(st[-1].exit, ex, st[-1].get_stop(c[i]), candle_index=i - self.skip_i(),
+    #                                  index=len(st)+1))
+    #         i += 1
+    #
+    # def level2(self, st: Stream):
+    #     c = self.candles
+    #     st1 = self.candles.stream1
+    #     st.append(StreamItem(st1[0].enter, st1[0].enter, st1[0].enter))
+    #
+    #     i = 0
+    #     while i < len(c) - 1:
+    #         # if st[-1].is_stop2(c[i], c[i + 1]):
+    #         #     st.append(TStreamItem(
+    #         #         st[-1].exit,
+    #         #         st1.get_exit(st[-1], c[i], c[i + 1]),
+    #         #         st[-1].get_stop(c[i])))
+    #         i += 1

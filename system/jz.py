@@ -1,6 +1,7 @@
 from system.abstract import *
 from system.stream import StreamMethod
-from system.tendency import TendencyMethod
+# from system.tendency import TendencyMethod
+from system.flow import FlowMethod
 
 # Structured
 # Volumed
@@ -12,12 +13,13 @@ class JZSystem(AnalysisSystem):
         super().__init__(_drawer)
         logger.info(">> JZ system init")
 
-    def add_methods(self, interval: Interval, s: Symbol, candles: TCandlesList, ax):
+    def add_methods(self, interval: Interval, s: Symbol, candles: Candles, ax):
         # if interval != Interval.min5: self.methods.append(InfoMethod(s, candles, ax, visible=True))
         # if interval != Interval.min5: self.methods.append(MoneyMethod(s, candles, ax, visible=True))
 
         self.methods.append(StreamMethod(s, candles, ax, visible=True))
-        self.methods.append(TendencyMethod(s, candles, ax, visible=True))
+        self.methods.append(FlowMethod(s, candles, ax, visible=False))
+        # self.methods.append(TendencyMethod(s, candles, ax, visible=True))
         # self.methods.append(CorrectionMethod(s, candles, ax, visible=True))
 
     def add_symbol(self, meta: MetaSymbol, s: Symbol, interval: Interval):

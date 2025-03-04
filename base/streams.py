@@ -1,10 +1,11 @@
+from base.data import CandlesList
 from settings import *
 from base.info import *
 
 
 class StreamItem:
 
-    stream: 'Stream'
+    stream: 'SimpleStream'
 
     up: bool = False
     index: int
@@ -123,7 +124,9 @@ class StreamItem:
                                             # +1-1 --- написано просто для понимания
 
 
-class Stream(list[StreamItem]):
+class SimpleStream(list[StreamItem]):
+    frsi: int = 0  # first result stream index
+    lrsi: int = 0  # last result stream index
 
     def get_exit(self, si: StreamItem, ci, ci1: TCandle):
         pass
@@ -196,4 +199,75 @@ class Stream(list[StreamItem]):
 
     def next(self):
         pass
+
+
+class Streams:
+    base: SimpleStream
+    inside: SimpleStream
+    level0: SimpleStream
+    level1: SimpleStream
+    level2: SimpleStream
+
+    candles: CandlesList
+
+    def __init__(self, candles: CandlesList):
+        self.base = SimpleStream()
+        self.inside = SimpleStream()
+        self.level0 = SimpleStream()
+        self.level1 = SimpleStream()
+        self.level2 = SimpleStream()
+
+        self.candles = candles
+
+    def calc(self, skip_i: int):
+
+        c = self.candles
+
+        def is_correction(ci, ci1: TCandle):
+            return (ci.enter[1] <= ci1.low <= ci.exit[1] < ci1.high) or (
+                    ci.enter[1] >= ci1.high >= ci.exit[1] > ci1.low)
+
+        def level0(st: SimpleStream):
+
+            i = 0
+            while i < len(c) - 1:
+                st.append(StreamItem(c[i].enter, c[i].exit, visible=False))
+                st.append(StreamItem(c[i].exit, c[i + 1].enter, visible=False))
+                i += 1
+
+        def level1(st: SimpleStream):
+
+            i = 0
+            while i < len(c) - 1:
+                if len(st) > 0 and is_correction(c[i], c[i + 1]):
+                    st.append(StreamItem(c[i].enter, c[i + 1].enter, visible=False))
+                # elif len(st) > 0 and self.is_merge_wicks(c[i], c[i + 1]):
+                else:
+                    # level0(st)
+                    st.append(StreamItem(c[i].enter, c[i].exit, visible=False))
+                    st.append(StreamItem(c[i].exit, c[i + 1].enter, visible=False))
+                i += 1
+
+        def level_base(st: SimpleStream):  # v0.91
+
+            i = skip_i
+
+            st.append(StreamItem(c[i].enter, c[i].exit, c[i].enter, candle_index=i - skip_i, index=1))
+
+            while i < len(c) - 1:
+                ex = st[-1].move_exit(c[i], c[i + 1])  # переносим выход, пока ...
+
+                if st[-1].is_stop2(c[i], c[i + 1]):
+                    st.append(StreamItem(st[-1].exit, ex, st[-1].get_stop(c[i]), candle_index=i - skip_i,
+                                         index=len(st) + 1))
+                i += 1
+
+        level_base(self.base)
+        level0(self.level0)
+        level1(self.level1)
+
+        # todo --- реализовать это !!!
+        # level_inside(self.inside)  -- внутри свеча обратная
+        # find_frsi() -- first result stream index
+        # find_lrsi()  -- last result stream index
 

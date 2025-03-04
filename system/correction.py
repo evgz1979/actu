@@ -6,7 +6,7 @@ class CorrectionMethod(AnalysisMethod):
     id = 'CORRECTION'
 
     def calc(self):
-        st = self.candles.stream
+        st = self.candles.streams
         tc = self.candles.tendency
         cr = self.candles.correction
 

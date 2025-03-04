@@ -1,22 +1,31 @@
 # ACTU@liZator, (c) JZ
 from system.jz import JZSystem
-from system.volk import *
 from robot import *
-from connector_tinkoff import *
-from connector_moex import *
-from trader import MOEXTrader
+from connector.tbank import *
+from connector.moex import *
+from connector.kucoin import *
+from drawer import *
 
 if __name__ == "__main__":
 
-    si = MetaSymbol('USD/RUB')
-    cny = MetaSymbol('CNY/RUB')
+    # si = MetaSymbol('USD/RUB')
+    # cny = MetaSymbol('CNY/RUB')
     sber = MetaSymbol('SBER')
 
     jz = JZSystem(TDrawer())
-    robot = Robot(jz, MOEXTrader(), [TBankConnector(), MOEXConnector()], [sber, cny])
+
+    cTBank = TBankConnector()
+    # cMOEX = MOEXConnector()
+
+    # cKuCoin = KUCoinConnector()
+    # df = cKuCoin.get_candles_df('BTC/USDT', '1m')
+    # print(df)
+
+    # robot = Robot(jz, [cTBank, cMOEX], [sber, cny])
+    robot = Robot(jz, [cTBank], [sber])
     robot.main()
 
-    jz.add_interval(sber, Interval.week1)
+    jz.add_interval(sber, Interval.day1)
 
     jz.main()
 

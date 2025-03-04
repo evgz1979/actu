@@ -299,14 +299,14 @@ class TendencyMethod(AnalysisMethod):
 
         tc = self.candles.tendency
 
-        tc.current_index = 1
+        tc.debug_current_index = 1
 
         drawer.fp.add_text(tc.range[0].coord(), tc.range[0].title(), tc.range[0].si.color, ax=self.ax)
         i = 1
 
         while i < len(tc.range):
             drawer.fp.add_line(tc.range[i - 1].coord(), tc.range[i].coord(), tc.range[i-1].color, ax=self.ax, width=3)
-            if i == len(tc.range) - 1: s1 = ' (range=' + str(tc.current_index) + ')'
+            if i == len(tc.range) - 1: s1 = ' (range=' + str(tc.debug_current_index) + ')'
             else: s1 = ''
             s2 = ', up='+str(tc.range[i].up) + ' ,enl=' + str(tc.range[i].enlarge)
             drawer.fp.add_text(tc.range[i].coord(), tc.range[i].title() + s1 + s2, tc.range[i].color, ax=self.ax)
@@ -317,7 +317,7 @@ class TendencyMethod(AnalysisMethod):
             # print(tc.range.frsi.coord(), tc.range.frsi.coord(delta=1))
             i += 1
 
-        tc.current_index = 0
+        tc.debug_current_index = 0
 
     # def draw(self):  # todo debug-mode -- ? отображение надписей, в обыном режиме - рисовать
     #
